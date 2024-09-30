@@ -6,6 +6,9 @@ use protorune_rs::{message::{MessageContext}, Protorune};
 use anyhow::{anyhow, Result};
 use std::u128;
 
+pub mod vm!
+pub mod storage;
+
 struct AlkaneMessageContext(());
 
 // TODO: import MessageContextParcel
