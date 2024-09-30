@@ -8,6 +8,9 @@ use std::u128;
 
 pub mod vm!
 pub mod storage;
+pub mod utils;
+pub mod response;
+pub mod parcel;
 
 struct AlkaneMessageContext(());
 
