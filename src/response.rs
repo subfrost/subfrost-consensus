@@ -6,11 +6,11 @@ pub struct CallResponse {
 }
 
 impl CallResponse {
-  pub fn parse(cursor: &mut std::io::Cursor) -> CallRespponse {
-    let parcel = AlkaneTransferParcel::parse(cursor);
+  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>) -> Result<CallRespponse> {
+    let parcel = AlkaneTransferParcel::parse(cursor)?;
     CallResponse {
       alkanes: parcel,
-      data: cursor.read_until_end()
+      data: cursor.read(cursor.as_ref().len() as u64 - cursor.position())
     }
   }
 }

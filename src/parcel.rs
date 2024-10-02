@@ -1,14 +1,33 @@
 use crate::utils::read_u128;
+use crate::id::{AlkaneId};
+use anyhow::{Result};
 
 #[derive(Default, Clone)]
-pub struct AlkaneTransferParcel(pub AlkaneTransfer);
+pub struct AlkaneTransfer {
+  id: AlkaneId;
+  value: u128
+}
+
+#[derive(Default, Clone)]
+pub struct AlkaneTransferParcel(pub Vec<AlkaneTransfer>);
 
 impl AlkaneTransferParcel {
-  pub fn parse(cursor: &mut std::io::Cursor) -> AlkaneTransferParcel {
+  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AlkaneTransferParcel> {
     let mut result = AlkaneTransferParcel::default();
-    for i in [0..read_u128(cursor)] {
-      result.0.push(AlkaneTransfer::parse(cursor));
+    for i in [0..consume_sized_int<u128>(cursor)?] {
+      result.0.push(AlkaneTransfer::parse(cursor)?);
     }
-    result
+    Ok(result)
+  }
+}
+
+impl AlkaneTransfer {
+  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>) -> Result<AlkaneTransfer> {
+    let id = AlkaneId::parse(cursor)?;
+    let value = consume_sized_int<u128>(cursor)?;
+    Ok(AlkaneTransfer {
+      id,
+      value
+    })
   }
 }
