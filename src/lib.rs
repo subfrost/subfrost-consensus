@@ -11,6 +11,7 @@ pub mod storage;
 pub mod utils;
 pub mod response;
 pub mod parcel;
+pub mod cellpack;
 pub mod id;
 
 struct AlkaneMessageContext(());
