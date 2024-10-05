@@ -2,8 +2,8 @@ use std::fmt::Write;
 use bitcoin::blockdata::block::Block;
 use bitcoin::consensus::Decodable;
 use metashrew::{input, flush, stdio::{stdout}, println};
-use protorune::{message::{MessageContext}, Protorune};
-use anyhow::{anyhow, Result};
+use protorune::{message::{MessageContextParcel, MessageContext}, Protorune};
+use anyhow::{Result};
 use std::u128;
 use crate::id::{AlkaneId};
 
@@ -20,7 +20,6 @@ struct AlkaneMessageContext(());
 
 // TODO: import MessageContextParcel
 
-pub struct MessageContextParcel(u32);
 
 impl MessageContext for AlkaneMessageContext {
   fn protocol_tag() -> u128 {

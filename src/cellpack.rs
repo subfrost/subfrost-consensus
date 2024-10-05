@@ -5,14 +5,14 @@ use anyhow::{Result};
 
 #[derive(Clone, Default)]
 struct Cellpack {
-  target: AlkaneId;
-  inputs: Vec<u128>;
+  target: AlkaneId,
+  inputs: Vec<u128>
 }
 
 impl Cellpack {
   pub fn parse(cursor: &mut Cursor<Vec<u8>>) -> Result<Cellpack> {
-    let target = AlkaneId::parse(cursor)?
-    let result = Cellpack::default();
+    let target = AlkaneId::parse(cursor)?;
+    let mut result = Cellpack::default();
     result.target = target;
     loop {
       match consume_sized_int::<u128>(cursor) {

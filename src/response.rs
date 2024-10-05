@@ -1,6 +1,6 @@
 use anyhow::{Result};
 use crate::parcel::{AlkaneTransferParcel};
-use std::io::Read;
+use crate::utils::{consume_to_end};
 
 pub struct CallResponse {
   pub alkanes: AlkaneTransferParcel,
@@ -12,7 +12,7 @@ impl CallResponse {
     let parcel = AlkaneTransferParcel::parse(cursor)?;
     Ok(CallResponse {
       alkanes: parcel,
-      data: cursor.read(cursor.as_ref().len() as u64 - cursor.position())
+      data: consume_to_end(cursor)?
     })
   }
 }
