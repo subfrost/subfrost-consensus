@@ -8,6 +8,8 @@ use std::sync::{Arc, Mutex};
 use protorune::message::{MessageContext, MessageContextParcel};
 use metashrew::{index_pointer::{KeyValuePointer, IndexPointer, AtomicPointer}, println, stdio::{stdout}};
 use crate::{
+  cellpack::{Cellpack},
+  envelope::{RawEnvelope},
   response::{CallResponse},
   storage::{StorageMap},
   parcel::{AlkaneTransfer, AlkaneTransferParcel},
@@ -170,16 +172,6 @@ impl AlkanesInstance {
             .map_err(|_| anyhow!("failed to write ArrayBuffer"))?;
         Ok((ptr + 4).try_into()?)
     }
-    pub fn get(address: &Vec<u8>, context: Arc<Mutex<AlkanesRuntimeContext>>) -> Result<Option<Self>> {
-        let saved = IndexPointer::from_keyword("/alkanes/")
-            .select(address)
-            .get();
-        if saved.len() == 0 {
-            Ok(None)
-        } else {
-            Ok(Some(Self::load_from_context(address, &saved, context.clone())?))
-        }
-    }
     pub fn checkpoint(&mut self) {
         (&mut self.store.data_mut().context.lock().unwrap().message).atomic.checkpoint();
     }
@@ -189,10 +181,9 @@ impl AlkanesInstance {
     pub fn rollback(&mut self) {
         (&mut self.store.data_mut().context.lock().unwrap().message).atomic.rollback();
     }
-    pub fn load_from_context(
-        address: &Vec<u8>,
-        program: &Vec<u8>,
-        context: Arc<Mutex<AlkanesRuntimeContext>>
+    pub fn from_alkane(
+        alkane: &AlkaneId,
+        context: AlkanesRuntimeContext
     ) -> Result<Self> {
         let mut config = Config::default();
         config.consume_fuel(true);
@@ -202,12 +193,12 @@ impl AlkanesInstance {
             AlkanesState {
                 had_failure: false,
                 limiter: StoreLimitsBuilder::new().memory_size(MEMORY_LIMIT).build(),
-                context: context.clone()
+                context: Arc::new(Mutex::new(context))
             },
         );
         store.limiter(|state| &mut state.limiter);
         Store::<AlkanesState>::set_fuel(&mut store, 100000)?; // TODO: implement gas limits
-        let cloned = program.clone();
+        let cloned = IndexPointer::from_keyword("/alkanes/").select(&alkane.into()).get().as_ref().clone();
         let module = Module::new(&engine, &mut &cloned[..])?;
         let mut linker: Linker<AlkanesState> = Linker::<AlkanesState>::new(&engine);
         linker.func_wrap("env", "abort", AlkanesHostFunctionsImpl::abort)?;
@@ -235,7 +226,7 @@ impl AlkanesInstance {
     pub fn reset(&mut self) {
         self.store.data_mut().had_failure = false;
     }
-    pub fn run(&mut self, payload: Vec<u8>) -> Result<CallResponse, anyhow::Error> {
+    pub fn execute(&mut self) -> Result<CallResponse> {
         let start_fuel = self.store.get_fuel()?;
         self.checkpoint();
         let (call_response, had_failure): (CallResponse, bool) = {
@@ -259,6 +250,33 @@ impl AlkanesInstance {
             Ok(call_response)
         }
     }
+}
+
+pub fn sequence_pointer(ptr: &AtomicPointer) -> AtomicPointer {
+  ptr.derive(&IndexPointer::from_keyword("/alkanes/sequence"))
+}
+
+pub fn find_witness_payload(tx: &Transaction) -> Option<Vec<u8>> {
+  let envelopes = RawEnvelope::from_transaction(tx);
+  if envelopes.len() == 0 {
+    None
+  } else {
+    Some(envelopes[0].payload.clone().into_iter().skip(1).flatten().collect())
+  }
+}
+
+pub fn run(context: AlkanesRuntimeContext, cellpack: &Cellpack) -> Result<CallResponse> {
+  let mut payload = cellpack.clone();
+  if cellpack.is_create() {
+
+    let next_sequence_pointer = sequence_pointer(&context.message.atomic);
+    let next_sequence = next_sequence_pointer.get_value::<u128>();
+    let new_id = AlkaneId::new(0, next_sequence);
+    context.message.atomic.keyword("/alkanes/").select(&new_id.clone().into()).set(Arc::new(find_witness_payload(&context.message.transaction).ok_or("").map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?));
+    payload.target = new_id.clone();
+  }
+  // TODO: implement reserved/factory/etc
+  AlkanesInstance::from_alkane(&payload.target, context)?.execute()
 }
 
 pub fn send_to_arraybuffer<'a>(caller: &mut Caller<'_, AlkanesState>, ptr: usize, v: &Vec<u8>) -> Result<i32> {

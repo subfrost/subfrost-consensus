@@ -37,6 +37,7 @@ dependencies = [
  "protoc-rust",
  "protorune",
  "ruint",
+ "serde",
  "wasm-bindgen",
  "wasm-bindgen-test",
  "wasmi",

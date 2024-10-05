@@ -3,8 +3,8 @@ use anyhow::{Result};
 
 #[derive(Default, Clone)]
 pub struct AlkaneId {
-  block: u128,
-  tx: u128
+  pub block: u128,
+  pub tx: u128
 }
 
 impl AlkaneId {
@@ -15,10 +15,25 @@ impl AlkaneId {
        tx
      })
   }
+  pub fn new(block: u128, tx: u128) -> AlkaneId {
+    AlkaneId {
+      block,
+      tx
+    }
+  }
 }
 
 impl From<AlkaneId> for Vec<u8> {
     fn from(rune_id: AlkaneId) -> Self {
+        let mut bytes = Vec::<u8>::with_capacity(32);
+        bytes.extend(&rune_id.block.to_le_bytes());
+        bytes.extend(&rune_id.tx.to_le_bytes());
+        bytes
+    }
+}
+
+impl From<&AlkaneId> for Vec<u8> {
+    fn from(rune_id: &AlkaneId) -> Self {
         let mut bytes = Vec::<u8>::with_capacity(32);
         bytes.extend(&rune_id.block.to_le_bytes());
         bytes.extend(&rune_id.tx.to_le_bytes());

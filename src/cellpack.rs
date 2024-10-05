@@ -4,9 +4,9 @@ use crate::id::{AlkaneId};
 use anyhow::{Result};
 
 #[derive(Clone, Default)]
-struct Cellpack {
-  target: AlkaneId,
-  inputs: Vec<u128>
+pub struct Cellpack {
+  pub target: AlkaneId,
+  pub inputs: Vec<u128>
 }
 
 impl Cellpack {
@@ -21,5 +21,8 @@ impl Cellpack {
       }
     }
     Ok(result)
+  }
+  pub fn is_create(&self) -> bool {
+    self.target.block == 0 && self.target.tx == 0
   }
 }

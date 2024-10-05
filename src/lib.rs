@@ -1,4 +1,3 @@
-use std::fmt::Write;
 use bitcoin::blockdata::block::Block;
 use bitcoin::consensus::Decodable;
 use metashrew::{input, flush, stdio::{stdout}, println};
@@ -16,6 +15,7 @@ pub mod parcel;
 pub mod cellpack;
 pub mod id;
 pub mod message;
+pub mod envelope;
 pub fn index_block() -> Result<()> {
   let data = input();
   let height = u32::from_le_bytes((&data[0..4]).try_into()?);
