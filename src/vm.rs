@@ -252,7 +252,7 @@ impl AlkaneContract {
     }
     pub fn run(&mut self, payload: Vec<u8>) -> Result<CallResponse, anyhow::Error> {
         let start_fuel = self.store.get_fuel()?;
-        let call_response: Vec<u8> =lkanesExportsImpl::execute(self)?
+        let call_response: Vec<u8> = AlkanesExportsImpl::execute(self)?
         let had_failure = self.store.data().had_failure;
         self.reset();
         if had_failure {

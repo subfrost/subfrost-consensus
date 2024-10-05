@@ -1,12 +1,14 @@
 use std::fmt::Write;
 use bitcoin::blockdata::block::Block;
 use bitcoin::consensus::Decodable;
-use metashrew_rs::{input, flush, stdio::{stdout}, println};
-use protorune_rs::{message::{MessageContext}, Protorune};
+use metashrew::{input, flush, stdio::{stdout}, println};
+use protorune::{message::{MessageContext}, Protorune};
 use anyhow::{anyhow, Result};
 use std::u128;
+use crate::id::{AlkaneId};
 
-pub mod vm!
+
+//pub mod vm;
 pub mod storage;
 pub mod utils;
 pub mod response;
@@ -30,7 +32,7 @@ impl MessageContext for AlkaneMessageContext {
     true
   }
   */
-  fn handle() -> bool {
+  fn handle(_parcel: Box<MessageContextParcel>) -> bool {
     true
   }
 }
@@ -40,7 +42,7 @@ pub fn index_block() -> Result<()> {
   let height = u32::from_le_bytes((&data[0..4]).try_into()?);
   let mut reader = &data[4..];
   let block = Block::consensus_decode(&mut reader)?;
-  Protorune::index_block::<AlkaneMessageContext>(block, height)?;
+  Protorune::index_block::<AlkaneMessageContext>(block, height.into())?;
   Ok(())
 }
 

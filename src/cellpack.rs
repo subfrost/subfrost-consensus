@@ -1,5 +1,7 @@
 use std::io::{Cursor};
 use crate::utils::{consume_sized_int};
+use crate::id::{AlkaneId};
+use anyhow::{Result};
 
 #[derive(Clone, Default)]
 struct Cellpack {
@@ -8,7 +10,7 @@ struct Cellpack {
 }
 
 impl Cellpack {
-  pub fn parse(cursor: &mut Cursor) -> Result<Cellpack> {
+  pub fn parse(cursor: &mut Cursor<Vec<u8>>) -> Result<Cellpack> {
     let target = AlkaneId::parse(cursor)?
     let result = Cellpack::default();
     result.target = target;

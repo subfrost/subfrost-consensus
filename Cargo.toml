@@ -12,16 +12,17 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 anyhow = "1.0.89"
 bitcoin = { version = "0.30.1", features = ["rand"] }
-metashrew-rs = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }
+metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }
 ordinals = { git = "https://github.com/kungfuflex/protorune-rs" }
-protorune-rs = { git = "https://github.com/kungfuflex/protorune-rs" }
+protorune = { git = "https://github.com/kungfuflex/protorune-rs" }
 ruint = "1.12.3"
 wasm-bindgen = "0.2.92"
 byteorder = "1.5"
 wasm-bindgen-test = "0.3.43"
+wasmi = "0.37.2"
 
 [dev-dependencies]
-metashrew-rs = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs", features = ["mock"] }
+metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs", features = ["mock"] }
 
 [build-dependencies]
 protobuf-codegen = "3.4.0"

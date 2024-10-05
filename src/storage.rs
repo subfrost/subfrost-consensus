@@ -1,6 +1,7 @@
 use std::collections::{HashMap};
 use std::io::{Cursor};
 use anyhow::{Result, anyhow};
+use crate::utils::{consume_sized_int};
 
 pub struct StorageMap(pub HashMap<Vec<u8>, Vec<u8>>)
 

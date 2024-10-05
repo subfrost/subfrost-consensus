@@ -8,7 +8,7 @@ pub struct AlkaneId {
 }
 
 impl AlkaneId {
-  pub fn parse(cursor: &mut std::io::Cursor) ->  Result<AlkaneId> {
+  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) ->  Result<AlkaneId> {
      let (block, txindex) = (consume_sized_int<u128>(cursor)?, consume_sized_int<u128>(cursor)?);
      Ok(AlkaneId {
        block,

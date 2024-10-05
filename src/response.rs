@@ -1,4 +1,6 @@
-use crate::response::{AlkaneTransferParcel};
+use anyhow::{Result};
+use crate::parcel::{AlkaneTransferParcel};
+use std::io::Read;
 
 pub struct CallResponse {
   pub alkanes: AlkaneTransferParcel,
@@ -6,11 +8,11 @@ pub struct CallResponse {
 }
 
 impl CallResponse {
-  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>) -> Result<CallRespponse> {
+  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<CallResponse> {
     let parcel = AlkaneTransferParcel::parse(cursor)?;
-    CallResponse {
+    Ok(CallResponse {
       alkanes: parcel,
       data: cursor.read(cursor.as_ref().len() as u64 - cursor.position())
-    }
+    })
   }
 }

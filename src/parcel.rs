@@ -1,4 +1,4 @@
-use crate::utils::read_u128;
+use crate::utils::{consume_sized_int};
 use crate::id::{AlkaneId};
 use anyhow::{Result};
 
@@ -22,7 +22,7 @@ impl AlkaneTransferParcel {
 }
 
 impl AlkaneTransfer {
-  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>) -> Result<AlkaneTransfer> {
+  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AlkaneTransfer> {
     let id = AlkaneId::parse(cursor)?;
     let value = consume_sized_int<u128>(cursor)?;
     Ok(AlkaneTransfer {
