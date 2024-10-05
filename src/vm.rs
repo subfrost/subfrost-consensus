@@ -3,17 +3,29 @@ use bitcoin::blockdata::{block::Block, transaction::Transaction};
 use anyhow::{anyhow, Result};
 use std::collections::{HashMap, HashSet};
 use std::io::Read;
+use std::borrow::BorrowMut;
 use std::sync::{Arc, Mutex};
+use protorune::message::{MessageContext, MessageContextParcel};
+use metashrew::{index_pointer::{KeyValuePointer, IndexPointer, AtomicPointer}, println, stdio::{stdout}};
+use crate::{
+  response::{CallResponse},
+  storage::{StorageMap},
+  parcel::{AlkaneTransfer, AlkaneTransferParcel},
+  utils::{consume_to_end, consume_sized_int},
+  message::{AlkaneMessageContext},
+  id::{AlkaneId}
+};
+use std::fmt::{Write};
 use wasmi::*;
 
 #[derive(Default, Clone)]
-struct AlkaneRuntimeContext {
+struct AlkanesRuntimeContext {
     pub myself: AlkaneId,
     pub caller: AlkaneId,
     pub incoming_alkanes: AlkaneTransferParcel,
-    pub state: AlkaneGlobalState,
     pub returndata: Vec<u8>,
-    pub inputs: Vec<u128>
+    pub inputs: Vec<u128>,
+    pub message: Box<MessageContextParcel>
 }
 
 pub fn read_arraybuffer(data: &[u8], data_start: i32) -> Result<Vec<u8>> {
@@ -27,19 +39,19 @@ pub fn read_arraybuffer(data: &[u8], data_start: i32) -> Result<Vec<u8>> {
     ));
 }
 
-pub struct AlkaneState {
+pub struct AlkanesState {
   pub had_failure: bool,
-  pub context: Arc<Mutex<AlkaneRuntimeContext>>,
+  pub context: Arc<Mutex<AlkanesRuntimeContext>>,
   pub limiter: StoreLimits,
 }
 
-pub struct AlkaneInstance {
+pub struct AlkanesInstance {
   instance: Instance,
-  store: Store<AlkaneState>,
+  store: Store<AlkanesState>
 }
 
 
-pub fn get_memory<'a>(caller: &mut Caller<'_, AlkaneState>) -> Result<Memory> {
+pub fn get_memory<'a>(caller: &mut Caller<'_, AlkanesState>) -> Result<Memory> {
     caller
         .get_export("memory")
         .ok_or(anyhow!("export was not memory region"))?
@@ -49,78 +61,57 @@ pub fn get_memory<'a>(caller: &mut Caller<'_, AlkaneState>) -> Result<Memory> {
 
 const MEMORY_LIMIT: usize = 33554432;
 
+pub struct AlkanesHostFunctionsImpl(());
 impl AlkanesHostFunctionsImpl {
-    fn _abort<'a>(caller: Caller<'_, AlkaneState>) {
+    fn _abort<'a>(caller: Caller<'_, AlkanesState>) {
         AlkanesHostFunctionsImpl::abort(caller, 0, 0, 0, 0);
     }
-    fn abort<'a>(mut caller: Caller<'_, AlkaneState>, _: i32, _: i32, _: i32, _: i32) {
+    fn abort<'a>(mut caller: Caller<'_, AlkanesState>, _: i32, _: i32, _: i32, _: i32) {
         caller.data_mut().had_failure = true;
     }
-    fn load_storage<'a>(caller: &mut Caller<'_, AlkaneState>, k: i32, v: i32) -> Result<i32> {
+    fn load_storage<'a>(caller: &mut Caller<'_, AlkanesState>, k: i32, v: i32) -> Result<i32> {
         let mem = get_memory(caller)?;
         let key = {
             let data = mem.data(&caller);
             read_arraybuffer(data, k)?
         };
-        let value = caller
+        let value = {
+          let myself = caller.data_mut().context.lock().unwrap().myself.clone();
+          (&caller
             .data_mut()
-            .storage
+            .context
             .lock()
             .unwrap()
-            .contract
-            .get(&(&key.to_be_bytes::<32>()).try_into()?);
-        send_to_arraybuffer(caller, &value)
+            .message)
+            .atomic
+            .keyword("/alkanes/")
+            .select(&myself.into())
+            .keyword("/storage")
+            .select(&key)
+            .get()
+        };
+        send_to_arraybuffer(caller, v.try_into()?, value.as_ref())
     }
-    fn call<'a>(caller: &mut Caller<'_, AlkaneState>, data: i32) -> Result<i32> {
-        let buffer = read_arraybuffer(get_memory(caller)?.data(&caller), data)?;
-        let mut reader = BytesReader::from(&buffer);
-        let (contract_address, calldata): (Vec<u8>, Vec<u8>) = (
-            reader.read_address()?.as_str().as_bytes().to_vec(),
-            reader.read_bytes_with_length()?,
-        );
-        if let Some(_v) = caller.data().call_stack.get(&contract_address) {
-            return Err(anyhow!("failure -- reentrancy guard"));
-        }
-        let mut vm = AlkanesContract::get(
-            &contract_address,
-            Arc::new(Mutex::new(
-                caller.data_mut().storage.lock().unwrap().clone(),
-            )),
-        )?
-        .ok_or("")
-        .map_err(|_| match String::from_utf8(contract_address.clone()) {
-            Ok(v) => anyhow!(format!(
-                "failed to call non-existent contract at address {}",
-                v
-            )),
-            Err(_) => anyhow!("failed to convert contract address from utf-8"),
-        })?;
-        {
-            let mut environment = caller.data_mut().environment.clone();
-            environment.set_contract_address(&contract_address.clone());
-            vm.store.data_mut().environment = environment;
-        }
-        AlkanesExportsImpl::set_environment(&mut vm)?;
-        let call_response = vm.run(calldata)?;
-        vm.store.data_mut().storage = call_response.storage.clone();
-        vm.store.data_mut().events = call_response.events;
-        vm.consume_fuel(call_response.gas_used)?;
-        send_to_arraybuffer(caller, &call_response.response)
-        // TODO: encode response
+    fn call<'a>(caller: &mut Caller<'_, AlkanesState>, data: i32) -> Result<i32> {
+        Ok(0)
+        // TODO: call
     }
-    fn log<'a>(caller: &mut Caller<'_, AlkaneState>, v: i32) -> Result<()> {
-        crate::stdio::log({
-            let mem = get_memory(caller)?;
-            Arc::new(read_arraybuffer(mem.data(&caller), v)?)
-        });
+    fn log<'a>(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
+        let mem = get_memory(caller)?;
+        let message = {
+            let data = mem.data(&caller);
+            read_arraybuffer(data, v)?
+        };
+        println!("{}", String::from_utf8(message)?);
         Ok(())
     }
 }
 
+pub struct AlkanesExportsImpl(());
 impl AlkanesExportsImpl {
-    pub fn _get_export(vm: &mut AlkanesContract, name: &str) -> Result<Func> {
+    pub fn _get_export(vm: &mut AlkanesInstance, name: &str) -> Result<Func> {
         let instance: &mut Instance = &mut vm.instance;
-        let store: &mut Store<State> = &mut vm.store;
+        let store: &mut Store<AlkanesState> = &mut vm.store;
         Ok(instance.get_func(store, name).ok_or("").map_err(|_| {
             anyhow!(format!(
                 "{} not found -- is this WASM built with the ALKANES SDK?",
@@ -128,7 +119,7 @@ impl AlkanesExportsImpl {
             ))
         })?)
     }
-    pub fn _get_result(vm: &mut AlkanesContract, result: &[Val; 1]) -> Result<Vec<u8>> {
+    pub fn _get_result(vm: &mut AlkanesInstance, result: &[Val; 1]) -> Result<Vec<u8>> {
         vm.read_arraybuffer(
             result[0]
                 .i32()
@@ -136,20 +127,20 @@ impl AlkanesExportsImpl {
                 .map_err(|_| anyhow!("result is not an i32"))?,
         )
     }
-    pub fn execute(vm: &mut AlkanesContract) -> Result<Vec<u8>> {
+    pub fn execute(vm: &mut AlkanesInstance) -> Result<CallResponse> {
         let mut result = [Val::I32(0)];
         let func = Self::_get_export(vm, "__execute")?;
-        let arg2 = vm.send_to_arraybuffer(data)?;
         func.call(
             &mut vm.store,
-            &[Val::I32(method as i32), Val::I32(arg2)],
+            &[],
             &mut result,
         )?;
-        Self::_get_result(vm, &result)
+        Ok(CallResponse::parse(&mut std::io::Cursor::new(Self::_get_result(vm, &result)?))?)
     }
 }
 
-impl AlkaneContract {
+
+impl AlkanesInstance {
     pub fn consume_fuel(&mut self, fuel: u64) -> Result<()> {
         let fuel_remaining = self.store.get_fuel().unwrap();
         if fuel_remaining < fuel {
@@ -179,51 +170,46 @@ impl AlkaneContract {
             .map_err(|_| anyhow!("failed to write ArrayBuffer"))?;
         Ok((ptr + 4).try_into()?)
     }
-    pub fn get(address: &Vec<u8>, storage: Arc<Mutex<StorageView>>) -> Result<Option<Self>> {
+    pub fn get(address: &Vec<u8>, context: Arc<Mutex<AlkanesRuntimeContext>>) -> Result<Option<Self>> {
         let saved = IndexPointer::from_keyword("/alkanes/")
             .select(address)
             .get();
         if saved.len() == 0 {
             Ok(None)
         } else {
-            Ok(Some(Self::load_from_address(address, &saved, storage)?))
+            Ok(Some(Self::load_from_context(address, &saved, context.clone())?))
         }
     }
-    pub fn checkpoint(&mut self) -> Arc<Mutex<StorageView>> {
-        Arc::new(Mutex::new(
-            self.store.data_mut().storage.lock().unwrap().clone(),
-        ))
+    pub fn checkpoint(&mut self) {
+        (&mut self.store.data_mut().context.lock().unwrap().message).atomic.checkpoint();
     }
-    pub fn load(address: &Vec<u8>, program: &Vec<u8>) -> Result<Self> {
-        let mut storage = StorageView::default();
-        storage.global.lazy_load(address);
-        storage.contract = storage.global.0.get(address).clone().unwrap().clone();
-        return Self::load_from_address(address, program, Arc::new(Mutex::new(storage)));
+    pub fn commit(&mut self) {
+        (&mut self.store.data_mut().context.lock().unwrap().message).atomic.commit();
     }
-    pub fn load_from_address(
+    pub fn rollback(&mut self) {
+        (&mut self.store.data_mut().context.lock().unwrap().message).atomic.rollback();
+    }
+    pub fn load_from_context(
         address: &Vec<u8>,
         program: &Vec<u8>,
-        storage: Arc<Mutex<StorageView>>,
+        context: Arc<Mutex<AlkanesRuntimeContext>>
     ) -> Result<Self> {
         let mut config = Config::default();
         config.consume_fuel(true);
         let engine = Engine::new(&config);
-        let mut store = Store::<State>::new(
+        let mut store = Store::<AlkanesState>::new(
             &engine,
             AlkanesState {
-                environment: AlkanesEnvironment::default(),
-                events: vec![],
                 had_failure: false,
                 limiter: StoreLimitsBuilder::new().memory_size(MEMORY_LIMIT).build(),
-                call_stack: HashSet::<Vec<u8>>::new(),
-                storage: storage.clone(),
+                context: context.clone()
             },
         );
         store.limiter(|state| &mut state.limiter);
-        Store::<State>::set_fuel(&mut store, 100000)?; // TODO: implement gas limits
+        Store::<AlkanesState>::set_fuel(&mut store, 100000)?; // TODO: implement gas limits
         let cloned = program.clone();
         let module = Module::new(&engine, &mut &cloned[..])?;
-        let mut linker: Linker<State> = Linker::<State>::new(&engine);
+        let mut linker: Linker<AlkanesState> = Linker::<AlkanesState>::new(&engine);
         linker.func_wrap("env", "abort", AlkanesHostFunctionsImpl::abort)?;
         linker.func_wrap("env", "__load_storage", |mut caller: Caller<'_, AlkanesState>, k: i32, v: i32| {
             match AlkanesHostFunctionsImpl::load_storage(&mut caller, k, v) {
@@ -239,12 +225,11 @@ impl AlkaneContract {
                 AlkanesHostFunctionsImpl::_abort(caller);
             }
         })?;
-        Ok(AlkaneContract {
+        Ok(AlkanesInstance {
             instance: linker
                 .instantiate(&mut store, &module)?
                 .ensure_no_start(&mut store)?,
-            store,
-            storage,
+            store
         })
     }
     pub fn reset(&mut self) {
@@ -252,30 +237,35 @@ impl AlkaneContract {
     }
     pub fn run(&mut self, payload: Vec<u8>) -> Result<CallResponse, anyhow::Error> {
         let start_fuel = self.store.get_fuel()?;
-        let call_response: Vec<u8> = AlkanesExportsImpl::execute(self)?
-        let had_failure = self.store.data().had_failure;
+        self.checkpoint();
+        let (call_response, had_failure): (CallResponse, bool) = {
+          match AlkanesExportsImpl::execute(self) {
+            Ok(v) => {
+              if self.store.data().had_failure {
+                (CallResponse::default(), true)
+              } else {
+                (v, false)
+              }
+            },
+            Err(_) => (CallResponse::default(), true)
+          }
+        };
         self.reset();
         if had_failure {
+            self.rollback();
             Err(anyhow!("ALKANES: revert"))
         } else {
-            let checkpoint = { self.checkpoint() };
-            let mut state: &mut AlkanesState = self.store.data_mut();
-            state.storage.lock().unwrap().commit();
-            state.storage = checkpoint.clone();
-            Ok(CallResponse {
-                storage: checkpoint.clone(),
-                response: call_response,
-                gas_used: start_fuel - self.store.get_fuel()?,
-            })
+            self.commit();
+            Ok(call_response)
         }
     }
 }
 
-pub fn send_to_arraybuffer<'a>(caller: &mut Caller<'_, AlkaneState>, ptr: usize, v: &Vec<u8>) -> Result<i32> {
+pub fn send_to_arraybuffer<'a>(caller: &mut Caller<'_, AlkanesState>, ptr: usize, v: &Vec<u8>) -> Result<i32> {
     let mem = get_memory(caller)?;
     mem.write(&mut *caller, ptr - 4, &v.len().to_le_bytes())
         .map_err(|_| anyhow!("failed to write ArrayBuffer"))?;
     mem.write(&mut *caller, ptr, v.as_slice())
         .map_err(|_| anyhow!("failed to write ArrayBuffer"))?;
-    Ok(ptr)
+    Ok(ptr.try_into()?)
 }

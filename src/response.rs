@@ -2,6 +2,7 @@ use anyhow::{Result};
 use crate::parcel::{AlkaneTransferParcel};
 use crate::utils::{consume_to_end};
 
+#[derive(Default, Clone)]
 pub struct CallResponse {
   pub alkanes: AlkaneTransferParcel,
   pub data: Vec<u8>
