@@ -16,4 +16,12 @@ impl CallResponse {
             data: consume_to_end(cursor)?,
         })
     }
+    pub fn serialize(&self) -> Vec<u8> {
+      let mut list = Vec::<Vec<u128>>::new();
+      list.push(vec![self.alkanes.0.len() as u128]);
+      self.alkanes.0.iter().for_each(|v| list.push(vec![ v.id.block, v.id.tx, v.value ]));
+      let mut result: Vec<u8> = list.into_iter().flatten().map(|v| (&v.to_le_bytes()).to_vec()).flatten().collect();
+      result.extend(&self.data);
+      result
+    }
 }

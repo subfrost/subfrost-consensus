@@ -1,3 +1,4 @@
+use metashrew::index_pointer::{IndexPointer, KeyValuePointer, AtomicPointer};
 use crate::id::AlkaneId;
 use crate::utils::consume_sized_int;
 use anyhow::Result;
@@ -18,6 +19,10 @@ impl AlkaneTransferParcel {
             result.0.push(AlkaneTransfer::parse(cursor)?);
         }
         Ok(result)
+    }
+    pub fn transfer_from<T: KeyValuePointer>(&self, pointer: &mut T, from: &AlkaneId, to: &AlkaneId) -> Result<()> {
+      Ok(())
+      
     }
 }
 

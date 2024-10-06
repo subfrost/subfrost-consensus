@@ -1,7 +1,9 @@
+use metashrew::index_pointer::{IndexPointer, KeyValuePointer, AtomicPointer};
 use crate::utils::{consume_exact, consume_sized_int};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::io::Cursor;
+use std::sync::{Arc};
 
 pub struct StorageMap(pub HashMap<Vec<u8>, Vec<u8>>);
 
@@ -33,5 +35,8 @@ impl StorageMap {
     }
     pub fn set<KT: AsRef<[u8]>, VT: AsRef<[u8]>>(&mut self, k: KT, v: VT) {
         self.0.insert(k.as_ref().to_vec(), v.as_ref().to_vec());
+    }
+    pub fn pipe_to<T: KeyValuePointer>(&self, pointer: &mut T) {
+      self.0.iter().for_each(|(k, v)| { pointer.keyword("/storage/").select(k).set(Arc::new(v.clone())); });
     }
 }

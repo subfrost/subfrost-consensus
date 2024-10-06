@@ -1,7 +1,7 @@
 use crate::utils::consume_sized_int;
 use anyhow::Result;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Copy)]
 pub struct AlkaneId {
     pub block: u128,
     pub tx: u128,
