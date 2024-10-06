@@ -16,7 +16,7 @@ use metashrew::{
     stdio::stdout,
 };
 use protorune::message::{MessageContext, MessageContextParcel};
-use protorune::utils::{consensus_encode};
+use protorune::utils::consensus_encode;
 use std::borrow::BorrowMut;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
@@ -196,7 +196,11 @@ impl AlkanesHostFunctionsImpl {
         Ok(())
     }
     fn sequence(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
-        let buffer: Vec<u8> = (&sequence_pointer(&caller.data_mut().context.lock().unwrap().message.atomic).get_value::<u128>().to_le_bytes()).to_vec();
+        let buffer: Vec<u8> =
+            (&sequence_pointer(&caller.data_mut().context.lock().unwrap().message.atomic)
+                .get_value::<u128>()
+                .to_le_bytes())
+                .to_vec();
         send_to_arraybuffer(caller, output.try_into()?, &buffer)?;
         Ok(())
     }
@@ -231,44 +235,60 @@ impl AlkanesHostFunctionsImpl {
         send_to_arraybuffer(caller, output.try_into()?, &balance)?;
         Ok(())
     }
-    fn call<'a>(caller: &mut Caller<'_, AlkanesState>, cellpack_ptr: i32, incoming_alkanes_ptr: i32, checkpoint_ptr: i32) -> Result<i32> {
+    fn call<'a>(
+        caller: &mut Caller<'_, AlkanesState>,
+        cellpack_ptr: i32,
+        incoming_alkanes_ptr: i32,
+        checkpoint_ptr: i32,
+    ) -> Result<i32> {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
         let cellpack = Cellpack::parse(&mut Cursor::new(read_arraybuffer(data, cellpack_ptr)?))?;
-        let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(read_arraybuffer(data, incoming_alkanes_ptr)?))?;
-        let storage_map = StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-        let subcontext = {
-          let mut context = caller.data_mut().context.lock().unwrap();
-          context.message.atomic.checkpoint();
-          storage_map.pipe_to(&mut context.message.atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&context.myself.into())));
-          if let Err(_) = incoming_alkanes.transfer_from(&mut context.message.atomic.derive(&IndexPointer::default()), &context.myself, &cellpack.target) {
-            context.message.atomic.rollback();
-            context.returndata = Vec::<u8>::new();
-            return Ok(0)
-          }
-          let mut subbed = (&*context).clone();
-          subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
-          subbed.myself = cellpack.target.clone();
-          subbed.caller = context.caller.clone();
-          subbed.returndata = vec![];
-          subbed.incoming_alkanes = incoming_alkanes.clone();
-          subbed.inputs = cellpack.inputs.clone();
-          subbed
-        };
+        let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(read_arraybuffer(
+            data,
+            incoming_alkanes_ptr,
+        )?))?;
+        let storage_map =
+            StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
+        let subcontext =
+            {
+                let mut context = caller.data_mut().context.lock().unwrap();
+                context.message.atomic.checkpoint();
+                storage_map.pipe_to(&mut context.message.atomic.derive(
+                    &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
+                ));
+                if let Err(_) = incoming_alkanes.transfer_from(
+                    &mut context.message.atomic.derive(&IndexPointer::default()),
+                    &context.myself,
+                    &cellpack.target,
+                ) {
+                    context.message.atomic.rollback();
+                    context.returndata = Vec::<u8>::new();
+                    return Ok(0);
+                }
+                let mut subbed = (&*context).clone();
+                subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
+                subbed.myself = cellpack.target.clone();
+                subbed.caller = context.caller.clone();
+                subbed.returndata = vec![];
+                subbed.incoming_alkanes = incoming_alkanes.clone();
+                subbed.inputs = cellpack.inputs.clone();
+                subbed
+            };
         match run(subcontext, &cellpack) {
-          Ok(response) => {
-            let mut context = caller.data_mut().context.lock().unwrap();
-            context.message.atomic.commit();
-            let serialized = response.serialize();
-            context.returndata = serialized;
-            Ok(context.returndata.len().try_into()?)
-          },
-          Err(_) => {
-            let mut context = caller.data_mut().context.lock().unwrap();
-            context.message.atomic.rollback();
-            context.returndata = vec![];
-            Ok(0)
-          }
+            Ok(response) => {
+                let mut context = caller.data_mut().context.lock().unwrap();
+                context.message.atomic.commit();
+                let serialized = response.serialize();
+                context.returndata = serialized;
+                Ok(context.returndata.len().try_into()?)
+            }
+            Err(_) => {
+                let mut context = caller.data_mut().context.lock().unwrap();
+                context.message.atomic.rollback();
+                context.returndata = vec![];
+                Ok(0)
+            }
         }
     }
     fn log<'a>(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
@@ -495,6 +515,28 @@ impl AlkanesInstance {
             |mut caller: Caller<'_, AlkanesState>, output: i32| {
                 if let Err(_e) = AlkanesHostFunctionsImpl::load_block(&mut caller, output) {
                     AlkanesHostFunctionsImpl::_abort(caller);
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "__call",
+            |mut caller: Caller<'_, AlkanesState>,
+             cellpack_ptr: i32,
+             incoming_alkanes_ptr: i32,
+             checkpoint_ptr: i32|
+             -> i32 {
+                match AlkanesHostFunctionsImpl::call(
+                    &mut caller,
+                    cellpack_ptr,
+                    incoming_alkanes_ptr,
+                    checkpoint_ptr,
+                ) {
+                    Ok(v) => v,
+                    Err(_e) => {
+                        AlkanesHostFunctionsImpl::_abort(caller);
+                        -1
+                    }
                 }
             },
         )?;
