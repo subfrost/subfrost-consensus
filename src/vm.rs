@@ -231,9 +231,22 @@ impl AlkanesHostFunctionsImpl {
         send_to_arraybuffer(caller, output.try_into()?, &balance)?;
         Ok(())
     }
-    fn call<'a>(caller: &mut Caller<'_, AlkanesState>, data: i32) -> Result<i32> {
+    fn call<'a>(caller: &mut Caller<'_, AlkanesState>, : i32) -> Result<i32> {
+        let cellpack = Cellpack::parse(&mut Cursor::new(read_arraybuffer(data, cellpack_ptr)?))?;
+        let incoming_runes = AlkaneTransferParcel::parse(&mut Cursor::new(read_arraybuffer(data, incoming_runes_ptr)?))?;
+        let storage_map = = StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
+        {
+          let context = &mut caller.data_mut().context.lock().unwrap();
+          context.message.atomic.checkpoint();
+          storage_map.pipe_to(&mut context.message.atomic, &context.myself);
+          if let Err(_) = incoming_runes.transfer_from(&context.myself, &cellpack.target) {
+            context.message.atomic.rollback();
+            context.returndata = Vec::u8::new();
+            return Ok(0)
+          }
+        }
+        // TODO: IMPLEMENT run()
         Ok(0)
-        // TODO: call
     }
     fn log<'a>(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
         let mem = get_memory(caller)?;
