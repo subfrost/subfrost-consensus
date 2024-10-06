@@ -170,6 +170,11 @@ impl AlkanesHostFunctionsImpl {
         .len()
         .try_into()?)
     }
+    fn returndatacopy(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
+        let context = caller.data_mut().context.lock().unwrap().returndata.clone();
+        send_to_arraybuffer(caller, output.try_into()?, &context)?;
+        Ok(())
+    }
     fn load_transaction(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
         let context = consensus_encode(
             &caller
@@ -476,6 +481,15 @@ impl AlkanesInstance {
         )?;
         linker.func_wrap(
             "env",
+            "__returndatacopy",
+            |mut caller: Caller<'_, AlkanesState>, output: i32| {
+                if let Err(_e) = AlkanesHostFunctionsImpl::returndatacopy(&mut caller, output) {
+                    AlkanesHostFunctionsImpl::_abort(caller);
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
             "__request_transaction",
             |mut caller: Caller<'_, AlkanesState>| {
                 match AlkanesHostFunctionsImpl::request_transaction(&mut caller) {
@@ -514,6 +528,15 @@ impl AlkanesInstance {
             "__load_block",
             |mut caller: Caller<'_, AlkanesState>, output: i32| {
                 if let Err(_e) = AlkanesHostFunctionsImpl::load_block(&mut caller, output) {
+                    AlkanesHostFunctionsImpl::_abort(caller);
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "__returndatacopy",
+            |mut caller: Caller<'_, AlkanesState>, output: i32| {
+                if let Err(_e) = AlkanesHostFunctionsImpl::returndatacopy(&mut caller, output) {
                     AlkanesHostFunctionsImpl::_abort(caller);
                 }
             },
