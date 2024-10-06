@@ -195,6 +195,11 @@ impl AlkanesHostFunctionsImpl {
         send_to_arraybuffer(caller, v.try_into()?, &context)?;
         Ok(())
     }
+    fn sequence(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
+        let buffer: Vec<u8> = (&sequence_pointer(&caller.data_mut().context.lock().unwrap().message.atomic).get_value::<u128>().to_le_bytes()).to_vec();
+        send_to_arraybuffer(caller, output.try_into()?, &buffer)?;
+        Ok(())
+    }
     fn balance<'a>(
         caller: &mut Caller<'a, AlkanesState>,
         who_ptr: i32,
@@ -400,6 +405,15 @@ impl AlkanesInstance {
             "__load_context",
             |mut caller: Caller<'_, AlkanesState>, output: i32| {
                 if let Err(_e) = AlkanesHostFunctionsImpl::load_context(&mut caller, output) {
+                    AlkanesHostFunctionsImpl::_abort(caller);
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "__sequence",
+            |mut caller: Caller<'_, AlkanesState>, output: i32| {
+                if let Err(_e) = AlkanesHostFunctionsImpl::sequence(&mut caller, output) {
                     AlkanesHostFunctionsImpl::_abort(caller);
                 }
             },
