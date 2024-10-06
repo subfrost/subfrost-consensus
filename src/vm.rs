@@ -16,6 +16,7 @@ use metashrew::{
     stdio::stdout,
 };
 use protorune::message::{MessageContext, MessageContextParcel};
+use protorune::utils::{consensus_encode};
 use std::borrow::BorrowMut;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
@@ -153,6 +154,44 @@ impl AlkanesHostFunctionsImpl {
     }
     fn load_context(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
         let context = caller.data_mut().context.lock().unwrap().serialize();
+        send_to_arraybuffer(caller, v.try_into()?, &context)?;
+        Ok(())
+    }
+    fn request_transaction(caller: &mut Caller<'_, AlkanesState>) -> Result<i32> {
+        Ok(consensus_encode(
+            &caller
+                .data_mut()
+                .context
+                .lock()
+                .unwrap()
+                .message
+                .transaction,
+        )?
+        .len()
+        .try_into()?)
+    }
+    fn load_transaction(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
+        let context = consensus_encode(
+            &caller
+                .data_mut()
+                .context
+                .lock()
+                .unwrap()
+                .message
+                .transaction,
+        )?;
+        send_to_arraybuffer(caller, v.try_into()?, &context)?;
+        Ok(())
+    }
+    fn request_block(caller: &mut Caller<'_, AlkanesState>) -> Result<i32> {
+        Ok(
+            consensus_encode(&caller.data_mut().context.lock().unwrap().message.block)?
+                .len()
+                .try_into()?,
+        )
+    }
+    fn load_block(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
+        let context = consensus_encode(&caller.data_mut().context.lock().unwrap().message.block)?;
         send_to_arraybuffer(caller, v.try_into()?, &context)?;
         Ok(())
     }
@@ -359,8 +398,52 @@ impl AlkanesInstance {
         linker.func_wrap(
             "env",
             "__load_context",
-            |mut caller: Caller<'_, AlkanesState>, who: i32, what: i32, output: i32| {
-                if let Err(_e) = AlkanesHostFunctionsImpl::balance(&mut caller, who, what, output) {
+            |mut caller: Caller<'_, AlkanesState>, output: i32| {
+                if let Err(_e) = AlkanesHostFunctionsImpl::load_context(&mut caller, output) {
+                    AlkanesHostFunctionsImpl::_abort(caller);
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "__request_transaction",
+            |mut caller: Caller<'_, AlkanesState>| {
+                match AlkanesHostFunctionsImpl::request_transaction(&mut caller) {
+                    Ok(v) => v,
+                    Err(_e) => {
+                        AlkanesHostFunctionsImpl::_abort(caller);
+                        -1
+                    }
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "__load_transaction",
+            |mut caller: Caller<'_, AlkanesState>, output: i32| {
+                if let Err(_e) = AlkanesHostFunctionsImpl::load_transaction(&mut caller, output) {
+                    AlkanesHostFunctionsImpl::_abort(caller);
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "__request_block",
+            |mut caller: Caller<'_, AlkanesState>| match AlkanesHostFunctionsImpl::request_block(
+                &mut caller,
+            ) {
+                Ok(v) => v,
+                Err(_e) => {
+                    AlkanesHostFunctionsImpl::_abort(caller);
+                    -1
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "__load_block",
+            |mut caller: Caller<'_, AlkanesState>, output: i32| {
+                if let Err(_e) = AlkanesHostFunctionsImpl::load_block(&mut caller, output) {
                     AlkanesHostFunctionsImpl::_abort(caller);
                 }
             },
