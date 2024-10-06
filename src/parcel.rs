@@ -4,8 +4,8 @@ use anyhow::Result;
 
 #[derive(Default, Clone)]
 pub struct AlkaneTransfer {
-    id: AlkaneId,
-    value: u128,
+    pub id: AlkaneId,
+    pub value: u128,
 }
 
 #[derive(Default, Clone)]

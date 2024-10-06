@@ -19,7 +19,7 @@ use protorune::message::{MessageContext, MessageContextParcel};
 use std::borrow::BorrowMut;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
-use std::io::Read;
+use std::io::{Read, Cursor};
 use std::sync::{Arc, Mutex};
 use wasmi::*;
 use wasmi::*;
@@ -32,6 +32,30 @@ struct AlkanesRuntimeContext {
     pub returndata: Vec<u8>,
     pub inputs: Vec<u128>,
     pub message: Box<MessageContextParcel>,
+}
+
+impl AlkanesRuntimeContext {
+  pub fn flatten(&self) -> Vec<u128> {
+    let mut result = Vec::<u128>::new();
+    result.push(self.myself.block);
+    result.push(self.myself.tx);
+    result.push(self.caller.block);
+    result.push(self.caller.tx);
+    result.push(self.incoming_alkanes.0.len() as u128);
+    for incoming in &self.incoming_alkanes.0 {
+      result.push(incoming.id.block);
+      result.push(incoming.id.tx);
+      result.push(incoming.value);
+    }
+    for input in &self.inputs {
+      result.push(input.clone());
+    }
+    result
+  }
+  pub fn serialize(&self) -> Vec<u8> {
+    self.flatten().into_iter().map(|v| (&v.to_le_bytes()).to_vec()).flatten().collect::<Vec<u8>>()
+  }
+  
 }
 
 pub fn read_arraybuffer(data: &[u8], data_start: i32) -> Result<Vec<u8>> {
@@ -113,6 +137,26 @@ impl AlkanesHostFunctionsImpl {
                 .get()
         };
         send_to_arraybuffer(caller, v.try_into()?, value.as_ref())
+    }
+    fn request_context(caller: &mut Caller<'_, AlkanesState>) -> Result<i32> {
+      Ok(caller.data_mut().context.lock().unwrap().serialize().len().try_into()?)
+    }
+    fn load_context(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
+      let context = caller.data_mut().context.lock().unwrap().serialize();
+      send_to_arraybuffer(caller, v.try_into()?, &context)?;
+      Ok(())
+
+    }
+    fn balance<'a>(caller: &mut Caller<'a, AlkanesState>, who_ptr: i32, what_ptr: i32, output: i32) -> Result<()> {
+      let (who, what) = {
+        let mem = get_memory(caller)?;
+        let data = mem.data(&caller);
+        (AlkaneId::parse(&mut Cursor::new(read_arraybuffer(data, who_ptr)?))?, AlkaneId::parse(&mut Cursor::new(read_arraybuffer(data, what_ptr)?))?)
+      };
+      let balance = caller.data_mut().context.lock().unwrap().message.atomic.keyword("/alkanes/").select(&who.into()).keyword("/balances/").select(&what.into()).get().as_ref().clone();
+      send_to_arraybuffer(caller, output.try_into()?, &balance)?;
+      Ok(())
+      
     }
     fn call<'a>(caller: &mut Caller<'_, AlkanesState>, data: i32) -> Result<i32> {
         Ok(0)
