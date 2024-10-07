@@ -767,10 +767,10 @@ pub fn find_witness_payload(tx: &Transaction) -> Option<Vec<u8>> {
 
 pub fn run(context: AlkanesRuntimeContext, cellpack: &Cellpack) -> Result<CallResponse> {
     let mut payload = cellpack.clone();
-    if cellpack.is_create() {
-        let next_sequence_pointer = sequence_pointer(&context.message.atomic);
+    if cellpack.target.is_create() {
+        let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
-        let new_id = AlkaneId::new(0, next_sequence);
+        let new_id = AlkaneId::new(2, next_sequence);
         context
             .message
             .atomic
@@ -781,6 +781,50 @@ pub fn run(context: AlkanesRuntimeContext, cellpack: &Cellpack) -> Result<CallRe
                     .ok_or("")
                     .map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?,
             ));
+        next_sequence_pointer.set_value(next_sequence + 1);
+        payload.target = new_id.clone();
+    } else if let Some(number) = cellpack.target.reserved() {
+        let new_id = AlkaneId::new(4, number);
+        let mut ptr = context
+            .message
+            .atomic
+            .keyword("/alkanes/")
+            .select(&new_id.clone().into());
+        if ptr.get().as_ref().len() == 0 {
+            ptr.set(Arc::new(
+                find_witness_payload(&context.message.transaction)
+                    .ok_or("")
+                    .map_err(|_| {
+                        anyhow!("used CREATERESERVED cellpack but no binary found in witness")
+                    })?,
+            ));
+            payload.target = new_id.clone();
+        } else {
+            return Err(anyhow!(format!(
+                "used CREATERESERVED cellpack but {} already holds a binary",
+                number
+            )));
+        }
+    } else if let Some(factory) = cellpack.target.factory() {
+        let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
+        let next_sequence = next_sequence_pointer.get_value::<u128>();
+        let factory_id: AlkaneId = factory.into();
+        let new_id = AlkaneId::new(2, next_sequence);
+        next_sequence_pointer.set_value(next_sequence + 1);
+        let binary: Vec<u8> = context
+            .message
+            .atomic
+            .keyword("/alkanes/")
+            .select(&factory_id.clone().into())
+            .get()
+            .as_ref()
+            .clone();
+        context
+            .message
+            .atomic
+            .keyword("/alkanes/")
+            .select(&new_id.into())
+            .set(Arc::new(binary));
         payload.target = new_id.clone();
     }
     // TODO: implement reserved/factory/etc

@@ -24,7 +24,4 @@ impl Cellpack {
         }
         Ok(result)
     }
-    pub fn is_create(&self) -> bool {
-        self.target.block == 0 && self.target.tx == 0
-    }
 }

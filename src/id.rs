@@ -18,6 +18,25 @@ impl AlkaneId {
     pub fn new(block: u128, tx: u128) -> AlkaneId {
         AlkaneId { block, tx }
     }
+    pub fn is_create(&self) -> bool {
+        self.block == 1 && self.tx == 0
+    }
+    pub fn reserved(&self) -> Option<u128> {
+        if self.block == 3 {
+            Some(self.tx)
+        } else {
+            None
+        }
+    }
+    pub fn factory(&self) -> Option<[u128; 2]> {
+        if self.block == 5 {
+            Some([1, self.tx])
+        } else if self.block == 6 {
+            Some([2, self.tx])
+        } else {
+            None
+        }
+    }
 }
 
 impl From<AlkaneId> for Vec<u8> {
@@ -26,6 +45,15 @@ impl From<AlkaneId> for Vec<u8> {
         bytes.extend(&rune_id.block.to_le_bytes());
         bytes.extend(&rune_id.tx.to_le_bytes());
         bytes
+    }
+}
+
+impl Into<AlkaneId> for [u128; 2] {
+    fn into(self) -> AlkaneId {
+        AlkaneId {
+            block: self[0],
+            tx: self[1],
+        }
     }
 }
 
