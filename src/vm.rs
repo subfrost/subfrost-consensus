@@ -250,6 +250,7 @@ impl AlkanesHostFunctionsImpl {
         cellpack_ptr: i32,
         incoming_alkanes_ptr: i32,
         checkpoint_ptr: i32,
+        start_fuel: u64
     ) -> Result<i32> {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
@@ -285,7 +286,7 @@ impl AlkanesHostFunctionsImpl {
                 subbed.inputs = cellpack.inputs.clone();
                 subbed
             };
-        match run(subcontext, &cellpack) {
+        match run(subcontext, &cellpack, start_fuel) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.commit();
@@ -306,6 +307,7 @@ impl AlkanesHostFunctionsImpl {
         cellpack_ptr: i32,
         incoming_alkanes_ptr: i32,
         checkpoint_ptr: i32,
+        start_fuel: u64
     ) -> Result<i32> {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
@@ -341,7 +343,7 @@ impl AlkanesHostFunctionsImpl {
                 subbed.inputs = cellpack.inputs.clone();
                 subbed
             };
-        match run(subcontext, &cellpack) {
+        match run(subcontext, &cellpack, start_fuel) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.rollback();
@@ -362,6 +364,7 @@ impl AlkanesHostFunctionsImpl {
         cellpack_ptr: i32,
         incoming_alkanes_ptr: i32,
         checkpoint_ptr: i32,
+        start_fuel: u64
     ) -> Result<i32> {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
@@ -386,7 +389,7 @@ impl AlkanesHostFunctionsImpl {
                 subbed.inputs = cellpack.inputs.clone();
                 subbed
             };
-        match run(subcontext, &cellpack) {
+        match run(subcontext, &cellpack, start_fuel) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.rollback();
@@ -488,7 +491,7 @@ impl AlkanesInstance {
             .atomic
             .rollback();
     }
-    pub fn from_alkane(alkane: &AlkaneId, context: AlkanesRuntimeContext) -> Result<Self> {
+    pub fn from_alkane(alkane: &AlkaneId, context: AlkanesRuntimeContext, start_fuel: u64) -> Result<Self> {
         let mut config = Config::default();
         config.consume_fuel(true);
         let engine = Engine::new(&config);
@@ -501,7 +504,7 @@ impl AlkanesInstance {
             },
         );
         store.limiter(|state| &mut state.limiter);
-        Store::<AlkanesState>::set_fuel(&mut store, 100000)?; // TODO: implement gas limits
+        Store::<AlkanesState>::set_fuel(&mut store, start_fuel)?; // TODO: implement gas limits
         let cloned = IndexPointer::from_keyword("/alkanes/")
             .select(&alkane.into())
             .get()
@@ -662,13 +665,15 @@ impl AlkanesInstance {
             |mut caller: Caller<'_, AlkanesState>,
              cellpack_ptr: i32,
              incoming_alkanes_ptr: i32,
-             checkpoint_ptr: i32|
+             checkpoint_ptr: i32,
+             start_fuel: u64|
              -> i32 {
                 match AlkanesHostFunctionsImpl::call(
                     &mut caller,
                     cellpack_ptr,
                     incoming_alkanes_ptr,
                     checkpoint_ptr,
+                    start_fuel
                 ) {
                     Ok(v) => v,
                     Err(_e) => {
@@ -684,13 +689,15 @@ impl AlkanesInstance {
             |mut caller: Caller<'_, AlkanesState>,
              cellpack_ptr: i32,
              incoming_alkanes_ptr: i32,
-             checkpoint_ptr: i32|
+             checkpoint_ptr: i32,
+             start_fuel: u64|
              -> i32 {
                 match AlkanesHostFunctionsImpl::delegatecall(
                     &mut caller,
                     cellpack_ptr,
                     incoming_alkanes_ptr,
                     checkpoint_ptr,
+                    start_fuel
                 ) {
                     Ok(v) => v,
                     Err(_e) => {
@@ -706,13 +713,15 @@ impl AlkanesInstance {
             |mut caller: Caller<'_, AlkanesState>,
              cellpack_ptr: i32,
              incoming_alkanes_ptr: i32,
-             checkpoint_ptr: i32|
+             checkpoint_ptr: i32,
+             start_fuel: u64|
              -> i32 {
                 match AlkanesHostFunctionsImpl::staticcall(
                     &mut caller,
                     cellpack_ptr,
                     incoming_alkanes_ptr,
                     checkpoint_ptr,
+                    start_fuel
                 ) {
                     Ok(v) => v,
                     Err(_e) => {
@@ -779,7 +788,7 @@ pub fn find_witness_payload(tx: &Transaction) -> Option<Vec<u8>> {
     }
 }
 
-pub fn run(context: AlkanesRuntimeContext, cellpack: &Cellpack) -> Result<CallResponse> {
+pub fn run(context: AlkanesRuntimeContext, cellpack: &Cellpack, start_fuel: u64) -> Result<CallResponse> {
     let mut payload = cellpack.clone();
     if cellpack.target.is_create() {
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
@@ -842,7 +851,7 @@ pub fn run(context: AlkanesRuntimeContext, cellpack: &Cellpack) -> Result<CallRe
         payload.target = new_id.clone();
     }
     // TODO: implement reserved/factory/etc
-    AlkanesInstance::from_alkane(&payload.target, context)?.execute()
+    AlkanesInstance::from_alkane(&payload.target, context, start_fuel)?.execute()
 }
 
 pub fn send_to_arraybuffer<'a>(
