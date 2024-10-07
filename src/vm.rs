@@ -209,6 +209,11 @@ impl AlkanesHostFunctionsImpl {
         send_to_arraybuffer(caller, output.try_into()?, &buffer)?;
         Ok(())
     }
+    fn fuel(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
+        let buffer: Vec<u8> = (&caller.get_fuel().unwrap().to_le_bytes()).to_vec();
+        send_to_arraybuffer(caller, output.try_into()?, &buffer)?;
+        Ok(())
+    }
     fn balance<'a>(
         caller: &mut Caller<'a, AlkanesState>,
         who_ptr: i32,
@@ -576,6 +581,15 @@ impl AlkanesInstance {
             "__sequence",
             |mut caller: Caller<'_, AlkanesState>, output: i32| {
                 if let Err(_e) = AlkanesHostFunctionsImpl::sequence(&mut caller, output) {
+                    AlkanesHostFunctionsImpl::_abort(caller);
+                }
+            },
+        )?;
+        linker.func_wrap(
+            "env",
+            "__fuel",
+            |mut caller: Caller<'_, AlkanesState>, output: i32| {
+                if let Err(_e) = AlkanesHostFunctionsImpl::fuel(&mut caller, output) {
                     AlkanesHostFunctionsImpl::_abort(caller);
                 }
             },
