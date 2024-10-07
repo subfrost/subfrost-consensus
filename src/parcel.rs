@@ -1,6 +1,6 @@
 use crate::id::AlkaneId;
 use crate::utils::consume_sized_int;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer};
 
 #[derive(Default, Clone)]
@@ -27,12 +27,27 @@ impl AlkaneTransferParcel {
         to: &AlkaneId,
     ) -> Result<()> {
         for transfer in &self.0 {
-          let balance = pointer.keyword("/alkanes/").select(&transfer.id.into()).keyword("/balances/").select(&from.into()).get_value::<u128>();
-          if balance < transfer.value {
-            return Err(anyhow!("balance underflow"))
-          }
-          pointer.keyword("/alkanes/").select(&transfer.id.into()).keyword("/balances/").select(&from.into()).set_value::<u128>(balance - transfer.value);
-          pointer.keyword("/alkanes/").select(&transfer.id.into()).keyword("/balances/").select(&to.into()).set_value::<u128>(balance + transfer.value);
+            let balance = pointer
+                .keyword("/alkanes/")
+                .select(&transfer.id.into())
+                .keyword("/balances/")
+                .select(&from.into())
+                .get_value::<u128>();
+            if balance < transfer.value {
+                return Err(anyhow!("balance underflow"));
+            }
+            pointer
+                .keyword("/alkanes/")
+                .select(&transfer.id.into())
+                .keyword("/balances/")
+                .select(&from.into())
+                .set_value::<u128>(balance - transfer.value);
+            pointer
+                .keyword("/alkanes/")
+                .select(&transfer.id.into())
+                .keyword("/balances/")
+                .select(&to.into())
+                .set_value::<u128>(balance + transfer.value);
         }
         Ok(())
     }
