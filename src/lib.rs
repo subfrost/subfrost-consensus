@@ -18,6 +18,8 @@ pub mod response;
 pub mod storage;
 pub mod utils;
 pub mod vm;
+#[cfg(test)]
+pub mod tests;
 
 pub fn index_block() -> Result<()> {
     let data = input();
