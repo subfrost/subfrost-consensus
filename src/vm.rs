@@ -36,6 +36,17 @@ pub struct AlkanesRuntimeContext {
 }
 
 impl AlkanesRuntimeContext {
+    pub fn from_parcel_and_cellpack(message: &MessageContextParcel, cellpack: &Cellpack) -> AlkanesRuntimeContext {
+      let cloned = cellpack.clone();
+      AlkanesRuntimeContext {
+        message: Box::new(message.clone()),
+        returndata: vec![],
+        incoming_alkanes: message.runes.clone().into(),
+        myself: cloned.target,
+        caller: AlkaneId::default(),
+        inputs: cloned.inputs,
+      }
+    }
     pub fn flatten(&self) -> Vec<u128> {
         let mut result = Vec::<u128>::new();
         result.push(self.myself.block);

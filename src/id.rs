@@ -1,4 +1,5 @@
 use crate::utils::consume_sized_int;
+use protorune::balance_sheet::{ProtoruneRuneId}; 
 use anyhow::Result;
 
 #[derive(Default, Clone, Copy)]
@@ -6,6 +7,17 @@ pub struct AlkaneId {
     pub block: u128,
     pub tx: u128,
 }
+
+impl From<ProtoruneRuneId> for AlkaneId {
+  fn from(id: ProtoruneRuneId) -> AlkaneId {
+    AlkaneId {
+      block: id.block,
+      tx: id.tx
+    }
+  }
+}
+
+
 
 impl AlkaneId {
     pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AlkaneId> {

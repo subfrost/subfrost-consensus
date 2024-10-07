@@ -2,11 +2,18 @@ use crate::id::AlkaneId;
 use crate::utils::consume_sized_int;
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer};
+use protorune::message::{IncomingRune};
 
 #[derive(Default, Clone)]
 pub struct AlkaneTransfer {
     pub id: AlkaneId,
     pub value: u128,
+}
+
+impl From<Vec<IncomingRune>> for AlkaneTransferParcel {
+  fn from(v: Vec<IncomingRune>) -> AlkaneTransferParcel {
+    AlkaneTransferParcel(v.into_iter().map(|incoming| AlkaneTransfer { id: incoming.rune.into(), value: incoming.amount }).collect())
+  }
 }
 
 #[derive(Default, Clone)]

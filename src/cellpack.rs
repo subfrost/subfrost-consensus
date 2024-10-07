@@ -25,3 +25,13 @@ impl Cellpack {
         Ok(result)
     }
 }
+
+impl TryFrom<Vec<u128>> for Cellpack {
+  type Error = anyhow::Error;
+  fn try_from(v: Vec<u128>) -> std::result::Result<Cellpack, Self::Error> {
+    Ok(Cellpack {
+      target: <[u128; 2] as TryFrom<&[u128]>>::try_from(&v[0..2])?.into(),
+      inputs: (&v[2..]).to_vec()
+    })
+  }
+}
