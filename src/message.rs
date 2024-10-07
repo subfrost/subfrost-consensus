@@ -23,12 +23,6 @@ impl MessageContext for AlkaneMessageContext {
     fn protocol_tag() -> u128 {
         1
     }
-    /*
-     * TODO: change protorune-rs to supply MessageContextParcel
-    fn handle(data: &MessageContextParcel) -> bool {
-      true
-    }
-    */
     fn handle(_parcel: Box<MessageContextParcel>) -> bool {
       
       match handle_message(_parcel) {
@@ -37,11 +31,3 @@ impl MessageContext for AlkaneMessageContext {
       }
     }
 }
-
-/*
-impl MessageContext {
-  fn parcel() -> Box<MessageContextParcel> {
-    Box::new(MessageContextParcel::default())
-  }
-}
-*/
