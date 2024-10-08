@@ -15,8 +15,6 @@ use {
 
 pub(crate) const PROTOCOL_ID: [u8; 3] = *b"BIN";
 
-pub(crate) const BODY_TAG: [u8; 0] = [];
-
 pub type Result<T> = std::result::Result<T, script::Error>;
 pub type RawEnvelope = Envelope<Vec<Vec<u8>>>;
 

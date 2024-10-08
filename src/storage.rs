@@ -1,6 +1,6 @@
-use metashrew::utils::{consume_exact, consume_sized_int};
 use anyhow::Result;
-use metashrew::index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer};
+use metashrew::index_pointer::KeyValuePointer;
+use metashrew::utils::{consume_exact, consume_sized_int};
 use std::collections::HashMap;
 use std::io::Cursor;
 use std::sync::Arc;

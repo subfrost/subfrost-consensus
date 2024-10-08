@@ -1,8 +1,8 @@
 use crate::id::AlkaneId;
-use metashrew::utils::consume_sized_int;
 use anyhow::{anyhow, Result};
-use metashrew::index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer};
-use protorune::incoming_rune::{IncomingRune};
+use metashrew::index_pointer::KeyValuePointer;
+use metashrew::utils::consume_sized_int;
+use protorune::incoming_rune::IncomingRune;
 
 #[derive(Default, Clone)]
 pub struct AlkaneTransfer {
@@ -11,9 +11,16 @@ pub struct AlkaneTransfer {
 }
 
 impl From<Vec<IncomingRune>> for AlkaneTransferParcel {
-  fn from(v: Vec<IncomingRune>) -> AlkaneTransferParcel {
-    AlkaneTransferParcel(v.into_iter().map(|incoming| AlkaneTransfer { id: incoming.rune.into(), value: incoming.amount }).collect())
-  }
+    fn from(v: Vec<IncomingRune>) -> AlkaneTransferParcel {
+        AlkaneTransferParcel(
+            v.into_iter()
+                .map(|incoming| AlkaneTransfer {
+                    id: incoming.rune.into(),
+                    value: incoming.amount,
+                })
+                .collect(),
+        )
+    }
 }
 
 #[derive(Default, Clone)]

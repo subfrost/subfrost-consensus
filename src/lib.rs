@@ -1,13 +1,9 @@
-use crate::{id::AlkaneId, message::AlkaneMessageContext};
+use crate::message::AlkaneMessageContext;
 use anyhow::Result;
 use bitcoin::blockdata::block::Block;
 use bitcoin::consensus::Decodable;
-use metashrew::{flush, input, println, stdio::stdout};
-use protorune::{
-    message::{MessageContext, MessageContextParcel},
-    Protorune,
-};
-use std::u128;
+use metashrew::{flush, input};
+use protorune::Protorune;
 
 pub mod cellpack;
 pub mod envelope;
@@ -16,10 +12,10 @@ pub mod message;
 pub mod parcel;
 pub mod response;
 pub mod storage;
-pub mod utils;
-pub mod vm;
 #[cfg(test)]
 pub mod tests;
+pub mod utils;
+pub mod vm;
 
 pub fn index_block() -> Result<()> {
     let data = input();

@@ -1,28 +1,19 @@
 use crate::{
-    cellpack::Cellpack,
-    envelope::RawEnvelope,
-    id::AlkaneId,
-    message::AlkaneMessageContext,
-    parcel::{AlkaneTransfer, AlkaneTransferParcel},
-    response::CallResponse,
-    storage::StorageMap
+    cellpack::Cellpack, envelope::RawEnvelope, id::AlkaneId, parcel::AlkaneTransferParcel,
+    response::CallResponse, storage::StorageMap,
 };
 use anyhow::{anyhow, Result};
-use bitcoin::blockdata::{block::Block, transaction::Transaction};
+use bitcoin::blockdata::transaction::Transaction;
 use metashrew::{
     index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer},
-    utils::{consume_sized_int, consume_to_end},
     println,
     stdio::stdout,
 };
-use protorune::message::{MessageContext, MessageContextParcel};
+use protorune::message::MessageContextParcel;
 use protorune::utils::consensus_encode;
-use std::borrow::BorrowMut;
-use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
-use std::io::{Cursor, Read};
+use std::io::Cursor;
 use std::sync::{Arc, Mutex};
-use wasmi::*;
 use wasmi::*;
 
 #[derive(Default, Clone)]
@@ -36,16 +27,19 @@ pub struct AlkanesRuntimeContext {
 }
 
 impl AlkanesRuntimeContext {
-    pub fn from_parcel_and_cellpack(message: &MessageContextParcel, cellpack: &Cellpack) -> AlkanesRuntimeContext {
-      let cloned = cellpack.clone();
-      AlkanesRuntimeContext {
-        message: Box::new(message.clone()),
-        returndata: vec![],
-        incoming_alkanes: message.runes.clone().into(),
-        myself: cloned.target,
-        caller: AlkaneId::default(),
-        inputs: cloned.inputs,
-      }
+    pub fn from_parcel_and_cellpack(
+        message: &MessageContextParcel,
+        cellpack: &Cellpack,
+    ) -> AlkanesRuntimeContext {
+        let cloned = cellpack.clone();
+        AlkanesRuntimeContext {
+            message: Box::new(message.clone()),
+            returndata: vec![],
+            incoming_alkanes: message.runes.clone().into(),
+            myself: cloned.target,
+            caller: AlkaneId::default(),
+            inputs: cloned.inputs,
+        }
     }
     pub fn flatten(&self) -> Vec<u128> {
         let mut result = Vec::<u128>::new();
@@ -261,7 +255,7 @@ impl AlkanesHostFunctionsImpl {
         cellpack_ptr: i32,
         incoming_alkanes_ptr: i32,
         checkpoint_ptr: i32,
-        start_fuel: u64
+        start_fuel: u64,
     ) -> Result<i32> {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
@@ -318,7 +312,7 @@ impl AlkanesHostFunctionsImpl {
         cellpack_ptr: i32,
         incoming_alkanes_ptr: i32,
         checkpoint_ptr: i32,
-        start_fuel: u64
+        start_fuel: u64,
     ) -> Result<i32> {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
@@ -375,7 +369,7 @@ impl AlkanesHostFunctionsImpl {
         cellpack_ptr: i32,
         incoming_alkanes_ptr: i32,
         checkpoint_ptr: i32,
-        start_fuel: u64
+        start_fuel: u64,
     ) -> Result<i32> {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
@@ -502,7 +496,11 @@ impl AlkanesInstance {
             .atomic
             .rollback();
     }
-    pub fn from_alkane(alkane: &AlkaneId, context: AlkanesRuntimeContext, start_fuel: u64) -> Result<Self> {
+    pub fn from_alkane(
+        alkane: &AlkaneId,
+        context: AlkanesRuntimeContext,
+        start_fuel: u64,
+    ) -> Result<Self> {
         let mut config = Config::default();
         config.consume_fuel(true);
         let engine = Engine::new(&config);
@@ -684,7 +682,7 @@ impl AlkanesInstance {
                     cellpack_ptr,
                     incoming_alkanes_ptr,
                     checkpoint_ptr,
-                    start_fuel
+                    start_fuel,
                 ) {
                     Ok(v) => v,
                     Err(_e) => {
@@ -708,7 +706,7 @@ impl AlkanesInstance {
                     cellpack_ptr,
                     incoming_alkanes_ptr,
                     checkpoint_ptr,
-                    start_fuel
+                    start_fuel,
                 ) {
                     Ok(v) => v,
                     Err(_e) => {
@@ -732,7 +730,7 @@ impl AlkanesInstance {
                     cellpack_ptr,
                     incoming_alkanes_ptr,
                     checkpoint_ptr,
-                    start_fuel
+                    start_fuel,
                 ) {
                     Ok(v) => v,
                     Err(_e) => {
@@ -753,7 +751,6 @@ impl AlkanesInstance {
         self.store.data_mut().had_failure = false;
     }
     pub fn execute(&mut self) -> Result<CallResponse> {
-        let start_fuel = self.store.get_fuel()?;
         self.checkpoint();
         let (call_response, had_failure): (CallResponse, bool) = {
             match AlkanesExportsImpl::execute(self) {
@@ -799,7 +796,11 @@ pub fn find_witness_payload(tx: &Transaction) -> Option<Vec<u8>> {
     }
 }
 
-pub fn run(context: AlkanesRuntimeContext, cellpack: &Cellpack, start_fuel: u64) -> Result<CallResponse> {
+pub fn run(
+    context: AlkanesRuntimeContext,
+    cellpack: &Cellpack,
+    start_fuel: u64,
+) -> Result<CallResponse> {
     let mut payload = cellpack.clone();
     if cellpack.target.is_create() {
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);

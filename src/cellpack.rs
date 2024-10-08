@@ -1,6 +1,6 @@
 use crate::id::AlkaneId;
-use metashrew::utils::consume_sized_int;
 use anyhow::Result;
+use metashrew::utils::consume_sized_int;
 use std::io::Cursor;
 
 #[derive(Clone, Default)]
@@ -27,11 +27,11 @@ impl Cellpack {
 }
 
 impl TryFrom<Vec<u128>> for Cellpack {
-  type Error = anyhow::Error;
-  fn try_from(v: Vec<u128>) -> std::result::Result<Cellpack, Self::Error> {
-    Ok(Cellpack {
-      target: <[u128; 2] as TryFrom<&[u128]>>::try_from(&v[0..2])?.into(),
-      inputs: (&v[2..]).to_vec()
-    })
-  }
+    type Error = anyhow::Error;
+    fn try_from(v: Vec<u128>) -> std::result::Result<Cellpack, Self::Error> {
+        Ok(Cellpack {
+            target: <[u128; 2] as TryFrom<&[u128]>>::try_from(&v[0..2])?.into(),
+            inputs: (&v[2..]).to_vec(),
+        })
+    }
 }

@@ -1,6 +1,6 @@
-use metashrew::utils::consume_sized_int;
-use protorune::balance_sheet::{ProtoruneRuneId}; 
 use anyhow::Result;
+use metashrew::utils::consume_sized_int;
+use protorune::balance_sheet::ProtoruneRuneId;
 
 #[derive(Default, Clone, Copy)]
 pub struct AlkaneId {
@@ -9,15 +9,13 @@ pub struct AlkaneId {
 }
 
 impl From<ProtoruneRuneId> for AlkaneId {
-  fn from(id: ProtoruneRuneId) -> AlkaneId {
-    AlkaneId {
-      block: id.block,
-      tx: id.tx
+    fn from(id: ProtoruneRuneId) -> AlkaneId {
+        AlkaneId {
+            block: id.block,
+            tx: id.tx,
+        }
     }
-  }
 }
-
-
 
 impl AlkaneId {
     pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AlkaneId> {

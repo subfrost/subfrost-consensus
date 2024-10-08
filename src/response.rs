@@ -1,6 +1,6 @@
 use crate::parcel::AlkaneTransferParcel;
-use metashrew::utils::consume_to_end;
 use anyhow::Result;
+use metashrew::utils::consume_to_end;
 
 #[derive(Default, Clone)]
 pub struct CallResponse {
