@@ -1,4 +1,4 @@
-use crate::utils::consume_sized_int;
+use metashrew::utils::consume_sized_int;
 use protorune::balance_sheet::{ProtoruneRuneId}; 
 use anyhow::Result;
 

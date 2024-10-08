@@ -1,4 +1,4 @@
-use crate::utils::{consume_exact, consume_sized_int};
+use metashrew::utils::{consume_exact, consume_sized_int};
 use anyhow::Result;
 use metashrew::index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer};
 use std::collections::HashMap;

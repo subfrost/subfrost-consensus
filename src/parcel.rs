@@ -1,8 +1,8 @@
 use crate::id::AlkaneId;
-use crate::utils::consume_sized_int;
+use metashrew::utils::consume_sized_int;
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer};
-use protorune::message::{IncomingRune};
+use protorune::incoming_rune::{IncomingRune};
 
 #[derive(Default, Clone)]
 pub struct AlkaneTransfer {

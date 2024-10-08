@@ -1,5 +1,5 @@
 use crate::id::AlkaneId;
-use crate::utils::consume_sized_int;
+use metashrew::utils::consume_sized_int;
 use anyhow::Result;
 use std::io::Cursor;
 

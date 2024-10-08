@@ -1,5 +1,5 @@
 use protorune::message::{MessageContext, MessageContextParcel};
-use crate::utils::{decode_varint_list};
+use protorune::utils::{decode_varint_list};
 use crate::vm;
 use crate::cellpack::{Cellpack};
 use std::io::{Cursor};

@@ -5,13 +5,13 @@ use crate::{
     message::AlkaneMessageContext,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
     response::CallResponse,
-    storage::StorageMap,
-    utils::{consume_sized_int, consume_to_end},
+    storage::StorageMap
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::{block::Block, transaction::Transaction};
 use metashrew::{
     index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer},
+    utils::{consume_sized_int, consume_to_end},
     println,
     stdio::stdout,
 };

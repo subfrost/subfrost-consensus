@@ -1,5 +1,5 @@
 use crate::parcel::AlkaneTransferParcel;
-use crate::utils::consume_to_end;
+use metashrew::utils::consume_to_end;
 use anyhow::Result;
 
 #[derive(Default, Clone)]
