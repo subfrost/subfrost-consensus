@@ -23,6 +23,21 @@ impl From<Vec<RuneTransfer>> for AlkaneTransferParcel {
     }
 }
 
+impl Into<RuneTransfer> for AlkaneTransfer {
+  fn into(self) -> RuneTransfer {
+    RuneTransfer {
+      id: self.id.into(),
+      value: self.value
+    }
+  }
+}
+
+impl Into<Vec<RuneTransfer>> for AlkaneTransferParcel {
+  fn into(self) -> Vec<RuneTransfer> {
+    self.0.into_iter().map(|v| v.into()).collect()
+  }
+}
+
 #[derive(Default, Clone)]
 pub struct AlkaneTransferParcel(pub Vec<AlkaneTransfer>);
 

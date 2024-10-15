@@ -20,7 +20,11 @@ pub fn handle_message(myself: &MessageContextParcel) -> Result<(Vec<RuneTransfer
         &cellpack,
         FUEL_LIMIT,
     )?;
-    Ok((vec![], BalanceSheet::default()))
+    let mut combined = myself.runtime_balances.as_ref().clone();
+    <BalanceSheet as From<Vec<RuneTransfer>>>::from(myself.runes.clone()).pipe(&mut combined);
+    let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
+    combined.debit(&sheet)?;
+    Ok((response.alkanes.into(), combined))
 }
 impl MessageContext for AlkaneMessageContext {
     fn protocol_tag() -> u128 {

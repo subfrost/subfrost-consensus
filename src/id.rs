@@ -17,6 +17,15 @@ impl From<ProtoruneRuneId> for AlkaneId {
     }
 }
 
+impl Into<ProtoruneRuneId> for AlkaneId {
+  fn into(self) -> ProtoruneRuneId {
+    ProtoruneRuneId {
+      block: self.block,
+      tx: self.tx
+    }
+  }
+}
+
 impl AlkaneId {
     pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AlkaneId> {
         let (block, tx) = (
