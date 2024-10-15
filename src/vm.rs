@@ -35,7 +35,7 @@ impl AlkanesRuntimeContext {
         AlkanesRuntimeContext {
             message: Box::new(message.clone()),
             returndata: vec![],
-            incoming_alkanes: message.runes.clone().into(),
+            incoming_alkanes: message.clone().runes.into(),
             myself: cloned.target,
             caller: AlkaneId::default(),
             inputs: cloned.inputs,
