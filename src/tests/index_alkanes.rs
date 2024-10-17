@@ -3,7 +3,9 @@ mod tests {
     use protorune::proto::protorune::{RunesByHeightRequest, WalletRequest};
 
     use protorune::test_helpers as helpers;
-    use protorune::test_helpers::{display_list_as_hex, display_vec_as_hex};
+    use protorune::test_helpers::{
+        create_test_transaction_with_witness, display_list_as_hex, display_vec_as_hex,
+    };
     use protorune::Protorune;
     use protorune::{tables, view};
 
@@ -25,19 +27,10 @@ mod tests {
     #[test]
     fn test_data_unwrap() -> anyhow::Result<()> {
         clear();
-        let (test_block, _) = helpers::create_block_with_rune_tx();
-        println!("asdksjahf");
-        test_block
-            .txdata
-            .clone()
-            .into_iter()
-            .map(|tx| {
-                println!("{:?}", tx);
-                println!("asdlkajfsa");
-            })
-            .for_each(drop);
-        let wasm_binary = alkane_helpers::read_sample_contract();
-        println!("{}", wasm_binary?.len());
+        let (mut test_block, _) = helpers::create_block_with_rune_tx();
+        let wasm_binary = alkane_helpers::read_sample_contract()?;
+        let tx = create_test_transaction_with_witness(wasm_binary);
+        test_block.txdata.push(tx);
         let _ = Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840001);
         let req = (WalletRequest {
             wallet: "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
