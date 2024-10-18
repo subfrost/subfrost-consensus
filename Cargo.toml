@@ -27,9 +27,12 @@ byteorder = "1.5"
 wasm-bindgen-test = "0.3.43"
 wasmi = "0.37.2"
 serde = "1.0.210"
+hex = "0.4.3"
+protobuf = "3.7.1"
 
 [dev-dependencies]
 metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs", features = ["mock"] }
+protorune = { git = "https://github.com/kungfuflex/protorune-rs", features = ["test_utils"] }
 
 [build-dependencies]
 protobuf-codegen = "3.4.0"
