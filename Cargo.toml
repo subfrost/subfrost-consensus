@@ -9,7 +9,7 @@ repository = "https://github.com/kungfuflex/alkanes-rs"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[workspaces]
+[workspace]
 members = [".", "crates/*"]
 
 [dependencies]

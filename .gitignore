@@ -1,6 +1,6 @@
 /target
 *.swp
 *.swo
-./**/target
 
+crates/
 sample_contract/target
