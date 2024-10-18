@@ -35,4 +35,15 @@ impl StorageMap {
     pub fn set<KT: AsRef<[u8]>, VT: AsRef<[u8]>>(&mut self, k: KT, v: VT) {
         self.0.insert(k.as_ref().to_vec(), v.as_ref().to_vec());
     }
+    pub fn serialize(&self) -> Vec<u8> {
+      let mut buffer = Vec::<u8>::new();     
+      buffer.extend(&(self.0.len() as u32).to_le_bytes());
+      self.0.iter().for_each(|(k, v)| {
+        buffer.extend(&(k.len() as u32).to_le_bytes());
+        buffer.extend(k);
+        buffer.extend(&(v.len() as u32).to_le_bytes());
+        buffer.extend(v);
+      });
+      buffer
+    }
 }
