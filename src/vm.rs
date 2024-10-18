@@ -1,4 +1,7 @@
-use crate::{envelope::RawEnvelope, utils::{pipe_storagemap_to, transfer_from}};
+use crate::{
+    envelope::RawEnvelope,
+    utils::{pipe_storagemap_to, transfer_from},
+};
 use alkanes_support::{
     cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
     storage::StorageMap,
@@ -267,32 +270,34 @@ impl AlkanesHostFunctionsImpl {
         )?))?;
         let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-        let subcontext =
-            {
-                let mut context = caller.data_mut().context.lock().unwrap();
-                context.message.atomic.checkpoint();
-                pipe_storagemap_to(&storage_map, &mut context.message.atomic.derive(
+        let subcontext = {
+            let mut context = caller.data_mut().context.lock().unwrap();
+            context.message.atomic.checkpoint();
+            pipe_storagemap_to(
+                &storage_map,
+                &mut context.message.atomic.derive(
                     &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
-                ));
-                if let Err(_) = transfer_from(
-                    &incoming_alkanes,
-                    &mut context.message.atomic.derive(&IndexPointer::default()),
-                    &context.myself,
-                    &cellpack.target,
-                ) {
-                    context.message.atomic.rollback();
-                    context.returndata = Vec::<u8>::new();
-                    return Ok(0);
-                }
-                let mut subbed = (&*context).clone();
-                subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
-                subbed.myself = cellpack.target.clone();
-                subbed.caller = context.caller.clone();
-                subbed.returndata = vec![];
-                subbed.incoming_alkanes = incoming_alkanes.clone();
-                subbed.inputs = cellpack.inputs.clone();
-                subbed
-            };
+                ),
+            );
+            if let Err(_) = transfer_from(
+                &incoming_alkanes,
+                &mut context.message.atomic.derive(&IndexPointer::default()),
+                &context.myself,
+                &cellpack.target,
+            ) {
+                context.message.atomic.rollback();
+                context.returndata = Vec::<u8>::new();
+                return Ok(0);
+            }
+            let mut subbed = (&*context).clone();
+            subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
+            subbed.myself = cellpack.target.clone();
+            subbed.caller = context.caller.clone();
+            subbed.returndata = vec![];
+            subbed.incoming_alkanes = incoming_alkanes.clone();
+            subbed.inputs = cellpack.inputs.clone();
+            subbed
+        };
         match run(subcontext, &cellpack, start_fuel) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
@@ -325,32 +330,34 @@ impl AlkanesHostFunctionsImpl {
         )?))?;
         let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-        let subcontext =
-            {
-                let mut context = caller.data_mut().context.lock().unwrap();
-                context.message.atomic.checkpoint();
-                pipe_storagemap_to(&storage_map, &mut context.message.atomic.derive(
+        let subcontext = {
+            let mut context = caller.data_mut().context.lock().unwrap();
+            context.message.atomic.checkpoint();
+            pipe_storagemap_to(
+                &storage_map,
+                &mut context.message.atomic.derive(
                     &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
-                ));
-                if let Err(_) = transfer_from(
-                    &incoming_alkanes,
-                    &mut context.message.atomic.derive(&IndexPointer::default()),
-                    &context.myself,
-                    &cellpack.target,
-                ) {
-                    context.message.atomic.rollback();
-                    context.returndata = Vec::<u8>::new();
-                    return Ok(0);
-                }
-                let mut subbed = (&*context).clone();
-                subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
-                subbed.myself = cellpack.target.clone();
-                subbed.caller = context.caller.clone();
-                subbed.returndata = vec![];
-                subbed.incoming_alkanes = incoming_alkanes.clone();
-                subbed.inputs = cellpack.inputs.clone();
-                subbed
-            };
+                ),
+            );
+            if let Err(_) = transfer_from(
+                &incoming_alkanes,
+                &mut context.message.atomic.derive(&IndexPointer::default()),
+                &context.myself,
+                &cellpack.target,
+            ) {
+                context.message.atomic.rollback();
+                context.returndata = Vec::<u8>::new();
+                return Ok(0);
+            }
+            let mut subbed = (&*context).clone();
+            subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
+            subbed.myself = cellpack.target.clone();
+            subbed.caller = context.caller.clone();
+            subbed.returndata = vec![];
+            subbed.incoming_alkanes = incoming_alkanes.clone();
+            subbed.inputs = cellpack.inputs.clone();
+            subbed
+        };
         match run(subcontext, &cellpack, start_fuel) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
@@ -383,20 +390,22 @@ impl AlkanesHostFunctionsImpl {
         )?))?;
         let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-        let subcontext =
-            {
-                let mut context = caller.data_mut().context.lock().unwrap();
-                context.message.atomic.checkpoint();
-                pipe_storagemap_to(&storage_map, &mut context.message.atomic.derive(
+        let subcontext = {
+            let mut context = caller.data_mut().context.lock().unwrap();
+            context.message.atomic.checkpoint();
+            pipe_storagemap_to(
+                &storage_map,
+                &mut context.message.atomic.derive(
                     &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
-                ));
-                let mut subbed = (&*context).clone();
-                subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
-                subbed.returndata = vec![];
-                subbed.incoming_alkanes = incoming_alkanes.clone();
-                subbed.inputs = cellpack.inputs.clone();
-                subbed
-            };
+                ),
+            );
+            let mut subbed = (&*context).clone();
+            subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
+            subbed.returndata = vec![];
+            subbed.incoming_alkanes = incoming_alkanes.clone();
+            subbed.inputs = cellpack.inputs.clone();
+            subbed
+        };
         match run(subcontext, &cellpack, start_fuel) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();

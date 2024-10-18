@@ -69,5 +69,5 @@ pub trait AlkaneResponder {
     __sequence(to_ptr(&mut buffer) + 4);
     u64::from_le_bytes((&buffer[4..]).try_into().unwrap())
   }
-  fn execute(&self, runtime: &AlkaneRuntime) -> CallResponse;
+  fn execute(&self) -> CallResponse;
 }
