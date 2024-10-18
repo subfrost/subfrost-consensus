@@ -2,8 +2,8 @@ use anyhow::Result;
 use metashrew_support::utils::{consume_exact, consume_sized_int};
 use std::collections::HashMap;
 use std::io::Cursor;
-use std::sync::Arc;
 
+#[derive(Default, Clone, Debug)]
 pub struct StorageMap(pub HashMap<Vec<u8>, Vec<u8>>);
 
 impl FromIterator<(Vec<u8>, Vec<u8>)> for StorageMap {

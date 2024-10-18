@@ -1,9 +1,9 @@
 use crate::id::{AlkaneId};
-use anyhow::{anyhow, Result};
+use anyhow::{Result};
 use metashrew_support::utils::{consume_sized_int};
 use protorune_support::rune_transfer::{RuneTransfer};
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct AlkaneTransfer {
     pub id: AlkaneId,
     pub value: u128,
@@ -37,7 +37,7 @@ impl Into<Vec<RuneTransfer>> for AlkaneTransferParcel {
   }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct AlkaneTransferParcel(pub Vec<AlkaneTransfer>);
 
 impl AlkaneTransferParcel {

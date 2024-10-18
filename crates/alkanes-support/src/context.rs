@@ -1,7 +1,6 @@
-#[derive(Default, Clone)]
-use alkanes_support::id::{AlkaneId};
-use alkanes_support::parcel::{AlkaneTransferParcel};
-use metashrew_support::utils::{consume_sized_int};
+use crate::{parcel::{AlkaneTransferParcel},id::{AlkaneId}};
+use metashrew_support::utils::{consume_sized_int, is_empty};
+use anyhow::{Result};
 use std::io::Cursor;
 
 #[derive(Clone, Default, Debug)]
@@ -18,9 +17,9 @@ impl Context {
     result.myself = AlkaneId::parse(v)?;
     result.caller = AlkaneId::parse(v)?;
     result.incoming_alkanes = AlkaneTransferParcel::parse(v)?;
-    while !v.is_empty() {
-      result.inputs.push(consume_sized_int::<u128>(v));
+    while !is_empty(v) {
+      result.inputs.push(consume_sized_int::<u128>(v)?);
     }
-    result
+    Ok(result)
   }
 }
