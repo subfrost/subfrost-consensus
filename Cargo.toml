@@ -5,35 +5,32 @@ edition = "2021"
 description = "ALKANES metaprotocol indexer"
 license = "MIT"
 repository = "https://github.com/kungfuflex/alkanes-rs"
-resolver = "2"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[workspaces]
+members = [".", "crates/*"]
+
 [dependencies]
-anyhow = "1.0.89"
+anyhow = "1.0.90"
 bitcoin = { version = "0.30.1", features = ["rand"] }
 metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }
-ordinals = { git = "https://github.com/kungfuflex/protorune-rs", branch = "main" }
-protorune = { git = "https://github.com/kungfuflex/protorune-rs", branch = "main" }
+metashrew-support = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }
+ordinals = { git = "https://github.com/kungfuflex/protorune-rs" }
+protorune = { git = "https://github.com/kungfuflex/protorune-rs" }
+protorune-support = { git = "https://github.com/kungfuflex/protorune-rs" }
+alkanes-support = { path = "crates/alkanes-support" }
 ruint = "1.12.3"
-wasm-bindgen = "0.2.95"
+wasm-bindgen = "0.2.92"
 byteorder = "1.5"
 wasm-bindgen-test = "0.3.43"
 wasmi = "0.37.2"
 serde = "1.0.210"
-hex = "0.4.3"
-protobuf = "3.7.1"
 
 [dev-dependencies]
-metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs", features = [
-    "mock",
-] }
-wasm-bindgen-cli = "0.2.95"
-getrandom = { version = "0.2.15", features = ["js"] }
-protorune = { git = "https://github.com/kungfuflex/protorune-rs", features = [
-    "test_utils",
-], branch = "main" }
+metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs", features = ["mock"] }
+
 [build-dependencies]
 protobuf-codegen = "3.4.0"
 protoc-rust = { version = "2.28.0" }

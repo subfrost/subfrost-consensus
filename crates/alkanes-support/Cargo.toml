@@ -1,0 +1,16 @@
+[package]
+name = "alkanes-support"
+version = "0.1.0"
+edition = "2021"
+description = "ALKANES support"
+license = "MIT"
+repository = "https://github.com/kungfuflex/alkanes-rs"
+resolver = "2"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+anyhow = "1.0.90"
+protorune-support = { git = "https://github.com/kungfuflex/protorune-rs" }
+metashrew-support = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }

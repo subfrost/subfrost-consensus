@@ -1,8 +1,10 @@
-use crate::cellpack::Cellpack;
 use crate::vm;
+use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
-use protorune::{balance_sheet::{BalanceSheet}, rune_transfer::{RuneTransfer}, message::{MessageContext, MessageContextParcel}};
-use protorune::utils::decode_varint_list;
+use protorune::message::{MessageContext, MessageContextParcel};
+use protorune_support::{
+    balance_sheet::BalanceSheet, rune_transfer::RuneTransfer, utils::decode_varint_list,
+};
 use std::io::Cursor;
 
 #[derive(Clone, Default)]
@@ -32,7 +34,7 @@ impl MessageContext for AlkaneMessageContext {
     }
     fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
         match handle_message(_parcel) {
-            Ok((outgoing, runtime)) => { Ok((outgoing, runtime)) },
+            Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
             Err(e) => Err(e),
         }
     }

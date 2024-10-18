@@ -1,0 +1,13 @@
+[package]
+name = "alkanes-runtime"
+version = "0.1.0"
+edition = "2021"
+description = "ALKANES runtime library"
+license = "MIT"
+repository = "https://github.com/kungfuflex/alkanes-rs"
+resolver = "2"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]

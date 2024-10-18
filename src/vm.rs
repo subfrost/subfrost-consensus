@@ -1,6 +1,7 @@
-use crate::{
-    cellpack::Cellpack, envelope::RawEnvelope, id::AlkaneId, parcel::AlkaneTransferParcel,
-    response::CallResponse, storage::StorageMap,
+use crate::{envelope::RawEnvelope, utils::{pipe_storagemap_to, transfer_from}};
+use alkanes_support::{
+    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
+    storage::StorageMap,
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
@@ -10,7 +11,7 @@ use metashrew::{
     stdio::stdout,
 };
 use protorune::message::MessageContextParcel;
-use protorune::utils::consensus_encode;
+use protorune_support::utils::consensus_encode;
 use std::fmt::Write;
 use std::io::Cursor;
 use std::sync::{Arc, Mutex};
@@ -270,10 +271,11 @@ impl AlkanesHostFunctionsImpl {
             {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.checkpoint();
-                storage_map.pipe_to(&mut context.message.atomic.derive(
+                pipe_storagemap_to(&storage_map, &mut context.message.atomic.derive(
                     &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
                 ));
-                if let Err(_) = incoming_alkanes.transfer_from(
+                if let Err(_) = transfer_from(
+                    &incoming_alkanes,
                     &mut context.message.atomic.derive(&IndexPointer::default()),
                     &context.myself,
                     &cellpack.target,
@@ -327,10 +329,11 @@ impl AlkanesHostFunctionsImpl {
             {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.checkpoint();
-                storage_map.pipe_to(&mut context.message.atomic.derive(
+                pipe_storagemap_to(&storage_map, &mut context.message.atomic.derive(
                     &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
                 ));
-                if let Err(_) = incoming_alkanes.transfer_from(
+                if let Err(_) = transfer_from(
+                    &incoming_alkanes,
                     &mut context.message.atomic.derive(&IndexPointer::default()),
                     &context.myself,
                     &cellpack.target,
@@ -384,7 +387,7 @@ impl AlkanesHostFunctionsImpl {
             {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.checkpoint();
-                storage_map.pipe_to(&mut context.message.atomic.derive(
+                pipe_storagemap_to(&storage_map, &mut context.message.atomic.derive(
                     &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
                 ));
                 let mut subbed = (&*context).clone();

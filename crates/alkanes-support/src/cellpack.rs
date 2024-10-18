@@ -1,6 +1,6 @@
-use crate::id::AlkaneId;
+use crate::id::{AlkaneId};
 use anyhow::Result;
-use metashrew::utils::consume_sized_int;
+use metashrew_support::utils::{consume_sized_int};
 use std::io::Cursor;
 
 #[derive(Clone, Default)]
