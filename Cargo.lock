@@ -914,7 +914,7 @@ dependencies = [
 [[package]]
 name = "ordinals"
 version = "0.0.10"
-source = "git+https://github.com/kungfuflex/protorune-rs#602e4f888c08460a8b5f08811e1ac8c7af64c1b8"
+source = "git+https://github.com/kungfuflex/protorune-rs#2b7660717a5089f0b9115f9132120705e0cf441c"
 dependencies = [
  "bitcoin 0.30.2",
  "derive_more 1.0.0",
@@ -1174,7 +1174,7 @@ dependencies = [
 [[package]]
 name = "protorune"
 version = "0.1.0"
-source = "git+https://github.com/kungfuflex/protorune-rs#602e4f888c08460a8b5f08811e1ac8c7af64c1b8"
+source = "git+https://github.com/kungfuflex/protorune-rs#2b7660717a5089f0b9115f9132120705e0cf441c"
 dependencies = [
  "anyhow",
  "bitcoin 0.30.2",
@@ -1199,7 +1199,7 @@ dependencies = [
 [[package]]
 name = "protorune-support"
 version = "0.1.0"
-source = "git+https://github.com/kungfuflex/protorune-rs#602e4f888c08460a8b5f08811e1ac8c7af64c1b8"
+source = "git+https://github.com/kungfuflex/protorune-rs#2b7660717a5089f0b9115f9132120705e0cf441c"
 dependencies = [
  "anyhow",
  "bitcoin 0.30.2",

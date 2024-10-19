@@ -1,8 +1,8 @@
-use crate::parcel::{AlkaneTransferParcel};
+use crate::parcel::AlkaneTransferParcel;
 use anyhow::Result;
-use metashrew_support::utils::{consume_to_end};
+use metashrew_support::utils::consume_to_end;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct CallResponse {
     pub alkanes: AlkaneTransferParcel,
     pub data: Vec<u8>,
