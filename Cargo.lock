@@ -42,6 +42,7 @@ dependencies = [
  "protorune",
  "protorune-support",
  "ruint",
+ "sample-alkane",
  "serde",
  "wasm-bindgen",
  "wasm-bindgen-test",
