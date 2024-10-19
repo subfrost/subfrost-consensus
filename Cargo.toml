@@ -29,6 +29,9 @@ wasmi = "0.37.2"
 serde = "1.0.210"
 hex = "0.4.3"
 protobuf = "3.7.1"
+wasm-bindgen-futures = "0.4.45"
+web-sys = { version = "0.3.72", features = ["Response", "Window"] }
+js-sys = "0.3.72"
 
 [dev-dependencies]
 metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs", features = [

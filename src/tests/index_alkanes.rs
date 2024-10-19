@@ -26,20 +26,24 @@ mod tests {
 
     #[test]
     fn test_data_unwrap() -> anyhow::Result<()> {
-        clear();
-        let (mut test_block, _) = helpers::create_block_with_rune_tx();
-        let wasm_binary = alkane_helpers::read_sample_contract()?;
-        let tx = create_test_transaction_with_witness(wasm_binary);
-        test_block.txdata.push(tx);
-        let _ = Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840001);
-        let req = (WalletRequest {
-            wallet: "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
-                .as_bytes()
-                .to_vec(),
-            special_fields: SpecialFields::new(),
-        })
-        .write_to_bytes()
-        .unwrap();
+        wasm_bindgen_futures::spawn_local(async {
+            clear();
+            let (mut test_block, _) = helpers::create_block_with_rune_tx();
+            let wasm_binary = alkane_helpers::read_sample_contract().await.unwrap();
+            let tx = create_test_transaction_with_witness(wasm_binary);
+            test_block.txdata.push(tx);
+            let _ = Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840001);
+            let req = (WalletRequest {
+                wallet: "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
+                    .as_bytes()
+                    .to_vec(),
+                special_fields: SpecialFields::new(),
+            })
+            .write_to_bytes()
+            .unwrap();
+            
+            // Process the wasm_binary here, for example, assert its content
+        });
         // let test_val = view::runes_by_address(&req).unwrap();
         // let runes: Vec<protorune::proto::protorune::OutpointResponse> = test_val.clone().outpoints;
         // assert_eq!(runes[0].height, 840001);
