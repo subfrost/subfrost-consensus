@@ -41,7 +41,6 @@ metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs", fe
 protorune = { git = "https://github.com/kungfuflex/protorune-rs", features = [
     "test_utils",
 ] }
-sample-alkane = { path = "crates/sample-alkane" }
 
 [build-dependencies]
 protobuf-codegen = "3.4.0"

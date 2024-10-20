@@ -36,7 +36,7 @@ fn main() {
         .unwrap()
         .join("src")
         .join("tests")
-        .join("sample_alkane.rs");
+        .join("sample_alkane_build.rs");
     std::env::set_current_dir(&out_dir.parent().unwrap().parent().unwrap().parent().unwrap().join("crates").join("sample-alkane")).unwrap();
     Command::new("cargo").arg("build").arg("--release").spawn().expect("failed to execute cargo to build test alkanes").wait().expect("failed to wait on cargo build");
     let data: String =

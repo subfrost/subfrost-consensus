@@ -21,14 +21,14 @@ mod tests {
     use crate::message::AlkaneMessageContext;
     use std::str::FromStr;
     use std::sync::Arc;
-    use crate::tests::sample_alkane;
+    use crate::tests::sample_alkane_build;
     use wasm_bindgen_test::*;
 
     #[wasm_bindgen_test]
     fn test_data_unwrap() -> anyhow::Result<()> {
         clear();
         let (mut test_block, _) = helpers::create_block_with_rune_tx();
-        let wasm_binary = sample_alkane::get_bytes();
+        let wasm_binary = sample_alkane_build::get_bytes();
         let tx = create_test_transaction_with_witness(wasm_binary);
         test_block.txdata.push(tx);
         let _ = Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840001);
