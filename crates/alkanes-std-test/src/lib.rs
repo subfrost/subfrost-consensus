@@ -24,7 +24,7 @@ impl AlkaneResponder for LoggerAlkane {
 }
 
 #[no_mangle]
-pub extern "C" fn __execut() -> i32 {
+pub extern "C" fn __execute() -> i32 {
     let mut response = to_arraybuffer_layout(&LoggerAlkane::default().execute().serialize());
     to_ptr(&mut response) + 4
 }

@@ -69,7 +69,6 @@ fn main() {
                 .expect("failed to wait on build job");
             std::env::set_current_dir(&crates_dir)?;
             let subbed = v.clone().replace("-", "_");
-            let file_path = Path::new(&out_str).join(subbed.clone() + ".wasm");
             let data: String = hex::encode(&fs::read(
                 &Path::new(&out_str).join(subbed.clone() + ".wasm"),
             )?);
