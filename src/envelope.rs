@@ -14,6 +14,10 @@ use {
     serde::{Deserialize, Serialize},
     std::iter::Peekable,
 };
+use {
+    metashrew::{println, stdio::stdout},
+    std::fmt::Write,
+};
 
 pub(crate) const PROTOCOL_ID: [u8; 3] = *b"BIN";
 pub(crate) const BODY_TAG: [u8; 0] = [];
@@ -47,33 +51,59 @@ impl RawEnvelope {
         let mut envelopes = Vec::new();
 
         for (i, input) in transaction.input.iter().enumerate() {
+            println!(
+                "input {} witness is p2tr? {} witness len {}",
+                i,
+                input.script_sig.is_v1_p2tr(),
+                input.witness.len()
+            );
             if let Some(tapscript) = input.witness.tapscript() {
+                println!("GOT TAPSCRIPT");
                 if let Ok(input_envelopes) = Self::from_tapscript(tapscript, i) {
+                    println!("OK! Got input envelopes");
                     envelopes.extend(input_envelopes);
                 }
             }
         }
 
+        println!("returning ");
         envelopes
     }
 
     fn from_tapscript(tapscript: &Script, input: usize) -> Result<Vec<Self>> {
         let mut envelopes = Vec::new();
+        println!("parsing envelopes from tapscript");
 
         let mut instructions = tapscript.instructions().peekable();
 
         let mut stuttered = false;
-        while let Some(instruction) = instructions.next().transpose()? {
-            if instruction == PushBytes((&[]).into()) {
-                let (stutter, envelope) =
-                    Self::from_instructions(&mut instructions, input, envelopes.len(), stuttered)?;
-                if let Some(envelope) = envelope {
-                    envelopes.push(envelope);
-                } else {
-                    stuttered = stutter;
+        let mut i = 0;
+        while let Some(result) = instructions.next() {
+            match result {
+                Ok(instruction) => {
+                    i += 1;
+                    if instruction == PushBytes((&[]).into()) {
+                        let (stutter, envelope) = Self::from_instructions(
+                            &mut instructions,
+                            input,
+                            envelopes.len(),
+                            stuttered,
+                        )?;
+                        // println!("Pushing envelope: {:?}, stutter: {}", envelope, stutter);
+                        if let Some(envelope) = envelope {
+                            envelopes.push(envelope);
+                        } else {
+                            stuttered = stutter;
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("GOT ERROR {} after {} iterations", e, i);
                 }
             }
         }
+
+        println!("FINAL envelopes len {}", envelopes.len());
 
         Ok(envelopes)
     }

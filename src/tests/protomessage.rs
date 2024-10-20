@@ -14,6 +14,7 @@ mod tests {
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
     use protorune_support::utils::consensus_encode;
 
+    use bitcoin::secp256k1::PublicKey;
     use metashrew::{clear, get_cache, index_pointer::KeyValuePointer, println, stdio::stdout};
     use metashrew_support::utils::format_key;
     use ordinals::{Etching, Rune, Runestone};
@@ -23,7 +24,7 @@ mod tests {
 
     use crate::message::AlkaneMessageContext;
 
-    use crate::tests::sample_alkane;
+    use crate::tests::std::alkanes_std_test_build;
 
     pub fn print_cache() {
         let cache = get_cache();
@@ -241,12 +242,15 @@ mod tests {
             vout: 0,
         };
 
-        let wasm_binary = sample_alkane::get_bytes();
+        let wasm_binary = alkanes_std_test_build::get_bytes();
 
         let input_script = ScriptBuf::new();
 
         let mut witness = Witness::new();
+
+        let control_block: Vec<u8> = vec![0, 1, 2];
         witness.push(&wasm_binary);
+        witness.push(&control_block);
 
         // Create a transaction input
         let txin = TxIn {

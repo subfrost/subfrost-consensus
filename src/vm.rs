@@ -793,6 +793,7 @@ pub fn sequence_pointer(ptr: &AtomicPointer) -> AtomicPointer {
 
 pub fn find_witness_payload(tx: &Transaction) -> Option<Vec<u8>> {
     let envelopes = RawEnvelope::from_transaction(tx);
+    println!("num envelopes {}", envelopes.len());
     if envelopes.len() == 0 {
         None
     } else {
