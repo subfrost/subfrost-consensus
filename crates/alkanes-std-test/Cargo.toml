@@ -1,5 +1,5 @@
 [package]
-name = "sample-alkane"
+name = "alkanes-std-test"
 version = "0.1.0"
 edition = "2021"
 

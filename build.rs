@@ -36,11 +36,11 @@ fn main() {
         .unwrap()
         .join("src")
         .join("tests")
-        .join("sample_alkane_build.rs");
-    std::env::set_current_dir(&out_dir.parent().unwrap().parent().unwrap().parent().unwrap().join("crates").join("sample-alkane")).unwrap();
+        .join("alkanes_std_test_build.rs");
+    std::env::set_current_dir(&out_dir.parent().unwrap().parent().unwrap().parent().unwrap().join("crates").join("alkanes-std-test")).unwrap();
     Command::new("cargo").arg("build").arg("--release").spawn().expect("failed to execute cargo to build test alkanes").wait().expect("failed to wait on cargo build");
     let data: String =
-        hex::encode(&fs::read(&Path::new(&out_str).join("sample_alkane.wasm")).unwrap());
+        hex::encode(&fs::read(&Path::new(&out_str).join("alkanes_std_test.wasm")).unwrap());
     fs::write(
         &write_dir,
         String::from("use hex_lit::hex;\npub fn get_bytes() -> Vec<u8> { (&hex!(\"")
