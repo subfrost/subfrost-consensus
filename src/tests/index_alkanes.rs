@@ -19,9 +19,9 @@ mod tests {
     use protobuf::{Message, SpecialFields};
 
     use crate::message::AlkaneMessageContext;
+    use crate::tests::std::alkanes_std_test_build;
     use std::str::FromStr;
     use std::sync::Arc;
-    use crate::tests::std::alkanes_std_test_build;
     use wasm_bindgen_test::*;
 
     #[wasm_bindgen_test]

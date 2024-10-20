@@ -1,7 +1,7 @@
+use anyhow::Result;
 use hex;
 use protobuf_codegen;
 use protoc_bin_vendored;
-use anyhow::{Result};
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -25,8 +25,7 @@ fn main() {
         .unwrap()
         .parent()
         .unwrap();
-    let out_dir = base_dir
-        .join("release");
+    let out_dir = base_dir.join("release");
     let out_str = out_dir.to_str().unwrap();
     let write_dir = Path::new(&out_dir)
         .parent()
@@ -38,31 +37,58 @@ fn main() {
         .join("src")
         .join("tests");
 
-    let crates_dir = out_dir.parent().unwrap().parent().unwrap().parent().unwrap().join("crates");
+    let crates_dir = out_dir
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("crates");
     std::env::set_current_dir(&crates_dir).unwrap();
-    let files = fs::read_dir(&crates_dir).unwrap().filter_map(|v| {
-      let name = v.ok()?.file_name().into_string().ok()?;
-      if name.starts_with("alkanes-std-") {
-        Some(name)
-      } else {
-        None
-      }
-    }).map(|v| -> Result<String> {
-      std::env::set_current_dir(&crates_dir.clone().join(v.clone()))?;
-      Command::new("cargo").arg("build").arg("--release").stdout(Stdio::inherit()).stderr(Stdio::inherit()).spawn().expect("failed to execute cargo to build test alkanes").wait().expect("failed to wait on build job");
-      std::env::set_current_dir(&crates_dir)?;
-      let subbed = v.clone().replace("-", "_");
-      let file_path = Path::new(&out_str).join(subbed.clone() + ".wasm");
-      println!("{}", &file_path.as_path().display());
-      let data: String = hex::encode(&fs::read(&Path::new(&out_str).join(subbed.clone() + ".wasm"))?);
-      fs::write(
-        &write_dir.join("std").join(subbed.clone() + "_build.rs"),
-        String::from("use hex_lit::hex;\npub fn get_bytes() -> Vec<u8> { (&hex!(\"")
-          + data.as_str()
-          + "\")).to_vec() }"
-      )?;
-      Ok(subbed)
-    }).collect::<Result<Vec<String>>>().unwrap();
-    fs::write(&write_dir.join("std").join("mod.rs"), files.into_iter().fold(String::default(), |r, v| r + "pub mod " + v.as_str() + "_build;\n")).unwrap();
-
+    let files = fs::read_dir(&crates_dir)
+        .unwrap()
+        .filter_map(|v| {
+            let name = v.ok()?.file_name().into_string().ok()?;
+            if name.starts_with("alkanes-std-") {
+                Some(name)
+            } else {
+                None
+            }
+        })
+        .map(|v| -> Result<String> {
+            std::env::set_current_dir(&crates_dir.clone().join(v.clone()))?;
+            Command::new("cargo")
+                .arg("build")
+                .arg("--release")
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .spawn()
+                .expect("failed to execute cargo to build test alkanes")
+                .wait()
+                .expect("failed to wait on build job");
+            std::env::set_current_dir(&crates_dir)?;
+            let subbed = v.clone().replace("-", "_");
+            let file_path = Path::new(&out_str).join(subbed.clone() + ".wasm");
+            println!("{}", &file_path.as_path().display());
+            let data: String = hex::encode(&fs::read(
+                &Path::new(&out_str).join(subbed.clone() + ".wasm"),
+            )?);
+            fs::write(
+                &write_dir.join("std").join(subbed.clone() + "_build.rs"),
+                String::from("use hex_lit::hex;\npub fn get_bytes() -> Vec<u8> { (&hex!(\"")
+                    + data.as_str()
+                    + "\")).to_vec() }",
+            )?;
+            Ok(subbed)
+        })
+        .collect::<Result<Vec<String>>>()
+        .unwrap();
+    fs::write(
+        &write_dir.join("std").join("mod.rs"),
+        files.into_iter().fold(String::default(), |r, v| {
+            r + "pub mod " + v.as_str() + "_build;\n"
+        }),
+    )
+    .unwrap();
 }
