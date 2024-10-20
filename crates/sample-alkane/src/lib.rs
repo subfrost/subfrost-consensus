@@ -1,11 +1,7 @@
+use alkanes_runtime::{println, runtime::AlkaneResponder, stdio::stdout};
 use alkanes_support::response::CallResponse;
-use alkanes_runtime::{
-    runtime::AlkaneResponder,
-    println,
-    stdio::{stdout},
-};
-use std::fmt::Write;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
+use std::fmt::Write;
 
 #[derive(Default)]
 struct LoggerAlkane(());

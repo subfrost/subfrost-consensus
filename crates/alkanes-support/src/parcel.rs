@@ -1,7 +1,7 @@
-use crate::id::{AlkaneId};
-use anyhow::{Result};
-use metashrew_support::utils::{consume_sized_int};
-use protorune_support::rune_transfer::{RuneTransfer};
+use crate::id::AlkaneId;
+use anyhow::Result;
+use metashrew_support::utils::consume_sized_int;
+use protorune_support::rune_transfer::RuneTransfer;
 
 #[derive(Default, Clone, Debug)]
 pub struct AlkaneTransfer {
@@ -23,18 +23,18 @@ impl From<Vec<RuneTransfer>> for AlkaneTransferParcel {
 }
 
 impl Into<RuneTransfer> for AlkaneTransfer {
-  fn into(self) -> RuneTransfer {
-    RuneTransfer {
-      id: self.id.into(),
-      value: self.value
+    fn into(self) -> RuneTransfer {
+        RuneTransfer {
+            id: self.id.into(),
+            value: self.value,
+        }
     }
-  }
 }
 
 impl Into<Vec<RuneTransfer>> for AlkaneTransferParcel {
-  fn into(self) -> Vec<RuneTransfer> {
-    self.0.into_iter().map(|v| v.into()).collect()
-  }
+    fn into(self) -> Vec<RuneTransfer> {
+        self.0.into_iter().map(|v| v.into()).collect()
+    }
 }
 
 #[derive(Default, Clone, Debug)]

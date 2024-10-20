@@ -9,7 +9,7 @@ impl Write for Stdout {
     fn write_str(&mut self, s: &str) -> Result<(), Error> {
         let mut data = to_arraybuffer_layout::<Vec<u8>>(s.to_string().as_bytes().to_vec());
         unsafe {
-          __log(to_ptr(&mut data) + 4);
+            __log(to_ptr(&mut data) + 4);
         }
         return Ok(());
     }
