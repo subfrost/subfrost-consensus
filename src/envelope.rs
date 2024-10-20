@@ -5,6 +5,8 @@ use {
             Instruction::{self, Op, PushBytes},
             Instructions,
         },
+        witness::{Witness},
+        constants::{MAX_SCRIPT_ELEMENT_SIZE}
     },
     bitcoin::script,
     bitcoin::script::Script,
@@ -14,6 +16,7 @@ use {
 };
 
 pub(crate) const PROTOCOL_ID: [u8; 3] = *b"BIN";
+pub(crate) const BODY_TAG: [u8; 0] = [];
 
 pub type Result<T> = std::result::Result<T, script::Error>;
 pub type RawEnvelope = Envelope<Vec<Vec<u8>>>;
@@ -25,6 +28,18 @@ pub struct Envelope<T> {
     pub payload: T,
     pub pushnum: bool,
     pub stutter: bool,
+}
+
+impl From<Vec<u8>> for RawEnvelope {
+  fn from(v: Vec<u8>) -> RawEnvelope {
+    RawEnvelope {
+      input: 0,
+      offset: 0,
+      payload: v.chunks(MAX_SCRIPT_ELEMENT_SIZE).into_iter().map(|v| v.to_vec()).collect::<Vec<Vec<u8>>>(),
+      pushnum: false,
+      stutter: false
+    }
+  }
 }
 
 impl RawEnvelope {
@@ -70,6 +85,31 @@ impl RawEnvelope {
         } else {
             Ok(false)
         }
+    }
+    fn append_reveal_script(
+      &self,
+      mut builder: script::Builder,
+    ) -> script::ScriptBuf {
+      builder = builder
+      .push_opcode(opcodes::OP_FALSE)
+      .push_opcode(opcodes::all::OP_IF)
+      .push_slice(PROTOCOL_ID);
+
+      builder = builder.push_slice(BODY_TAG);
+      for chunk in self.payload.clone().into_iter().flatten().collect::<Vec<u8>>().chunks(MAX_SCRIPT_ELEMENT_SIZE) {
+        builder = builder.push_slice::<&script::PushBytes>(chunk.try_into().unwrap());
+      }
+      builder.push_opcode(opcodes::all::OP_ENDIF).into_script()
+    }
+    pub fn to_witness(&self) -> Witness {
+      let builder = script::Builder::new();
+
+      let script = self.append_reveal_script(builder);
+
+      let mut witness = Witness::new();
+      witness.push(script);
+      witness.push([]);
+      witness
     }
 
     fn from_instructions(
