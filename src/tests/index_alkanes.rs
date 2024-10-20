@@ -10,6 +10,7 @@ mod tests {
     use protorune::{tables, view};
 
     use crate::tests::helpers as alkane_helpers;
+    use crate::tests::sample_alkane;
     use bitcoin::consensus::serialize;
     use bitcoin::hashes::Hash;
     use hex;
