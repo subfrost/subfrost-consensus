@@ -4,6 +4,7 @@ use protoc_bin_vendored;
 use std::env;
 use std::fs;
 use std::path::Path;
+use std::process::Command;
 fn main() {
     protobuf_codegen::Codegen::new()
         .protoc()
@@ -36,6 +37,8 @@ fn main() {
         .join("src")
         .join("tests")
         .join("sample_alkane.rs");
+    std::env::set_current_dir(&out_dir.parent().unwrap().parent().unwrap().parent().unwrap().join("crates").join("sample-alkane")).unwrap();
+    Command::new("cargo").arg("build").arg("--release").spawn().expect("failed to execute cargo to build test alkanes").wait().expect("failed to wait on cargo build");
     let data: String =
         hex::encode(&fs::read(&Path::new(&out_str).join("sample_alkane.wasm")).unwrap());
     fs::write(

@@ -15,7 +15,7 @@ members = [".", "crates/*"]
 [dependencies]
 anyhow = "1.0.90"
 bitcoin = { version = "0.30.1", features = ["rand"] }
-metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }
+metashrew = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs", features = ["mock"] }
 metashrew-support = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }
 ordinals = { git = "https://github.com/kungfuflex/protorune-rs" }
 protorune = { git = "https://github.com/kungfuflex/protorune-rs" }

@@ -10,7 +10,6 @@ mod tests {
     use protorune::{tables, view};
 
     use crate::tests::helpers as alkane_helpers;
-    use crate::tests::sample_alkane;
     use bitcoin::consensus::serialize;
     use bitcoin::hashes::Hash;
     use hex;
@@ -23,10 +22,11 @@ mod tests {
     use crate::message::AlkaneMessageContext;
     use std::str::FromStr;
     use std::sync::Arc;
+    use crate::tests::sample_alkane;
     use wasm_bindgen_test::*;
 
     #[wasm_bindgen_test]
-    fn test_data_unwrap() {
+    fn test_data_unwrap() -> anyhow::Result<()> {
         clear();
         let (mut test_block, _) = helpers::create_block_with_rune_tx();
         let wasm_binary = sample_alkane::get_bytes();
@@ -41,11 +41,10 @@ mod tests {
         })
         .write_to_bytes()
         .unwrap();
-
-        // Process the wasm_binary here, for example, assert its content
         // let test_val = view::runes_by_address(&req).unwrap();
         // let runes: Vec<protorune::proto::protorune::OutpointResponse> = test_val.clone().outpoints;
         // assert_eq!(runes[0].height, 840001);
         // assert_eq!(runes[0].txindex, 0);
+        Ok(())
     }
 }
