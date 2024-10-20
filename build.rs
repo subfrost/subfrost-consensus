@@ -1,10 +1,11 @@
 use hex;
 use protobuf_codegen;
 use protoc_bin_vendored;
+use anyhow::{Result};
 use std::env;
 use std::fs;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 fn main() {
     protobuf_codegen::Codegen::new()
         .protoc()
@@ -35,17 +36,33 @@ fn main() {
         .parent()
         .unwrap()
         .join("src")
-        .join("tests")
-        .join("alkanes_std_test_build.rs");
-    std::env::set_current_dir(&out_dir.parent().unwrap().parent().unwrap().parent().unwrap().join("crates").join("alkanes-std-test")).unwrap();
-    Command::new("cargo").arg("build").arg("--release").spawn().expect("failed to execute cargo to build test alkanes").wait().expect("failed to wait on cargo build");
-    let data: String =
-        hex::encode(&fs::read(&Path::new(&out_str).join("alkanes_std_test.wasm")).unwrap());
-    fs::write(
-        &write_dir,
+        .join("tests");
+
+    let crates_dir = out_dir.parent().unwrap().parent().unwrap().parent().unwrap().join("crates");
+    std::env::set_current_dir(&crates_dir).unwrap();
+    let files = fs::read_dir(&crates_dir).unwrap().filter_map(|v| {
+      let name = v.ok()?.file_name().into_string().ok()?;
+      if name.starts_with("alkanes-std-") {
+        Some(name)
+      } else {
+        None
+      }
+    }).map(|v| -> Result<String> {
+      std::env::set_current_dir(&crates_dir.clone().join(v.clone()))?;
+      Command::new("cargo").arg("build").arg("--release").stdout(Stdio::inherit()).stderr(Stdio::inherit()).spawn().expect("failed to execute cargo to build test alkanes").wait().expect("failed to wait on build job");
+      std::env::set_current_dir(&crates_dir)?;
+      let subbed = v.clone().replace("-", "_");
+      let file_path = Path::new(&out_str).join(subbed.clone() + ".wasm");
+      println!("{}", &file_path.as_path().display());
+      let data: String = hex::encode(&fs::read(&Path::new(&out_str).join(subbed.clone() + ".wasm"))?);
+      fs::write(
+        &write_dir.join("std").join(subbed.clone() + "_build.rs"),
         String::from("use hex_lit::hex;\npub fn get_bytes() -> Vec<u8> { (&hex!(\"")
-            + data.as_str()
-            + "\")).to_vec() }",
-    )
-    .unwrap();
+          + data.as_str()
+          + "\")).to_vec() }"
+      )?;
+      Ok(subbed)
+    }).collect::<Result<Vec<String>>>().unwrap();
+    fs::write(&write_dir.join("std").join("mod.rs"), files.into_iter().fold(String::default(), |r, v| r + "pub mod " + v.as_str() + "_build;\n")).unwrap();
+
 }

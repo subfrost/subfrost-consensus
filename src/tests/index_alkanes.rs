@@ -21,7 +21,7 @@ mod tests {
     use crate::message::AlkaneMessageContext;
     use std::str::FromStr;
     use std::sync::Arc;
-    use crate::tests::alkanes_std_test_build;
+    use crate::tests::std::alkanes_std_test_build;
     use wasm_bindgen_test::*;
 
     #[wasm_bindgen_test]
