@@ -48,7 +48,7 @@ dependencies = [
  "protoc-bin-vendored",
  "protoc-rust",
  "protorune",
- "protorune-support 0.1.0",
+ "protorune-support",
  "ruint",
  "serde",
  "wasm-bindgen",
@@ -81,8 +81,8 @@ name = "alkanes-support"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "metashrew-support 0.1.0 (git+https://github.com/sandshrewmetaprotocols/metashrew-rs)",
- "protorune-support 0.1.0 (git+https://github.com/kungfuflex/protorune-rs)",
+ "metashrew-support 0.1.0",
+ "protorune-support",
 ]
 
 [[package]]
@@ -1318,18 +1318,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ordinals"
-version = "0.0.10"
-source = "git+https://github.com/kungfuflex/protorune-rs#cd2f7085430c5d8f79be091d194d4802673008be"
-dependencies = [
- "bitcoin 0.30.2",
- "derive_more 1.0.0",
- "serde",
- "serde_with",
- "thiserror",
-]
-
-[[package]]
 name = "parity-scale-codec"
 version = "3.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1610,7 +1598,7 @@ dependencies = [
  "protobuf-codegen 3.7.1",
  "protoc-bin-vendored",
  "protoc-rust",
- "protorune-support 0.1.0",
+ "protorune-support",
  "ruint",
  "serde",
  "serde_json",
@@ -1627,18 +1615,6 @@ dependencies = [
  "bitcoin 0.30.2",
  "metashrew-support 0.1.0 (git+https://github.com/sandshrewmetaprotocols/metashrew-rs)",
  "ordinals 0.0.10",
- "serde",
-]
-
-[[package]]
-name = "protorune-support"
-version = "0.1.0"
-source = "git+https://github.com/kungfuflex/protorune-rs#cd2f7085430c5d8f79be091d194d4802673008be"
-dependencies = [
- "anyhow",
- "bitcoin 0.30.2",
- "metashrew-support 0.1.0 (git+https://github.com/sandshrewmetaprotocols/metashrew-rs)",
- "ordinals 0.0.10 (git+https://github.com/kungfuflex/protorune-rs)",
  "serde",
 ]
 
