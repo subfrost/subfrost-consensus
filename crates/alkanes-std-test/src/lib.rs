@@ -13,7 +13,7 @@ impl AlkaneResponder for LoggerAlkane {
             true
         });
         println!("hello world!");
-        self.balance(
+        println!("balance: {}", self.balance(
             &AlkaneId {
                 block: 100,
                 tx: 100,
@@ -22,7 +22,7 @@ impl AlkaneResponder for LoggerAlkane {
                 block: 100,
                 tx: 100,
             },
-        );
+        ));
         CallResponse::default()
     }
 }

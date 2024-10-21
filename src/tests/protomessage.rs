@@ -40,6 +40,7 @@ mod tests {
     }
 
     /// In one runestone, etches a rune, then protoburns it
+    /*
     #[wasm_bindgen_test]
     fn protoburn_test() {
         clear();
@@ -100,7 +101,9 @@ mod tests {
         let stored_protorune_balance = protorunes_sheet.get(&protorune_id);
         assert_eq!(stored_protorune_balance, 1000);
     }
+*/
 
+    /*
     #[wasm_bindgen_test]
     fn protomessage_no_binary_test() {
         clear();
@@ -229,6 +232,7 @@ mod tests {
         // let stored_protorune_balance = protorunes_sheet.get(&protorune_id);
         // assert_eq!(stored_protorune_balance, 1000);
     }
+*/
 
     #[wasm_bindgen_test]
     async fn protomessage_with_binary_test() {

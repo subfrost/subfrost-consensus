@@ -21,7 +21,7 @@ mod tests {
         let wasm_binary = alkanes_std_test_build::get_bytes();
         let tx = create_test_transaction_with_witness(wasm_binary);
         test_block.txdata.push(tx);
-        let _ = Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840001);
+        Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840001).unwrap();
         let req = (WalletRequest {
             wallet: "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
                 .as_bytes()
