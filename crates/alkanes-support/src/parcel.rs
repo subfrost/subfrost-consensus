@@ -1,6 +1,6 @@
 use crate::id::AlkaneId;
-use crate::utils::consume_sized_int;
 use anyhow::Result;
+use metashrew_support::utils::consume_sized_int;
 use protorune_support::rune_transfer::RuneTransfer;
 
 #[derive(Default, Clone, Debug)]

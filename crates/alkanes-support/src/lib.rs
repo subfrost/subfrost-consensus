@@ -6,4 +6,3 @@ pub mod parcel;
 pub mod response;
 mod stdio;
 pub mod storage;
-mod utils;

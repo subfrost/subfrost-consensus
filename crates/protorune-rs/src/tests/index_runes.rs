@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
+    use crate::balance_sheet::load_sheet;
     use crate::message::MessageContext;
     use crate::proto::protorune::{RunesByHeightRequest, WalletRequest};
-    use protorune::balance_sheet::load_sheet;
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 
     use crate::test_helpers as helpers;

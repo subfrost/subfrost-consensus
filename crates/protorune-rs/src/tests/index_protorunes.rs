@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use crate::balance_sheet::load_sheet;
     use crate::message::{MessageContext, MessageContextParcel};
     use crate::protostone::{Protostone, Protostones};
     use crate::test_helpers::{self as helpers, get_address, ADDRESS1};
@@ -10,7 +11,6 @@ mod tests {
         address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut,
         Witness,
     };
-    use protorune::balance_sheet::load_sheet;
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
     use protorune_support::rune_transfer::RuneTransfer;
     use protorune_support::utils::consensus_encode;

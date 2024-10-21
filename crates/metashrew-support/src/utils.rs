@@ -1,6 +1,5 @@
-use anyhow::Result;
 use crate::byte_view::ByteView;
-use std::io::BufRead;
+use anyhow::Result;
 use std::io::Read;
 use std::mem::size_of;
 
@@ -12,14 +11,12 @@ pub fn consume_sized_int<T: ByteView>(cursor: &mut std::io::Cursor<Vec<u8>>) -> 
 pub fn consume_to_end(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<Vec<u8>> {
     let mut result = vec![0u8; (cursor.get_ref().len() as u64 - cursor.position()).try_into()?];
     cursor.read_to_end(&mut result)?;
-    cursor.consume((cursor.get_ref().len() as u64 - cursor.position()).try_into()?);
     Ok(result)
 }
 
 pub fn consume_exact(cursor: &mut std::io::Cursor<Vec<u8>>, n: usize) -> Result<Vec<u8>> {
     let mut buffer: Vec<u8> = vec![0u8; n];
     cursor.read_exact(&mut buffer[0..n])?;
-    cursor.consume(n);
     Ok(buffer)
 }
 
@@ -28,11 +25,11 @@ pub fn consume_u128(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<u128> {
 }
 
 pub fn is_empty(cursor: &mut std::io::Cursor<Vec<u8>>) -> bool {
-  cursor.position() >= cursor.get_ref().len() as u64
+    cursor.position() >= cursor.get_ref().len() as u64
 }
 
 pub fn remaining_slice(cursor: &mut std::io::Cursor<Vec<u8>>) -> &[u8] {
-  &cursor.get_ref()[(cursor.position() as usize)..cursor.get_ref().len()]
+    &cursor.get_ref()[(cursor.position() as usize)..cursor.get_ref().len()]
 }
 pub fn ptr_to_vec(ptr: i32) -> Vec<u8> {
     unsafe {
@@ -52,12 +49,12 @@ pub fn format_key(v: &Vec<u8>) -> String {
         .map(|bytes| {
             let v = bytes.to_vec();
             if v.len() == 0 {
-              return "".to_owned();
+                return "".to_owned();
             }
             let r = String::from_utf8(v);
             let is_ascii = match r {
-              Ok(ref s) => s.is_ascii(),
-              Err(_) => false
+                Ok(ref s) => s.is_ascii(),
+                Err(_) => false,
             };
             if is_ascii {
                 "/".to_owned() + r.unwrap().as_str()
