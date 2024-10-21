@@ -7,6 +7,7 @@ mod tests {
         address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut,
         Witness,
     };
+    use metashrew::index_pointer::KeyValuePointer;
     use protorune::balance_sheet::load_sheet;
     use protorune::protostone::{Protostone, Protostones};
     use protorune::test_helpers::{self as helpers, get_address, ADDRESS1};
@@ -16,7 +17,7 @@ mod tests {
 
     use crate::tests::helpers as alkane_helpers;
     use bitcoin::secp256k1::PublicKey;
-    use metashrew::{clear, get_cache, index_pointer::KeyValuePointer, println, stdio::stdout};
+    use metashrew::{clear, get_cache, println, stdio::stdout};
     use metashrew_support::utils::format_key;
     use ordinals::{Etching, Rune, Runestone};
     use std::fmt::Write;

@@ -29,7 +29,7 @@ macro_rules! println {
 }
 
 #[allow(unused_unsafe)]
-pub fn log(v: Arc<Vec<u8>>) -> () {
+pub fn _log(v: Arc<Vec<u8>>) -> () {
     unsafe {
         __log(to_ptr(&mut to_arraybuffer_layout(v.as_ref())) + 4);
     }

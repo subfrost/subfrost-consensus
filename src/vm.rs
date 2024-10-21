@@ -8,11 +8,13 @@ use alkanes_support::{
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
+use metashrew::index_pointer::KeyValuePointer;
 use metashrew::{
-    index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer},
+    index_pointer::{AtomicPointer, IndexPointer},
     println,
     stdio::stdout,
 };
+
 use protorune::message::MessageContextParcel;
 use protorune_support::utils::consensus_encode;
 use std::fmt::Write;
@@ -51,24 +53,28 @@ impl AlkanesRuntimeContext {
         result.push(self.myself.tx);
         result.push(self.caller.block);
         result.push(self.caller.tx);
-        println!("incoming alkanes length {}", self.incoming_alkanes.0.len());
         result.push(self.incoming_alkanes.0.len() as u128);
         for incoming in &self.incoming_alkanes.0 {
             result.push(incoming.id.block);
             result.push(incoming.id.tx);
             result.push(incoming.value);
         }
-        for input in &self.inputs {
-            result.push(input.clone());
-        }
+        // for input in &self.inputs {
+        //     result.push(input.clone());
+        // }
         result
     }
     pub fn serialize(&self) -> Vec<u8> {
-        self.flatten()
-            .into_iter()
-            .map(|v| (&v.to_le_bytes()).to_vec())
+        let result = self
             .flatten()
-            .collect::<Vec<u8>>()
+            .into_iter()
+            .map(|v| {
+                let ar = (&v.to_le_bytes()).to_vec();
+                ar
+            })
+            .flatten()
+            .collect::<Vec<u8>>();
+        result
     }
 }
 
@@ -877,6 +883,5 @@ pub fn send_to_arraybuffer<'a>(
         .map_err(|_| anyhow!("failed to write ArrayBuffer"))?;
     mem.write(&mut *caller, ptr, v.as_slice())
         .map_err(|_| anyhow!("failed to write ArrayBuffer"))?;
-    println!("wrote to arraybuffer");
     Ok(ptr.try_into()?)
 }
