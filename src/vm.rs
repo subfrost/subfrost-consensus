@@ -512,6 +512,7 @@ impl AlkanesInstance {
         alkane: &AlkaneId,
         context: AlkanesRuntimeContext,
         start_fuel: u64,
+        wasm_payload: Arc<Vec<u8>>,
     ) -> Result<Self> {
         let mut config = Config::default();
         config.consume_fuel(true);
@@ -526,12 +527,7 @@ impl AlkanesInstance {
         );
         store.limiter(|state| &mut state.limiter);
         Store::<AlkanesState>::set_fuel(&mut store, start_fuel)?; // TODO: implement gas limits
-        let cloned = IndexPointer::from_keyword("/alkanes/")
-            .select(&alkane.into())
-            .get()
-            .as_ref()
-            .clone();
-        let module = Module::new(&engine, &mut &cloned[..])?;
+        let module = Module::new(&engine, &mut &wasm_payload[..])?;
         let mut linker: Linker<AlkanesState> = Linker::<AlkanesState>::new(&engine);
         linker.func_wrap("env", "abort", AlkanesHostFunctionsImpl::abort)?;
         linker.func_wrap(
@@ -618,6 +614,7 @@ impl AlkanesInstance {
                 }
             },
         )?;
+
         linker.func_wrap(
             "env",
             "__returndatacopy",
@@ -667,15 +664,6 @@ impl AlkanesInstance {
             "__load_block",
             |mut caller: Caller<'_, AlkanesState>, output: i32| {
                 if let Err(_e) = AlkanesHostFunctionsImpl::load_block(&mut caller, output) {
-                    AlkanesHostFunctionsImpl::_abort(caller);
-                }
-            },
-        )?;
-        linker.func_wrap(
-            "env",
-            "__returndatacopy",
-            |mut caller: Caller<'_, AlkanesState>, output: i32| {
-                if let Err(_e) = AlkanesHostFunctionsImpl::returndatacopy(&mut caller, output) {
                     AlkanesHostFunctionsImpl::_abort(caller);
                 }
             },
@@ -814,6 +802,11 @@ pub fn run(
     start_fuel: u64,
 ) -> Result<CallResponse> {
     let mut payload = cellpack.clone();
+    let wasm_payload = Arc::new(
+        find_witness_payload(&context.message.transaction)
+            .ok_or("finding witness payload failed for creation of alkane")
+            .map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?,
+    );
     if cellpack.target.is_create() {
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
@@ -823,11 +816,7 @@ pub fn run(
             .atomic
             .keyword("/alkanes/")
             .select(&new_id.clone().into())
-            .set(Arc::new(
-                find_witness_payload(&context.message.transaction)
-                    .ok_or("")
-                    .map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?,
-            ));
+            .set(wasm_payload.clone());
         next_sequence_pointer.set_value(next_sequence + 1);
         payload.target = new_id.clone();
     } else if let Some(number) = cellpack.target.reserved() {
@@ -838,13 +827,7 @@ pub fn run(
             .keyword("/alkanes/")
             .select(&new_id.clone().into());
         if ptr.get().as_ref().len() == 0 {
-            ptr.set(Arc::new(
-                find_witness_payload(&context.message.transaction)
-                    .ok_or("")
-                    .map_err(|_| {
-                        anyhow!("used CREATERESERVED cellpack but no binary found in witness")
-                    })?,
-            ));
+            ptr.set(wasm_payload.clone());
             payload.target = new_id.clone();
         } else {
             return Err(anyhow!(format!(
@@ -875,7 +858,8 @@ pub fn run(
         payload.target = new_id.clone();
     }
     // TODO: implement reserved/factory/etc
-    AlkanesInstance::from_alkane(&payload.target, context, start_fuel)?.execute()
+    AlkanesInstance::from_alkane(&payload.target, context, start_fuel, wasm_payload.clone())?
+        .execute()
 }
 
 pub fn send_to_arraybuffer<'a>(
