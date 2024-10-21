@@ -12,5 +12,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 anyhow = "1.0.90"
-protorune-support = { git = "https://github.com/kungfuflex/protorune-rs" }
-metashrew-support = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }
+protorune-support = { path = "../protorune-support" }
+metashrew-support = { path = "../metashrew-support" }

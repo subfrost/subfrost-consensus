@@ -1,27 +1,17 @@
 #[cfg(test)]
 mod tests {
-    use protorune::proto::protorune::{RunesByHeightRequest, WalletRequest};
+    use protorune::proto::protorune::WalletRequest;
 
     use protorune::test_helpers as helpers;
-    use protorune::test_helpers::{
-        create_test_transaction_with_witness, display_list_as_hex, display_vec_as_hex,
-    };
+    use protorune::test_helpers::create_test_transaction_with_witness;
     use protorune::Protorune;
-    use protorune::{tables, view};
 
-    use bitcoin::consensus::serialize;
-    use bitcoin::hashes::Hash;
-    use hex;
-    use std::fmt::Write;
-
-    use metashrew::{clear, index_pointer::KeyValuePointer};
+    use metashrew::clear;
 
     use protobuf::{Message, SpecialFields};
 
     use crate::message::AlkaneMessageContext;
     use crate::tests::std::alkanes_std_test_build;
-    use std::str::FromStr;
-    use std::sync::Arc;
     use wasm_bindgen_test::*;
 
     #[wasm_bindgen_test]
@@ -31,7 +21,7 @@ mod tests {
         let wasm_binary = alkanes_std_test_build::get_bytes();
         let tx = create_test_transaction_with_witness(wasm_binary);
         test_block.txdata.push(tx);
-        let _ = Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840001);
+        Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840001).unwrap();
         let req = (WalletRequest {
             wallet: "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
                 .as_bytes()

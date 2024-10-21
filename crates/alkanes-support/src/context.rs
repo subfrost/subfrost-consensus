@@ -1,6 +1,7 @@
 use crate::{id::AlkaneId, parcel::AlkaneTransferParcel};
 use anyhow::Result;
-use metashrew_support::utils::{consume_sized_int, is_empty};
+use metashrew_support::utils::consume_sized_int;
+use metashrew_support::utils::is_empty;
 use std::io::Cursor;
 
 #[derive(Clone, Default, Debug)]

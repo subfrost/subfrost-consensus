@@ -8,11 +8,13 @@ use alkanes_support::{
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
+use metashrew::index_pointer::KeyValuePointer;
 use metashrew::{
-    index_pointer::{AtomicPointer, IndexPointer, KeyValuePointer},
+    index_pointer::{AtomicPointer, IndexPointer},
     println,
     stdio::stdout,
 };
+
 use protorune::message::MessageContextParcel;
 use protorune_support::utils::consensus_encode;
 use std::fmt::Write;
@@ -57,17 +59,22 @@ impl AlkanesRuntimeContext {
             result.push(incoming.id.tx);
             result.push(incoming.value);
         }
-        for input in &self.inputs {
-            result.push(input.clone());
-        }
+        // for input in &self.inputs {
+        //     result.push(input.clone());
+        // }
         result
     }
     pub fn serialize(&self) -> Vec<u8> {
-        self.flatten()
-            .into_iter()
-            .map(|v| (&v.to_le_bytes()).to_vec())
+        let result = self
             .flatten()
-            .collect::<Vec<u8>>()
+            .into_iter()
+            .map(|v| {
+                let ar = (&v.to_le_bytes()).to_vec();
+                ar
+            })
+            .flatten()
+            .collect::<Vec<u8>>();
+        result
     }
 }
 
@@ -161,10 +168,9 @@ impl AlkanesHostFunctionsImpl {
             .len()
             .try_into()?)
     }
-    fn load_context(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
+    fn load_context(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<i32> {
         let context = caller.data_mut().context.lock().unwrap().serialize();
-        send_to_arraybuffer(caller, v.try_into()?, &context)?;
-        Ok(())
+        send_to_arraybuffer(caller, v.try_into()?, &context)
     }
     fn request_transaction(caller: &mut Caller<'_, AlkanesState>) -> Result<i32> {
         Ok(consensus_encode(
@@ -453,6 +459,7 @@ impl AlkanesExportsImpl {
                 .map_err(|_| anyhow!("result is not an i32"))?,
         )
     }
+
     pub fn execute(vm: &mut AlkanesInstance) -> Result<CallResponse> {
         let mut result = [Val::I32(0)];
         let func = Self::_get_export(vm, "__execute")?;
@@ -591,8 +598,12 @@ impl AlkanesInstance {
             "env",
             "__load_context",
             |mut caller: Caller<'_, AlkanesState>, output: i32| {
-                if let Err(_e) = AlkanesHostFunctionsImpl::load_context(&mut caller, output) {
-                    AlkanesHostFunctionsImpl::_abort(caller);
+                match AlkanesHostFunctionsImpl::load_context(&mut caller, output) {
+                    Ok(v) => v,
+                    Err(_e) => {
+                        AlkanesHostFunctionsImpl::_abort(caller);
+                        -1
+                    }
                 }
             },
         )?;
