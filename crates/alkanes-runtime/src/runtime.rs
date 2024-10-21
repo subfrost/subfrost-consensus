@@ -20,15 +20,10 @@ static mut _CACHE: Option<StorageMap> = None;
 
 pub trait AlkaneResponder {
     fn context(&self) -> Result<Context> {
-        println!("getting context");
         unsafe {
-            println!("requesting context");
             let mut buffer: Vec<u8> = to_arraybuffer_layout(vec![0; __request_context() as usize]);
-            println!("loading context");
             __load_context(to_ptr(&mut buffer) + 4);
-            println!("loaded context");
             let res = Context::parse(&mut Cursor::<Vec<u8>>::new((&buffer[4..]).to_vec()));
-            println!("{}", res.is_err());
             res
         }
     }
