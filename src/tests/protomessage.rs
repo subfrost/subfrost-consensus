@@ -14,6 +14,7 @@ mod tests {
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
     use protorune_support::utils::consensus_encode;
 
+    use crate::tests::helpers as alkane_helpers;
     use bitcoin::secp256k1::PublicKey;
     use metashrew::{clear, get_cache, index_pointer::KeyValuePointer, println, stdio::stdout};
     use metashrew_support::utils::format_key;
@@ -233,102 +234,28 @@ mod tests {
     async fn protomessage_with_binary_test() {
         clear();
         let block_height = 840000;
-        let protocol_id = 122;
         let mut test_block = helpers::create_block_with_coinbase_tx(block_height);
-
-        let previous_output = OutPoint {
-            txid: bitcoin::Txid::from_str(
-                "0000000000000000000000000000000000000000000000000000000000000000",
-            )
-            .unwrap(),
-            vout: 0,
-        };
 
         let wasm_binary = alkanes_std_test_build::get_bytes();
         let raw_envelope = RawEnvelope::from(wasm_binary);
 
-        let input_script = ScriptBuf::new();
-
         let witness = raw_envelope.to_witness();
 
         // Create a transaction input
-        let txin = TxIn {
-            previous_output,
-            script_sig: input_script,
-            sequence: Sequence::MAX,
-            witness,
+        let input_cellpack = Cellpack {
+            target: AlkaneId { block: 1, tx: 0 },
+            inputs: vec![
+                123456789123456789123456789u128,
+                987654321987654321987654321u128,
+            ],
         };
 
-        let address: Address<NetworkChecked> = get_address(&ADDRESS1);
-
-        let script_pubkey = address.script_pubkey();
-
-        let txout = TxOut {
-            value: Amount::from_sat(100_000_000).to_sat(),
-            script_pubkey,
-        };
-
-        let runestone: ScriptBuf = (Runestone {
-            etching: Some(Etching {
-                divisibility: Some(2),
-                premine: Some(1000),
-                rune: Some(Rune::from_str("TESTTESTTEST").unwrap()),
-                spacers: Some(0),
-                symbol: Some(char::from_str("A").unwrap()),
-                turbo: true,
-                terms: None,
-            }),
-            pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
-            edicts: Vec::new(),
-            mint: None,
-            protocol: match vec![
-                Protostone {
-                    burn: Some(protocol_id),
-                    edicts: vec![],
-                    pointer: Some(4),
-                    refund: None,
-                    from: None,
-                    protocol_tag: 13, // this value must be 13 if protoburn
-                    message: vec![],
-                },
-                Protostone {
-                    // protomessage with nonsensical inforamtion, which should all be refunded
-                    message: Cellpack {
-                        target: AlkaneId { block: 1, tx: 0 },
-                        inputs: vec![
-                            123456789123456789123456789u128,
-                            987654321987654321987654321u128,
-                        ],
-                    }
-                    .encipher(),
-                    pointer: Some(0),
-                    refund: Some(0),
-                    edicts: vec![],
-                    from: None,
-                    burn: None,
-                    protocol_tag: protocol_id as u128,
-                },
-            ]
-            .encipher()
-            {
-                Ok(v) => Some(v),
-                Err(_) => None,
-            },
-        })
-        .encipher();
-
-        //     // op return is at output 1
-        let op_return = TxOut {
-            value: Amount::from_sat(0).to_sat(),
-            script_pubkey: runestone,
-        };
-
-        test_block.txdata.push(Transaction {
-            version: 1,
-            lock_time: bitcoin::absolute::LockTime::ZERO,
-            input: vec![txin],
-            output: vec![txout, op_return],
-        });
+        test_block
+            .txdata
+            .push(alkane_helpers::create_cellpack_with_witness(
+                witness,
+                input_cellpack,
+            ));
         assert!(Protorune::index_block::<AlkaneMessageContext>(
             test_block.clone(),
             block_height as u64

@@ -161,10 +161,9 @@ impl AlkanesHostFunctionsImpl {
             .len()
             .try_into()?)
     }
-    fn load_context(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
+    fn load_context(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<i32> {
         let context = caller.data_mut().context.lock().unwrap().serialize();
-        send_to_arraybuffer(caller, v.try_into()?, &context)?;
-        Ok(())
+        send_to_arraybuffer(caller, v.try_into()?, &context)
     }
     fn request_transaction(caller: &mut Caller<'_, AlkanesState>) -> Result<i32> {
         Ok(consensus_encode(
@@ -453,6 +452,7 @@ impl AlkanesExportsImpl {
                 .map_err(|_| anyhow!("result is not an i32"))?,
         )
     }
+
     pub fn execute(vm: &mut AlkanesInstance) -> Result<CallResponse> {
         let mut result = [Val::I32(0)];
         let func = Self::_get_export(vm, "__execute")?;
@@ -591,8 +591,12 @@ impl AlkanesInstance {
             "env",
             "__load_context",
             |mut caller: Caller<'_, AlkanesState>, output: i32| {
-                if let Err(_e) = AlkanesHostFunctionsImpl::load_context(&mut caller, output) {
-                    AlkanesHostFunctionsImpl::_abort(caller);
+                match AlkanesHostFunctionsImpl::load_context(&mut caller, output) {
+                    Ok(v) => v,
+                    Err(_e) => {
+                        AlkanesHostFunctionsImpl::_abort(caller);
+                        -1
+                    }
                 }
             },
         )?;
@@ -872,5 +876,6 @@ pub fn send_to_arraybuffer<'a>(
         .map_err(|_| anyhow!("failed to write ArrayBuffer"))?;
     mem.write(&mut *caller, ptr, v.as_slice())
         .map_err(|_| anyhow!("failed to write ArrayBuffer"))?;
+    println!("wrote to arraybuffer");
     Ok(ptr.try_into()?)
 }

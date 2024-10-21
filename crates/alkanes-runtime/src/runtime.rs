@@ -4,6 +4,10 @@ use crate::imports::{
     __load_transaction, __log, __request_block, __request_context, __request_storage,
     __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
 };
+use crate::{
+    println,
+    stdio::{stdout, Write},
+};
 use anyhow::Result;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use std::io::Cursor;
@@ -16,10 +20,16 @@ static mut _CACHE: Option<StorageMap> = None;
 
 pub trait AlkaneResponder {
     fn context(&self) -> Result<Context> {
+        println!("getting context");
         unsafe {
+            println!("requesting context");
             let mut buffer: Vec<u8> = to_arraybuffer_layout(vec![0; __request_context() as usize]);
+            println!("loading context");
             __load_context(to_ptr(&mut buffer) + 4);
-            Context::parse(&mut Cursor::<Vec<u8>>::new((&buffer[4..]).to_vec()))
+            println!("loaded context");
+            let res = Context::parse(&mut Cursor::<Vec<u8>>::new((&buffer[4..]).to_vec()));
+            println!("{}", res.is_err());
+            res
         }
     }
     fn block(&self) -> Vec<u8> {

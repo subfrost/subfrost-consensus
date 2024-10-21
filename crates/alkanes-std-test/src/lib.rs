@@ -8,6 +8,10 @@ struct LoggerAlkane(());
 
 impl AlkaneResponder for LoggerAlkane {
     fn execute(&self) -> CallResponse {
+        let _v = self.context().is_err_and(|e| {
+            println!("{}", e);
+            true
+        });
         println!("hello world!");
         self.balance(
             &AlkaneId {
