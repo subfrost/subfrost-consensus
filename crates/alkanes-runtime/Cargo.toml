@@ -13,4 +13,4 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 alkanes-support = { path = "../alkanes-support" }
 anyhow = "1.0.90"
-metashrew-support = { git = "https://github.com/sandshrewmetaprotocols/metashrew-rs" }
+metashrew-support = { path = "../metashrew-support"  }
