@@ -25,15 +25,24 @@ impl Cellpack {
         }
         Ok(result)
     }
-
-    /// Enciphers a Cellpack to a raw protomessage calldata
-    pub fn encipher(&self) -> Vec<u8> {
-        let mut values = Vec::<u128>::new();
+    pub fn to_vec(&self) -> Vec<u128> {
+        let mut values = Vec::<u128>::with_capacity(self.inputs.len() + 2);
         values.push(self.target.block);
         values.push(self.target.tx);
         values.extend(&self.inputs);
+        values
+    }
+    pub fn serialize(&self) -> Vec<u8> {
+        self.to_vec()
+            .into_iter()
+            .map(|v| (&v.to_le_bytes()).to_vec())
+            .flatten()
+            .collect::<Vec<u8>>()
+    }
+
+    pub fn encipher(&self) -> Vec<u8> {
         // leb encode the list
-        return encode_varint_list(&values);
+        return encode_varint_list(&self.to_vec());
     }
 
     // non LEB encipher if we ever need it

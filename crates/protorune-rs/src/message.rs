@@ -1,9 +1,9 @@
-use protorune_support::balance_sheet::BalanceSheet;
-use protorune_support::rune_transfer::RuneTransfer;
-use protorune_support::utils::consensus_encode;
 use anyhow::Result;
 use bitcoin::{Block, OutPoint, Transaction};
 use metashrew::index_pointer::AtomicPointer;
+use protorune_support::balance_sheet::BalanceSheet;
+use protorune_support::rune_transfer::RuneTransfer;
+use protorune_support::utils::consensus_encode;
 use std::u128;
 
 pub trait MessageContext {

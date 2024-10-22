@@ -1,4 +1,3 @@
-use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use crate::proto::protorune::{
     BalanceSheet as ProtoBalanceSheet,
     BalanceSheetItem,
@@ -11,10 +10,11 @@ use crate::proto::protorune::{
     RunesResponse,
     WalletResponse,
 };
-use protorune_support::utils::{consensus_decode};
-use crate::{balance_sheet::{load_sheet}, proto, tables};
+use crate::{balance_sheet::load_sheet, proto, tables};
 use anyhow::{anyhow, Result};
 use bitcoin;
+use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
+use protorune_support::utils::consensus_decode;
 //use bitcoin::consensus::Decodable;
 use bitcoin::hashes::Hash;
 use bitcoin::OutPoint;

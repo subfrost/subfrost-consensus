@@ -8,6 +8,12 @@ pub struct AlkaneId {
     pub tx: u128,
 }
 
+impl Into<Vec<u128>> for AlkaneId {
+    fn into(self) -> Vec<u128> {
+        (&[self.block, self.tx]).to_vec()
+    }
+}
+
 impl From<ProtoruneRuneId> for AlkaneId {
     fn from(id: ProtoruneRuneId) -> AlkaneId {
         AlkaneId {

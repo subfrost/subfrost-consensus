@@ -1,7 +1,7 @@
+use crate::balance_sheet::{load_sheet, PersistentRecord};
 use crate::message::MessageContext;
 use crate::protostone::ProtostoneEdict;
 use crate::tables::RuneTable;
-use protorune_support::constants;
 use anyhow::{anyhow, Ok, Result};
 use bitcoin::blockdata::block::Block;
 use bitcoin::hashes::Hash;
@@ -18,7 +18,7 @@ use ordinals::{Edict, Etching};
 use proto::protorune::{Output, RunesResponse, WalletResponse};
 use protobuf::{Message, SpecialFields};
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
-use crate::balance_sheet::{load_sheet, PersistentRecord};
+use protorune_support::constants;
 use protorune_support::utils::consensus_encode;
 use protorune_support::utils::field_to_name;
 use protostone::{
@@ -85,7 +85,9 @@ pub fn runesbyaddress() -> i32 {
     let mut data: Cursor<Vec<u8>> = Cursor::new(input());
     let result: WalletResponse =
         view::runes_by_address(&consume_to_end(&mut data).unwrap()).unwrap();
-    to_ptr(&mut to_arraybuffer_layout::<&[u8]>(result.write_to_bytes().unwrap().as_ref())) + 4
+    to_ptr(&mut to_arraybuffer_layout::<&[u8]>(
+        result.write_to_bytes().unwrap().as_ref(),
+    )) + 4
 }
 
 #[no_mangle]
@@ -93,7 +95,9 @@ pub fn protorunesbyaddress() -> i32 {
     let mut data: Cursor<Vec<u8>> = Cursor::new(input());
     let result: WalletResponse =
         view::protorunes_by_address(&consume_to_end(&mut data).unwrap()).unwrap();
-    to_ptr(&mut to_arraybuffer_layout::<&[u8]>(&result.write_to_bytes().unwrap())) + 4
+    to_ptr(&mut to_arraybuffer_layout::<&[u8]>(
+        &result.write_to_bytes().unwrap(),
+    )) + 4
 }
 
 #[no_mangle]

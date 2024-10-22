@@ -1,5 +1,5 @@
-use metashrew_support::byte_view::ByteView;
 use crate::{get, set};
+use metashrew_support::byte_view::ByteView;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -298,9 +298,9 @@ impl AtomicPointer {
         self.store.0.lock().unwrap().pop();
     }
     pub fn derive(&self, pointer: &IndexPointer) -> Self {
-      AtomicPointer {
-        store: self.store.clone(),
-        pointer: pointer.clone()
-      }
+        AtomicPointer {
+            store: self.store.clone(),
+            pointer: pointer.clone(),
+        }
     }
 }

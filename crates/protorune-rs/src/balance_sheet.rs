@@ -1,7 +1,7 @@
-use metashrew::index_pointer::{KeyValuePointer};
-use protorune_support::balance_sheet::{ProtoruneRuneId, BalanceSheet};
-use std::collections::{HashMap};
 use anyhow::{anyhow, Result};
+use metashrew::index_pointer::KeyValuePointer;
+use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
+use std::collections::HashMap;
 pub trait PersistentRecord {
     fn save<T: KeyValuePointer>(&self, ptr: &T, is_cenotaph: bool) {
         let runes_ptr = ptr.keyword("/runes");
@@ -24,7 +24,10 @@ pub trait PersistentRecord {
     ) -> Result<()> {
         let runes_ptr = ptr.keyword("/runes");
         let balances_ptr = ptr.keyword("/balances");
-        let balance = self.balances().get(rune).ok_or(anyhow!("no balance found"))?;
+        let balance = self
+            .balances()
+            .get(rune)
+            .ok_or(anyhow!("no balance found"))?;
         if *balance != 0u128 && !is_cenotaph {
             runes_ptr.append((*rune).into());
             balances_ptr.append_value::<u128>(*balance);

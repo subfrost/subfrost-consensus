@@ -1,7 +1,7 @@
 use std::sync::Arc;
 //use std::io::{Write, Result};
-use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use crate::imports::__log;
+use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 pub use std::fmt::{Error, Write};
 
 pub struct Stdout(());
