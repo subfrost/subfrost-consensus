@@ -47,7 +47,7 @@ impl From<Vec<u8>> for RawEnvelope {
 }
 
 impl RawEnvelope {
-    pub(crate) fn from_transaction(transaction: &Transaction) -> Vec<Self> {
+    pub fn from_transaction(transaction: &Transaction) -> Vec<Self> {
         let mut envelopes = Vec::new();
 
         for (i, input) in transaction.input.iter().enumerate() {

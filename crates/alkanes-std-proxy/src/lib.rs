@@ -1,7 +1,8 @@
 use alkanes_runtime::{println, runtime::AlkaneResponder, stdio::stdout};
 use alkanes_support::{id::AlkaneId, response::CallResponse};
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
-use bitcoin::blockdata::{Transaction};
+use protorune_support::utils::{consensus_decode};
+use bitcoin::blockdata::transaction::{Transaction};
 use alkanes_support::envelope::{RawEnvelope};
 use std::fmt::Write;
 
@@ -20,7 +21,7 @@ fn shift<T>(v: &mut Vec<T>) -> Option<T> {
 impl AlkaneResponder for Proxy {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
-        Transaction::from_bytes(&self.transaction());
+        consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()));
         let mut inputs = context.inputs.clone();
         let opcode = shift(&mut inputs).unwrap();
         CallResponse::default()
