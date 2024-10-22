@@ -1,4 +1,4 @@
 *.swp
 *.swo
 target
-src/tests/std/*
+src/tests/std/**/*.rs
