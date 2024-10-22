@@ -1,7 +1,7 @@
 use crate::utils::consume_sized_int;
 use crate::{
     id::AlkaneId,
-    parcel::{AlkaneTransfer, AlkaneTransferParcel},
+    parcel::{AlkaneTransfer, AlkaneTransferParcel}
 };
 use anyhow::Result;
 use metashrew_support::utils::is_empty;

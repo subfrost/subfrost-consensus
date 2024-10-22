@@ -68,6 +68,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "alkanes-std-proxy"
+version = "0.1.0"
+dependencies = [
+ "alkanes-runtime",
+ "alkanes-support",
+ "metashrew-support 0.1.0 (git+https://github.com/sandshrewmetaprotocols/metashrew-rs)",
+]
+
+[[package]]
 name = "alkanes-std-test"
 version = "0.1.0"
 dependencies = [

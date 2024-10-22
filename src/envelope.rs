@@ -1,12 +1,12 @@
 use {
     bitcoin::blockdata::{
+        constants::MAX_SCRIPT_ELEMENT_SIZE,
         opcodes,
         script::{
             Instruction::{self, Op, PushBytes},
             Instructions,
         },
-        witness::{Witness},
-        constants::{MAX_SCRIPT_ELEMENT_SIZE}
+        witness::Witness,
     },
     bitcoin::script,
     bitcoin::script::Script,
@@ -31,15 +31,19 @@ pub struct Envelope<T> {
 }
 
 impl From<Vec<u8>> for RawEnvelope {
-  fn from(v: Vec<u8>) -> RawEnvelope {
-    RawEnvelope {
-      input: 0,
-      offset: 0,
-      payload: v.chunks(MAX_SCRIPT_ELEMENT_SIZE).into_iter().map(|v| v.to_vec()).collect::<Vec<Vec<u8>>>(),
-      pushnum: false,
-      stutter: false
+    fn from(v: Vec<u8>) -> RawEnvelope {
+        RawEnvelope {
+            input: 0,
+            offset: 0,
+            payload: v
+                .chunks(MAX_SCRIPT_ELEMENT_SIZE)
+                .into_iter()
+                .map(|v| v.to_vec())
+                .collect::<Vec<Vec<u8>>>(),
+            pushnum: false,
+            stutter: false,
+        }
     }
-  }
 }
 
 impl RawEnvelope {
@@ -86,30 +90,34 @@ impl RawEnvelope {
             Ok(false)
         }
     }
-    fn append_reveal_script(
-      &self,
-      mut builder: script::Builder,
-    ) -> script::ScriptBuf {
-      builder = builder
-      .push_opcode(opcodes::OP_FALSE)
-      .push_opcode(opcodes::all::OP_IF)
-      .push_slice(PROTOCOL_ID);
+    fn append_reveal_script(&self, mut builder: script::Builder) -> script::ScriptBuf {
+        builder = builder
+            .push_opcode(opcodes::OP_FALSE)
+            .push_opcode(opcodes::all::OP_IF)
+            .push_slice(PROTOCOL_ID);
 
-      builder = builder.push_slice(BODY_TAG);
-      for chunk in self.payload.clone().into_iter().flatten().collect::<Vec<u8>>().chunks(MAX_SCRIPT_ELEMENT_SIZE) {
-        builder = builder.push_slice::<&script::PushBytes>(chunk.try_into().unwrap());
-      }
-      builder.push_opcode(opcodes::all::OP_ENDIF).into_script()
+        builder = builder.push_slice(BODY_TAG);
+        for chunk in self
+            .payload
+            .clone()
+            .into_iter()
+            .flatten()
+            .collect::<Vec<u8>>()
+            .chunks(MAX_SCRIPT_ELEMENT_SIZE)
+        {
+            builder = builder.push_slice::<&script::PushBytes>(chunk.try_into().unwrap());
+        }
+        builder.push_opcode(opcodes::all::OP_ENDIF).into_script()
     }
     pub fn to_witness(&self) -> Witness {
-      let builder = script::Builder::new();
+        let builder = script::Builder::new();
 
-      let script = self.append_reveal_script(builder);
+        let script = self.append_reveal_script(builder);
 
-      let mut witness = Witness::new();
-      witness.push(script);
-      witness.push([]);
-      witness
+        let mut witness = Witness::new();
+        witness.push(script);
+        witness.push([]);
+        witness
     }
 
     fn from_instructions(

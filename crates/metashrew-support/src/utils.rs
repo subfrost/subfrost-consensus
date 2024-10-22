@@ -1,5 +1,5 @@
-use anyhow::Result;
 use crate::byte_view::ByteView;
+use anyhow::Result;
 use std::io::BufRead;
 use std::io::Read;
 use std::mem::size_of;
@@ -28,11 +28,11 @@ pub fn consume_u128(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<u128> {
 }
 
 pub fn is_empty(cursor: &mut std::io::Cursor<Vec<u8>>) -> bool {
-  cursor.position() >= cursor.get_ref().len() as u64
+    cursor.position() >= cursor.get_ref().len() as u64
 }
 
 pub fn remaining_slice(cursor: &mut std::io::Cursor<Vec<u8>>) -> &[u8] {
-  &cursor.get_ref()[(cursor.position() as usize)..cursor.get_ref().len()]
+    &cursor.get_ref()[(cursor.position() as usize)..cursor.get_ref().len()]
 }
 pub fn ptr_to_vec(ptr: i32) -> Vec<u8> {
     unsafe {
@@ -52,12 +52,12 @@ pub fn format_key(v: &Vec<u8>) -> String {
         .map(|bytes| {
             let v = bytes.to_vec();
             if v.len() == 0 {
-              return "".to_owned();
+                return "".to_owned();
             }
             let r = String::from_utf8(v);
             let is_ascii = match r {
-              Ok(ref s) => s.is_ascii(),
-              Err(_) => false
+                Ok(ref s) => s.is_ascii(),
+                Err(_) => false,
             };
             if is_ascii {
                 "/".to_owned() + r.unwrap().as_str()
