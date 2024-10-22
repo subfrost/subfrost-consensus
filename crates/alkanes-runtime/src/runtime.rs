@@ -121,5 +121,59 @@ pub trait AlkaneResponder {
         }
         CallResponse::parse(&mut Cursor::new(returndata))
     }
+    fn delegatecall(
+        &self,
+        cellpack: &Cellpack,
+        outgoing_alkanes: &AlkaneTransferParcel,
+        fuel: u64,
+    ) -> Result<CallResponse> {
+        let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
+        let mut outgoing_alkanes_buffer: Vec<u8> =
+            to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
+        let mut storage_map_buffer =
+            to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
+        let mut returndata = vec![
+            0;
+            unsafe {
+                __delegatecall(
+                    to_ptr(&mut cellpack_buffer),
+                    to_ptr(&mut outgoing_alkanes_buffer),
+                    to_ptr(&mut storage_map_buffer),
+                    fuel,
+                )
+            } as usize
+        ];
+        unsafe {
+            __returndatacopy(to_ptr(&mut returndata));
+        }
+        CallResponse::parse(&mut Cursor::new(returndata))
+    }
+    fn staticcall(
+        &self,
+        cellpack: &Cellpack,
+        outgoing_alkanes: &AlkaneTransferParcel,
+        fuel: u64,
+    ) -> Result<CallResponse> {
+        let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
+        let mut outgoing_alkanes_buffer: Vec<u8> =
+            to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
+        let mut storage_map_buffer =
+            to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
+        let mut returndata = vec![
+            0;
+            unsafe {
+                __staticcall(
+                    to_ptr(&mut cellpack_buffer),
+                    to_ptr(&mut outgoing_alkanes_buffer),
+                    to_ptr(&mut storage_map_buffer),
+                    fuel,
+                )
+            } as usize
+        ];
+        unsafe {
+            __returndatacopy(to_ptr(&mut returndata));
+        }
+        CallResponse::parse(&mut Cursor::new(returndata))
+    }
     fn execute(&self) -> CallResponse;
 }
