@@ -41,7 +41,7 @@ dependencies = [
  "hex_lit",
  "js-sys",
  "metashrew",
- "metashrew-support 0.1.0",
+ "metashrew-support",
  "ordinals 0.0.10",
  "protobuf 3.7.1",
  "protobuf-codegen 3.7.1",
@@ -64,7 +64,7 @@ version = "0.1.0"
 dependencies = [
  "alkanes-support",
  "anyhow",
- "metashrew-support 0.1.0 (git+https://github.com/sandshrewmetaprotocols/metashrew-rs)",
+ "metashrew-support",
 ]
 
 [[package]]
@@ -82,7 +82,7 @@ version = "0.1.0"
 dependencies = [
  "alkanes-runtime",
  "alkanes-support",
- "metashrew-support 0.1.0 (git+https://github.com/sandshrewmetaprotocols/metashrew-rs)",
+ "metashrew-support",
 ]
 
 [[package]]
@@ -90,7 +90,7 @@ name = "alkanes-support"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "metashrew-support 0.1.0",
+ "metashrew-support",
  "protorune-support",
 ]
 
@@ -1154,7 +1154,7 @@ dependencies = [
  "bytes",
  "cfg-if",
  "hex",
- "metashrew-support 0.1.0",
+ "metashrew-support",
  "ordinals 0.0.8",
  "protobuf 3.7.1",
  "protobuf-codegen 3.7.1",
@@ -1167,15 +1167,6 @@ dependencies = [
 [[package]]
 name = "metashrew-support"
 version = "0.1.0"
-dependencies = [
- "anyhow",
- "hex",
-]
-
-[[package]]
-name = "metashrew-support"
-version = "0.1.0"
-source = "git+https://github.com/sandshrewmetaprotocols/metashrew-rs#b9309c610c2bac20b1eb3c501fd8b80efa0430fc"
 dependencies = [
  "anyhow",
  "hex",
@@ -1600,7 +1591,7 @@ dependencies = [
  "getrandom",
  "hex",
  "metashrew",
- "metashrew-support 0.1.0",
+ "metashrew-support",
  "once_cell",
  "ordinals 0.0.10",
  "protobuf 3.7.1",
@@ -1622,7 +1613,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bitcoin 0.30.2",
- "metashrew-support 0.1.0 (git+https://github.com/sandshrewmetaprotocols/metashrew-rs)",
+ "metashrew-support",
  "ordinals 0.0.10",
  "serde",
 ]
