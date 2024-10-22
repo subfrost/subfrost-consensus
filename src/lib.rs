@@ -5,7 +5,6 @@ use bitcoin::consensus::Decodable;
 use metashrew::{flush, input};
 use protorune::Protorune;
 
-pub mod envelope;
 pub mod message;
 #[cfg(test)]
 pub mod tests;

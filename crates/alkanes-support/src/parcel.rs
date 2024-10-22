@@ -49,29 +49,32 @@ impl AlkaneTransferParcel {
         Ok(result)
     }
     pub fn to_vec(&self) -> Vec<u128> {
-      let len = self.0.len();
-      let mut buffer: Vec<u128> = Vec::<u128>::with_capacity(len * 3 + 1);
-      buffer.push(len as u128);
-      for v in self.0.clone() {
-        let transfer_list: Vec<u128> = v.into();
-        buffer.extend(&transfer_list);
-      }
-      buffer
+        let len = self.0.len();
+        let mut buffer: Vec<u128> = Vec::<u128>::with_capacity(len * 3 + 1);
+        buffer.push(len as u128);
+        for v in self.0.clone() {
+            let transfer_list: Vec<u128> = v.into();
+            buffer.extend(&transfer_list);
+        }
+        buffer
     }
-    pub fn encipher(&self) -> Vec<u8> {
-      self.to_vec().into_iter().map(|v| (&v.to_le_bytes()).to_vec()).flatten().collect::<Vec<u8>>()
-
+    pub fn serialize(&self) -> Vec<u8> {
+        self.to_vec()
+            .into_iter()
+            .map(|v| (&v.to_le_bytes()).to_vec())
+            .flatten()
+            .collect::<Vec<u8>>()
     }
 }
 
 impl Into<Vec<u128>> for AlkaneTransfer {
-  fn into(self) -> Vec<u128> {
-    let mut buffer = Vec::<u128>::with_capacity(3);
-    let id_ints: Vec<u128> = self.id.into();
-    buffer.extend(&id_ints);
-    buffer.push(self.value);
-    buffer
-  }
+    fn into(self) -> Vec<u128> {
+        let mut buffer = Vec::<u128>::with_capacity(3);
+        let id_ints: Vec<u128> = self.id.into();
+        buffer.extend(&id_ints);
+        buffer.push(self.value);
+        buffer
+    }
 }
 
 impl AlkaneTransfer {

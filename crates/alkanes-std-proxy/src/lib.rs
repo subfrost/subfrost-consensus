@@ -23,7 +23,6 @@ impl AlkaneResponder for Proxy {
         Transaction::from_bytes(&self.transaction());
         let mut inputs = context.inputs.clone();
         let opcode = shift(&mut inputs).unwrap();
-        context.incoming_alkanes
         CallResponse::default()
     }
 }

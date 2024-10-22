@@ -7,3 +7,4 @@ pub mod response;
 mod stdio;
 pub mod storage;
 mod utils;
+pub mod envelope;

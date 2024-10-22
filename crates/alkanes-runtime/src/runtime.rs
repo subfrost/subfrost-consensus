@@ -13,7 +13,12 @@ use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use std::io::Cursor;
 
 use alkanes_support::{
-    context::Context, id::AlkaneId, response::CallResponse, storage::StorageMap,
+    cellpack::Cellpack,
+    context::Context,
+    id::AlkaneId,
+    parcel::{AlkaneTransfer, AlkaneTransferParcel},
+    response::CallResponse,
+    storage::StorageMap,
 };
 
 static mut _CACHE: Option<StorageMap> = None;
@@ -49,15 +54,20 @@ pub trait AlkaneResponder {
     }
     fn load(&self, k: Vec<u8>) -> Vec<u8> {
         unsafe {
-            if _CACHE.as_ref().unwrap().contains_key(&k) {
-              _CACHE.as_ref().unwrap().get(&k)
+            if _CACHE.as_ref().unwrap().0.contains_key(&k) {
+                _CACHE
+                    .as_ref()
+                    .unwrap()
+                    .get(&k)
+                    .map(|v| v.clone())
+                    .unwrap_or_else(|| Vec::<u8>::new())
             } else {
-            let mut key_bytes = to_arraybuffer_layout(&k);
-            let key = to_ptr(&mut key_bytes) + 4;
-            let mut buffer: Vec<u8> =
-                to_arraybuffer_layout(vec![0; __request_storage(key) as usize]);
-            __load_storage(key, to_ptr(&mut buffer) + 4);
-            (&buffer[4..]).to_vec()
+                let mut key_bytes = to_arraybuffer_layout(&k);
+                let key = to_ptr(&mut key_bytes) + 4;
+                let mut buffer: Vec<u8> =
+                    to_arraybuffer_layout(vec![0; __request_storage(key) as usize]);
+                __load_storage(key, to_ptr(&mut buffer) + 4);
+                (&buffer[4..]).to_vec()
             }
         }
     }
@@ -84,13 +94,32 @@ pub trait AlkaneResponder {
             u128::from_le_bytes((&buffer[4..]).try_into().unwrap())
         }
     }
-    fn call(&self, cellpack: &Cellpack, outgoing_alkanes: &AlkaneTransferParcel, fuel: u64) -> Result<CallResponse> {
-      let cellpack_buffer = to_arraybuffer_layout::<[u8]>(&cellpack.serialize());
-      let outgoing_alkanes_buffer: Vec<u8> = to_arraybuffer_layout::<[u8]>(&outgoing_alkanes.serialize());
-      let storage_map_buffer = to_arraybuffer_layout::<[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
-      let mut returndata = vec![0; __call(to_ptr(&mut cellpack_buffer), to_ptr(&mut outgoing_alkanes_buffer), to_ptr(&mut storage_map_buffer), fuel)];
-      __returndatacopy(to_ptr(&mut returndata))
-      CallResponse::parse(&mut Cursor::new(returndata));
+    fn call(
+        &self,
+        cellpack: &Cellpack,
+        outgoing_alkanes: &AlkaneTransferParcel,
+        fuel: u64,
+    ) -> Result<CallResponse> {
+        let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
+        let mut outgoing_alkanes_buffer: Vec<u8> =
+            to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
+        let mut storage_map_buffer =
+            to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
+        let mut returndata = vec![
+            0;
+            unsafe {
+                __call(
+                    to_ptr(&mut cellpack_buffer),
+                    to_ptr(&mut outgoing_alkanes_buffer),
+                    to_ptr(&mut storage_map_buffer),
+                    fuel,
+                )
+            } as usize
+        ];
+        unsafe {
+            __returndatacopy(to_ptr(&mut returndata));
+        }
+        CallResponse::parse(&mut Cursor::new(returndata))
     }
     fn execute(&self) -> CallResponse;
 }

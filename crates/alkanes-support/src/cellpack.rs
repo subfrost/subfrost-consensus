@@ -33,7 +33,11 @@ impl Cellpack {
         values
     }
     pub fn serialize(&self) -> Vec<u8> {
-        self.to_vec().into_iter().map(|v| (&v.to_le_bytes()).to_vec()).flatten().collect::<Vec<u8>>()
+        self.to_vec()
+            .into_iter()
+            .map(|v| (&v.to_le_bytes()).to_vec())
+            .flatten()
+            .collect::<Vec<u8>>()
     }
 
     pub fn encipher(&self) -> Vec<u8> {

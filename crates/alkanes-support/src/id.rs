@@ -9,9 +9,9 @@ pub struct AlkaneId {
 }
 
 impl Into<Vec<u128>> for AlkaneId {
-  fn into(self) -> Vec<u128> {
-    (&[self.block, self.tx]).to_vec()
-  }
+    fn into(self) -> Vec<u128> {
+        (&[self.block, self.tx]).to_vec()
+    }
 }
 
 impl From<ProtoruneRuneId> for AlkaneId {

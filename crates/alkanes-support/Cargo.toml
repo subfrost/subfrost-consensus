@@ -14,3 +14,5 @@ crate-type = ["cdylib", "rlib"]
 anyhow = "1.0.90"
 protorune-support = { path = "../protorune-support" }
 metashrew-support = { path = "../metashrew-support" }
+bitcoin = "0.32.3"
+serde = "1.0.213"
