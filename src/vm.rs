@@ -513,16 +513,15 @@ impl AlkanesInstance {
             .rollback();
     }
     pub fn from_alkane(
-        _alkane: &AlkaneId,
+        alkane: &AlkaneId,
         context: AlkanesRuntimeContext,
         start_fuel: u64,
-        next_sequence_id: AlkaneId,
     ) -> Result<Self> {
         let binary = context
             .message
             .atomic
             .keyword("/alkanes/")
-            .select(&next_sequence_id.clone().into())
+            .select(&alkane.clone().into())
             .get();
         let mut config = Config::default();
         config.consume_fuel(true);
@@ -816,36 +815,37 @@ pub fn run(
     start_fuel: u64,
 ) -> Result<CallResponse> {
     let mut payload = cellpack.clone();
-    let wasm_payload = Arc::new(
-        find_witness_payload(&context.message.transaction)
-            .ok_or("finding witness payload failed for creation of alkane")
-            .map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?,
-    );
     let mut _new_id: Option<AlkaneId> = None;
     if cellpack.target.is_create() {
+        let wasm_payload = Arc::new(
+            find_witness_payload(&context.message.transaction)
+                .ok_or("finding witness payload failed for creation of alkane")
+                .map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?,
+        );
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
-        _new_id = Some(AlkaneId::new(2, next_sequence));
-        let new_id = _new_id.ok_or(anyhow!(""))?;
+        payload.target = AlkaneId { block: 2, tx: next_sequence };
         context
             .message
             .atomic
             .keyword("/alkanes/")
-            .select(&new_id.clone().into())
+            .select(&payload.target.clone().into())
             .set(wasm_payload.clone());
         next_sequence_pointer.set_value(next_sequence + 1);
-        payload.target = new_id.clone();
     } else if let Some(number) = cellpack.target.reserved() {
-        _new_id = Some(AlkaneId::new(4, number));
-        let new_id = _new_id.ok_or(anyhow!(""))?;
+        let wasm_payload = Arc::new(
+            find_witness_payload(&context.message.transaction)
+                .ok_or("finding witness payload failed for creation of alkane")
+                .map_err(|_| anyhow!("used CREATERESERVED cellpack but no binary found in witness"))?,
+        );
+        payload.target = AlkaneId { block: 3, tx: number };
         let mut ptr = context
             .message
             .atomic
             .keyword("/alkanes/")
-            .select(&new_id.clone().into());
+            .select(&payload.target.clone().into());
         if ptr.get().as_ref().len() == 0 {
             ptr.set(wasm_payload.clone());
-            payload.target = new_id.clone();
         } else {
             return Err(anyhow!(format!(
                 "used CREATERESERVED cellpack but {} already holds a binary",
@@ -855,15 +855,13 @@ pub fn run(
     } else if let Some(factory) = cellpack.target.factory() {
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
-        let factory_id: AlkaneId = factory.into();
-        _new_id = Some(AlkaneId::new(2, next_sequence));
-        let new_id = _new_id.ok_or(anyhow!(""))?;
+        payload.target = AlkaneId::new(2, next_sequence);
         next_sequence_pointer.set_value(next_sequence + 1);
         let binary: Vec<u8> = context
             .message
             .atomic
             .keyword("/alkanes/")
-            .select(&factory_id.clone().into())
+            .select(&factory.clone().into())
             .get()
             .as_ref()
             .clone();
@@ -871,12 +869,10 @@ pub fn run(
             .message
             .atomic
             .keyword("/alkanes/")
-            .select(&new_id.into())
+            .select(&payload.target.clone().into())
             .set(Arc::new(binary));
-        payload.target = new_id.clone();
     }
-    let new_id = _new_id.ok_or(anyhow!(""))?;
-    AlkanesInstance::from_alkane(&payload.target, context, start_fuel, new_id)?.execute()
+    AlkanesInstance::from_alkane(&payload.target, context, start_fuel)?.execute()
 }
 
 pub fn send_to_arraybuffer<'a>(
