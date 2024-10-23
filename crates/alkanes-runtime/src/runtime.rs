@@ -4,6 +4,7 @@ use crate::imports::{
     __load_transaction, __log, __request_block, __request_context, __request_storage,
     __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
 };
+#[allow(unused_imports)]
 use crate::{
     println,
     stdio::{stdout, Write},
@@ -12,6 +13,7 @@ use anyhow::Result;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use std::io::Cursor;
 
+#[allow(unused_imports)]
 use alkanes_support::{
     cellpack::Cellpack,
     context::Context,

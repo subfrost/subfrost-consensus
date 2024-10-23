@@ -1,6 +1,5 @@
 use crate::byte_view::ByteView;
 use anyhow::Result;
-use std::io::BufRead;
 use std::io::Read;
 use std::mem::size_of;
 

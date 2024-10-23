@@ -24,8 +24,8 @@ mod tests {
     use std::str::FromStr;
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::envelope::RawEnvelope;
     use crate::message::AlkaneMessageContext;
+    use alkanes_support::envelope::RawEnvelope;
 
     use crate::tests::std::alkanes_std_test_build;
 
