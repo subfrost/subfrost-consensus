@@ -5,11 +5,11 @@ use alkanes_support::{
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
+use hex;
 use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr},
     utils::consume_sized_int,
 };
-use hex;
 use protorune_support::utils::consensus_decode;
 
 #[derive(Default)]
@@ -77,7 +77,9 @@ impl AlkaneResponder for AMMFactory {
                         (String::from("/pools/")
                             + hex::encode(
                                 context
-                                    .incoming_alkanes.0.into_iter()
+                                    .incoming_alkanes
+                                    .0
+                                    .into_iter()
                                     .map(|v| <AlkaneId as Into<Vec<u8>>>::into(v.id))
                                     .flatten()
                                     .collect::<Vec<u8>>(),
@@ -87,7 +89,10 @@ impl AlkaneResponder for AMMFactory {
                         .to_vec(),
                     ),
                 );
-                response.data = (&consume_sized_int::<u128>(&mut cursor).unwrap().to_le_bytes()).to_vec();
+                response.data = (&consume_sized_int::<u128>(&mut cursor)
+                    .unwrap()
+                    .to_le_bytes())
+                    .to_vec();
                 response
             }
             _ => {

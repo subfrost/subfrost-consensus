@@ -55,9 +55,15 @@ impl AlkaneId {
     }
     pub fn factory(&self) -> Option<AlkaneId> {
         if self.block == 5 {
-            Some(AlkaneId { block: 2, tx: self.tx })
+            Some(AlkaneId {
+                block: 2,
+                tx: self.tx,
+            })
         } else if self.block == 6 {
-            Some(AlkaneId { block: 4, tx: self.tx })
+            Some(AlkaneId {
+                block: 4,
+                tx: self.tx,
+            })
         } else {
             None
         }

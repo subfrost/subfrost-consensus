@@ -1,11 +1,9 @@
 use crate::utils::{pipe_storagemap_to, transfer_from};
 use alkanes_support::{
-    cellpack::Cellpack, envelope::RawEnvelope, id::AlkaneId, parcel::AlkaneTransferParcel,
-    response::CallResponse, storage::StorageMap,
-    witness::{find_witness_payload}
+    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
+    storage::StorageMap, witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
-use bitcoin::blockdata::transaction::Transaction;
 use metashrew::index_pointer::KeyValuePointer;
 use metashrew::{
     index_pointer::{AtomicPointer, IndexPointer},
@@ -793,7 +791,6 @@ pub fn sequence_pointer(ptr: &AtomicPointer) -> AtomicPointer {
     ptr.derive(&IndexPointer::from_keyword("/alkanes/sequence"))
 }
 
-
 pub fn run(
     context: AlkanesRuntimeContext,
     cellpack: &Cellpack,
@@ -809,7 +806,10 @@ pub fn run(
         );
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
-        payload.target = AlkaneId { block: 2, tx: next_sequence };
+        payload.target = AlkaneId {
+            block: 2,
+            tx: next_sequence,
+        };
         context
             .message
             .atomic
@@ -821,9 +821,14 @@ pub fn run(
         let wasm_payload = Arc::new(
             find_witness_payload(&context.message.transaction, 0)
                 .ok_or("finding witness payload failed for creation of alkane")
-                .map_err(|_| anyhow!("used CREATERESERVED cellpack but no binary found in witness"))?,
+                .map_err(|_| {
+                    anyhow!("used CREATERESERVED cellpack but no binary found in witness")
+                })?,
         );
-        payload.target = AlkaneId { block: 3, tx: number };
+        payload.target = AlkaneId {
+            block: 3,
+            tx: number,
+        };
         let mut ptr = context
             .message
             .atomic
