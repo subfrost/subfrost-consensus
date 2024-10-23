@@ -96,6 +96,15 @@ pub trait AlkaneResponder {
             u128::from_le_bytes((&buffer[4..]).try_into().unwrap())
         }
     }
+    fn fuel(
+        &self
+    ) -> u64 {
+        unsafe {
+            let mut buffer: Vec<u8> = to_arraybuffer_layout(vec![0; 8]);
+            __fuel(to_ptr(&mut buffer) + 4);
+            u64::from_le_bytes((&buffer[4..]).try_into().unwrap())
+        }
+    }
     fn call(
         &self,
         cellpack: &Cellpack,

@@ -7,3 +7,4 @@ pub mod response;
 pub mod stdio;
 pub mod storage;
 pub mod envelope;
+pub mod witness;

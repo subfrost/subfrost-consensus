@@ -2,6 +2,7 @@ use crate::utils::{pipe_storagemap_to, transfer_from};
 use alkanes_support::{
     cellpack::Cellpack, envelope::RawEnvelope, id::AlkaneId, parcel::AlkaneTransferParcel,
     response::CallResponse, storage::StorageMap,
+    witness::{find_witness_payload}
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
@@ -792,22 +793,6 @@ pub fn sequence_pointer(ptr: &AtomicPointer) -> AtomicPointer {
     ptr.derive(&IndexPointer::from_keyword("/alkanes/sequence"))
 }
 
-pub fn find_witness_payload(tx: &Transaction) -> Option<Vec<u8>> {
-    let envelopes = RawEnvelope::from_transaction(tx);
-    if envelopes.len() == 0 {
-        None
-    } else {
-        Some(
-            envelopes[0]
-                .payload
-                .clone()
-                .into_iter()
-                .skip(1)
-                .flatten()
-                .collect(),
-        )
-    }
-}
 
 pub fn run(
     context: AlkanesRuntimeContext,
@@ -818,7 +803,7 @@ pub fn run(
     let mut _new_id: Option<AlkaneId> = None;
     if cellpack.target.is_create() {
         let wasm_payload = Arc::new(
-            find_witness_payload(&context.message.transaction)
+            find_witness_payload(&context.message.transaction, 0)
                 .ok_or("finding witness payload failed for creation of alkane")
                 .map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?,
         );
@@ -834,7 +819,7 @@ pub fn run(
         next_sequence_pointer.set_value(next_sequence + 1);
     } else if let Some(number) = cellpack.target.reserved() {
         let wasm_payload = Arc::new(
-            find_witness_payload(&context.message.transaction)
+            find_witness_payload(&context.message.transaction, 0)
                 .ok_or("finding witness payload failed for creation of alkane")
                 .map_err(|_| anyhow!("used CREATERESERVED cellpack but no binary found in witness"))?,
         );
