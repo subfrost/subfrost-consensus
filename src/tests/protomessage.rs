@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use crate::tests::std::alkanes_std_proxy_build;
     use alkanes_support::cellpack::Cellpack;
     use alkanes_support::id::AlkaneId;
     use protorune::Protorune;
@@ -11,15 +12,19 @@ mod tests {
     use crate::message::AlkaneMessageContext;
 
     #[wasm_bindgen_test]
-    async fn protomessage_with_call_cellpack_test() {
+    async fn std_proxy_test() {
         clear();
         let block_height = 840_000;
-        let test_cellpack = Cellpack {
+        let test_cellpacks = [Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
-            inputs: vec![],
-        };
+            // input 0 to initialize proxy
+            inputs: vec![0],
+        }];
 
-        let test_block = alkane_helpers::init_test_with_cellpack(test_cellpack);
+        let test_block = alkane_helpers::init_with_multiple_cellpacks(
+            alkanes_std_proxy_build::get_bytes(),
+            test_cellpacks.into(),
+        );
 
         Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64).unwrap();
     }
