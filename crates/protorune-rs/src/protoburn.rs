@@ -9,7 +9,7 @@ use std::{
     sync::Arc,
 };
 
-use ordinals::{Edict, Runestone};
+use ordinals::Edict;
 
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 

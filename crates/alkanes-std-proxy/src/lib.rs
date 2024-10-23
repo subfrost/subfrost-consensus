@@ -1,29 +1,26 @@
-use alkanes_runtime::{println, runtime::AlkaneResponder, stdio::stdout};
-use alkanes_support::{id::AlkaneId, response::CallResponse};
+use alkanes_runtime::runtime::AlkaneResponder;
+use alkanes_support::response::CallResponse;
+use bitcoin::blockdata::transaction::Transaction;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
-use protorune_support::utils::{consensus_decode};
-use bitcoin::blockdata::transaction::{Transaction};
-use alkanes_support::envelope::{RawEnvelope};
-use std::fmt::Write;
+use protorune_support::utils::consensus_decode;
 
 #[derive(Default)]
 struct Proxy(());
 
 fn shift<T>(v: &mut Vec<T>) -> Option<T> {
-  if v.is_empty() {
-    None
-  } else {
-    Some(v.remove(0))
-  }
-  
+    if v.is_empty() {
+        None
+    } else {
+        Some(v.remove(0))
+    }
 }
 
 impl AlkaneResponder for Proxy {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
-        consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()));
+        consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction())).unwrap();
         let mut inputs = context.inputs.clone();
-        let opcode = shift(&mut inputs).unwrap();
+        let _opcode = shift(&mut inputs).unwrap();
         CallResponse::default()
     }
 }

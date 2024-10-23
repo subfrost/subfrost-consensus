@@ -7,6 +7,8 @@ use bitcoin::string::FromHexStr;
 use bitcoin::{Address, Amount, BlockHash, OutPoint, Sequence, Witness};
 use byteorder::{ByteOrder, LittleEndian};
 use core::str::FromStr;
+use metashrew::{get_cache, println, stdio::stdout};
+use metashrew_support::utils::format_key;
 use ordinals::{Edict, Etching, Rune, RuneId, Runestone};
 use std::fmt::Write;
 use std::sync::Arc;
@@ -15,6 +17,16 @@ use crate::protostone::{Protostone, Protostones};
 
 pub const ADDRESS1: &'static str = "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu";
 
+pub fn print_cache() {
+    let cache = get_cache();
+
+    for (key, value) in cache.iter() {
+        let formatted_key = format_key(key);
+        let formatted_value = format_key(value);
+
+        println!("{}: {}", formatted_key, formatted_value);
+    }
+}
 pub fn display_vec_as_hex(data: Vec<u8>) -> String {
     let mut hex_string = String::new();
     for byte in data {

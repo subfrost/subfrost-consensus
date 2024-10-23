@@ -1,5 +1,4 @@
 use alkanes_support::cellpack::Cellpack;
-use alkanes_support::id::AlkaneId;
 use bitcoin::Transaction;
 use bitcoin::{
     address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut, Witness,

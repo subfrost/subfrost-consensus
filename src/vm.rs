@@ -1,10 +1,7 @@
-use crate::{
-    utils::{pipe_storagemap_to, transfer_from},
-};
+use crate::utils::{pipe_storagemap_to, transfer_from};
 use alkanes_support::{
-    envelope::{RawEnvelope},
-    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
-    storage::StorageMap,
+    cellpack::Cellpack, envelope::RawEnvelope, id::AlkaneId, parcel::AlkaneTransferParcel,
+    response::CallResponse, storage::StorageMap,
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
@@ -516,7 +513,7 @@ impl AlkanesInstance {
             .rollback();
     }
     pub fn from_alkane(
-        alkane: &AlkaneId,
+        _alkane: &AlkaneId,
         context: AlkanesRuntimeContext,
         start_fuel: u64,
         wasm_payload: Arc<Vec<u8>>,

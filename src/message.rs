@@ -1,5 +1,5 @@
 use crate::vm;
-use alkanes_support::{cellpack::Cellpack, envelope::{RawEnvelope}};
+use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
 use protorune::message::{MessageContext, MessageContextParcel};
 use protorune_support::{

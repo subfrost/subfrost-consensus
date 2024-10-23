@@ -15,10 +15,8 @@ mod tests {
     use protorune_support::rune_transfer::RuneTransfer;
     use protorune_support::utils::consensus_encode;
 
-    use metashrew::{clear, get_cache, index_pointer::KeyValuePointer, println, stdio::stdout};
-    use metashrew_support::utils::format_key;
+    use metashrew::{clear, index_pointer::KeyValuePointer};
     use ordinals::{Etching, Rune, Runestone};
-    use std::fmt::Write;
     use std::str::FromStr;
     use wasm_bindgen_test::wasm_bindgen_test;
 
@@ -41,17 +39,6 @@ mod tests {
         }
     }
 
-    pub fn print_cache() {
-        let cache = get_cache();
-
-        for (key, value) in cache.iter() {
-            let formatted_key = format_key(key);
-            let formatted_value = format_key(value);
-
-            println!("{}: {}", formatted_key, formatted_value);
-        }
-    }
-
     /// In one runestone, etches a rune, then protoburns it
     #[wasm_bindgen_test]
     fn protoburn_test() {
@@ -67,7 +54,6 @@ mod tests {
             .unwrap(),
             vout: 0,
         };
-        let input_script = ScriptBuf::new();
 
         let protoburn_tx = helpers::create_protoburn_transaction(previous_output, protocol_id);
 
