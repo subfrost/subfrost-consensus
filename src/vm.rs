@@ -516,8 +516,14 @@ impl AlkanesInstance {
         _alkane: &AlkaneId,
         context: AlkanesRuntimeContext,
         start_fuel: u64,
-        wasm_payload: Arc<Vec<u8>>,
+        next_sequence_id: AlkaneId,
     ) -> Result<Self> {
+        let binary = context
+            .message
+            .atomic
+            .keyword("/alkanes/")
+            .select(&next_sequence_id.clone().into())
+            .get();
         let mut config = Config::default();
         config.consume_fuel(true);
         let engine = Engine::new(&config);
@@ -531,7 +537,7 @@ impl AlkanesInstance {
         );
         store.limiter(|state| &mut state.limiter);
         Store::<AlkanesState>::set_fuel(&mut store, start_fuel)?; // TODO: implement gas limits
-        let module = Module::new(&engine, &mut &wasm_payload[..])?;
+        let module = Module::new(&engine, &mut &binary[..])?;
         let mut linker: Linker<AlkanesState> = Linker::<AlkanesState>::new(&engine);
         linker.func_wrap("env", "abort", AlkanesHostFunctionsImpl::abort)?;
         linker.func_wrap(
@@ -815,10 +821,12 @@ pub fn run(
             .ok_or("finding witness payload failed for creation of alkane")
             .map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?,
     );
+    let mut _new_id: Option<AlkaneId> = None;
     if cellpack.target.is_create() {
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
-        let new_id = AlkaneId::new(2, next_sequence);
+        _new_id = Some(AlkaneId::new(2, next_sequence));
+        let new_id = _new_id.ok_or(anyhow!(""))?;
         context
             .message
             .atomic
@@ -828,7 +836,8 @@ pub fn run(
         next_sequence_pointer.set_value(next_sequence + 1);
         payload.target = new_id.clone();
     } else if let Some(number) = cellpack.target.reserved() {
-        let new_id = AlkaneId::new(4, number);
+        _new_id = Some(AlkaneId::new(4, number));
+        let new_id = _new_id.ok_or(anyhow!(""))?;
         let mut ptr = context
             .message
             .atomic
@@ -847,7 +856,8 @@ pub fn run(
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
         let factory_id: AlkaneId = factory.into();
-        let new_id = AlkaneId::new(2, next_sequence);
+        _new_id = Some(AlkaneId::new(2, next_sequence));
+        let new_id = _new_id.ok_or(anyhow!(""))?;
         next_sequence_pointer.set_value(next_sequence + 1);
         let binary: Vec<u8> = context
             .message
@@ -865,9 +875,8 @@ pub fn run(
             .set(Arc::new(binary));
         payload.target = new_id.clone();
     }
-    // TODO: implement reserved/factory/etc
-    AlkanesInstance::from_alkane(&payload.target, context, start_fuel, wasm_payload.clone())?
-        .execute()
+    let new_id = _new_id.ok_or(anyhow!(""))?;
+    AlkanesInstance::from_alkane(&payload.target, context, start_fuel, new_id)?.execute()
 }
 
 pub fn send_to_arraybuffer<'a>(

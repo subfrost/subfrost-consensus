@@ -2,7 +2,6 @@
 mod tests {
     use alkanes_support::cellpack::Cellpack;
     use alkanes_support::id::AlkaneId;
-    use protorune::test_helpers::{self as helpers};
     use protorune::Protorune;
 
     use crate::tests::helpers as alkane_helpers;
@@ -10,22 +9,24 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::message::AlkaneMessageContext;
-    use alkanes_support::envelope::RawEnvelope;
 
-    use crate::tests::std::alkanes_std_test_build;
+    #[wasm_bindgen_test]
+    async fn protomessage_with_call_cellpack_test() {
+        clear();
+        let block_height = 840_000;
+        let test_cellpack = Cellpack {
+            target: AlkaneId { block: 1, tx: 0 },
+            inputs: vec![],
+        };
+
+        let test_block = alkane_helpers::init_test_with_cellpack(test_cellpack);
+
+        Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64).unwrap();
+    }
 
     #[wasm_bindgen_test]
     async fn protomessage_with_binary_test() {
         clear();
-        let block_height = 840000;
-        let mut test_block = helpers::create_block_with_coinbase_tx(block_height);
-
-        let wasm_binary = alkanes_std_test_build::get_bytes();
-        let raw_envelope = RawEnvelope::from(wasm_binary);
-
-        let witness = raw_envelope.to_witness();
-
-        // Create a transaction input
         let input_cellpack = Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
             inputs: vec![
@@ -34,17 +35,12 @@ mod tests {
             ],
         };
 
-        test_block
-            .txdata
-            .push(alkane_helpers::create_cellpack_with_witness(
-                witness,
-                input_cellpack,
-            ));
-        assert!(Protorune::index_block::<AlkaneMessageContext>(
-            test_block.clone(),
-            block_height as u64
-        )
-        .is_ok());
+        let test_block = alkane_helpers::init_test_with_cellpack(input_cellpack);
+
+        assert!(
+            Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840000 as u64)
+                .is_ok()
+        );
 
         // TODO: Fix protomessage refunding. this does not work rn
         // // tx 0 is coinbase, tx 1 is runestone

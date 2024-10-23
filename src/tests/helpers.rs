@@ -1,13 +1,33 @@
 use alkanes_support::cellpack::Cellpack;
-use bitcoin::Transaction;
+use alkanes_support::envelope::RawEnvelope;
 use bitcoin::{
     address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut, Witness,
 };
+use bitcoin::{Block, Transaction};
 use protorune::protostone::{Protostone, Protostones};
-use protorune::test_helpers::{get_address, ADDRESS1};
+use protorune::test_helpers::{create_block_with_coinbase_tx, get_address, ADDRESS1};
 
 use ordinals::{Etching, Rune, Runestone};
 use std::str::FromStr;
+
+use super::std::alkanes_std_test_build;
+
+pub fn init_test_with_cellpack(cellpack: Cellpack) -> Block {
+    let block_height = 840000;
+    let mut test_block = create_block_with_coinbase_tx(block_height);
+
+    let wasm_binary = alkanes_std_test_build::get_bytes();
+    let raw_envelope = RawEnvelope::from(wasm_binary);
+
+    let witness = raw_envelope.to_witness();
+
+    // Create a transaction input
+
+    test_block
+        .txdata
+        .push(create_cellpack_with_witness(witness, cellpack));
+    test_block
+}
 
 pub fn create_cellpack_with_witness(witness: Witness, cellpack: Cellpack) -> Transaction {
     let previous_output = OutPoint {
