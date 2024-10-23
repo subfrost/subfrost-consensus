@@ -1,11 +1,15 @@
 use alkanes_runtime::runtime::AlkaneResponder;
 use alkanes_support::{
-    cellpack::Cellpack, context::Context, parcel::AlkaneTransfer, response::CallResponse,
-    witness::find_witness_payload,
+    cellpack::Cellpack, context::Context, id::AlkaneId, parcel::AlkaneTransfer,
+    response::CallResponse, witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
-use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
+use metashrew_support::{
+    compat::{to_arraybuffer_layout, to_ptr},
+    utils::consume_sized_int,
+};
+use hex;
 use protorune_support::utils::consensus_decode;
 
 #[derive(Default)]
@@ -49,70 +53,41 @@ impl AlkaneResponder for AMMFactory {
     fn execute(&self) -> CallResponse {
         let mut context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
-        let auth = self.pull_incoming(&mut context);
         match shift(&mut inputs).unwrap() {
             0 => {
                 if self.load("/initialized".as_bytes().to_vec()).len() != 0 {
-                    let mut response: CallResponse = CallResponse::default();
-                    response.alkanes = context.incoming_alkanes.clone();
-                    response.alkanes.0.push(AlkaneTransfer {
-                        id: context.myself.clone(),
-                        value: 1,
-                    });
                     self.store("/initialized".as_bytes().to_vec(), vec![0x01]);
-                    response
+                    CallResponse::default()
                 } else {
                     panic!("already initialized");
                 }
             }
             1 => {
-                self.only_owner(auth.clone()).unwrap();
-                let witness_index = shift(&mut inputs).unwrap();
-                let tx =
-                    consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()))
-                        .unwrap();
-                let cellpack = Cellpack::parse(&mut std::io::Cursor::new(
-                    find_witness_payload(&tx, witness_index.try_into().unwrap()).unwrap(),
-                ))
-                .unwrap();
-                let mut response: CallResponse = self
-                    .call(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
+                if context.incoming_alkanes.0.len() != 2 {
+                    panic!("must send two runes to initialize a pool");
+                } else {
+                    CallResponse::default()
+                }
             }
             2 => {
-                self.only_owner(auth.clone()).unwrap();
-                let witness_index = shift(&mut inputs).unwrap();
-                let tx =
-                    consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()))
-                        .unwrap();
-                let cellpack = Cellpack::parse(&mut std::io::Cursor::new(
-                    find_witness_payload(&tx, witness_index.try_into().unwrap()).unwrap(),
-                ))
-                .unwrap();
-                let mut response: CallResponse = self
-                    .delegatecall(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
-            }
-            3 => {
-                self.only_owner(auth.clone()).unwrap();
-                let cellpack: Cellpack = inputs.try_into().unwrap();
-                let mut response: CallResponse = self
-                    .call(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
-            }
-            4 => {
-                self.only_owner(auth.clone()).unwrap();
-                let cellpack: Cellpack = inputs.try_into().unwrap();
-                let mut response: CallResponse = self
-                    .delegatecall(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
+                let mut response = CallResponse::default();
+                response.alkanes = context.incoming_alkanes.clone();
+                let mut cursor = std::io::Cursor::<Vec<u8>>::new(
+                    self.load(
+                        (String::from("/pools/")
+                            + hex::encode(
+                                context
+                                    .incoming_alkanes.0.into_iter()
+                                    .map(|v| <AlkaneId as Into<Vec<u8>>>::into(v.id))
+                                    .flatten()
+                                    .collect::<Vec<u8>>(),
+                            )
+                            .as_str())
+                        .as_bytes()
+                        .to_vec(),
+                    ),
+                );
+                response.data = (&consume_sized_int::<u128>(&mut cursor).unwrap().to_le_bytes()).to_vec();
                 response
             }
             _ => {
