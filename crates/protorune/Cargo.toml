@@ -16,7 +16,7 @@ test_utils = []
 [dependencies]
 anyhow = "1.0.89"
 bitcoin = { version = "0.30.1", features = ["rand"] }
-metashrew = { path = "../metashrew-rs", version = "0.1.0" }
+metashrew = { path = "../metashrew", version = "0.1.0" }
 metashrew-support = { path = "../metashrew-support", version = "0.1.0" }
 protorune-support = { path = "../protorune-support", version = "0.1.0" }
 ordinals = { version = "0.0.10", path = "../ordinals" }
@@ -31,7 +31,7 @@ serde_json = "1.0.128"
 protobuf = "3.6.0"
 
 [dev-dependencies]
-metashrew = { path = "../metashrew-rs", features = [
+metashrew = { path = "../metashrew", features = [
     "mock",
 ] }
 wasm-bindgen-cli = "0.2.92"
