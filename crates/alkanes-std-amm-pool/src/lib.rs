@@ -123,7 +123,29 @@ impl AMMPool {
             Err(anyhow!("root k is less than previous root k"))
         }
     }
-    pub fn burn(&self) -> Result<CallResponse> {
+    pub fn burn(&self, parcel: &AlkaneTransferParcel) -> Result<CallResponse> {
+        self.check_inputs(&parcel, 1)?;
+        let incoming = parcel.0[0].clone();
+        if incoming.id != self.context()?.myself {
+            return Err(anyhow!("can only burn LP alkane for this pair"));
+        }
+        let liquidity = incoming.value;
+        let (reserve_a, reserve_b) = self.reserves();
+        let total_supply = self.total_supply();
+        let mut response = CallResponse::default();
+        let amount_a = overflow_error(liquidity.checked_mul(reserve_a.value))? / total_supply;
+        let amount_b = overflow_error(liquidity.checked_mul(reserve_b.value))? / total_supply;
+        if (amount_a == 0 || amount_b == 0) {
+            return Err(anyhow!("insufficient liquidity!"));
+        }
+        self.set_total_supply(overflow_error(total_supply.checked_sub(liquidity))?);
+        response.alkanes = AlkaneTransferParcel(vec![AlkaneTransfer {
+          id: reserve_a.id,
+          value: amount_a
+        }, AlkaneTransfer {
+          id: reserve_b.id,
+          value: amount_b
+        }]);
         Ok(CallResponse::default())
     }
     pub fn swap(&self) -> Result<CallResponse> {
