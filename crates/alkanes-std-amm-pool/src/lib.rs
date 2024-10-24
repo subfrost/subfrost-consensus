@@ -1,12 +1,16 @@
 use alkanes_runtime::runtime::AlkaneResponder;
+use alkanes_runtime::storage::StoragePointer;
 use alkanes_support::{
-    cellpack::Cellpack, context::Context, parcel::AlkaneTransfer, response::CallResponse,
-    witness::find_witness_payload,
+    id::AlkaneId,
+    parcel::{AlkaneTransfer, AlkaneTransferParcel},
+    response::CallResponse,
 };
 use anyhow::{anyhow, Result};
-use bitcoin::blockdata::transaction::Transaction;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
-use protorune_support::utils::consensus_decode;
+use metashrew_support::index_pointer::KeyValuePointer;
+use num::integer::Roots;
+use protorune_support::balance_sheet::BalanceSheet;
+use std::sync::Arc;
 
 #[derive(Default)]
 struct AMMPool(());
@@ -19,102 +23,140 @@ fn shift<T>(v: &mut Vec<T>) -> Option<T> {
     }
 }
 
+pub fn overflow_error(v: Option<u128>) -> Result<u128> {
+    v.ok_or("").map_err(|_| anyhow!("overflow error"))
+}
+
 impl AMMPool {
-    pub fn pull_incoming(&self, context: &mut Context) -> Option<AlkaneTransfer> {
-        let i = context
-            .incoming_alkanes
-            .0
-            .iter()
-            .position(|v| v.id == context.myself)?;
-        Some(context.incoming_alkanes.0.remove(i))
+    pub fn alkanes_for_self(&self) -> Result<(AlkaneId, AlkaneId)> {
+        Ok((
+            StoragePointer::from_keyword("/alkanes/0")
+                .get()
+                .as_ref()
+                .clone()
+                .try_into()?,
+            StoragePointer::from_keyword("/alkanes/1")
+                .get()
+                .as_ref()
+                .clone()
+                .try_into()?,
+        ))
     }
-    pub fn only_owner(&self, v: Option<AlkaneTransfer>) -> Result<()> {
-        if let Some(auth) = v {
-            if auth.value < 1 {
-                Err(anyhow!(
-                    "must spend a balance of this alkane to the alkane to use as a proxy"
-                ))
+    pub fn check_inputs(&self, parcel: &AlkaneTransferParcel, n: usize) -> Result<()> {
+        if parcel.0.len() > n {
+            Err(anyhow!(format!(
+                "{} alkanes sent but maximum {} supported",
+                parcel.0.len(),
+                n
+            )))
+        } else {
+            let (a, b) = self.alkanes_for_self()?;
+            if let Some(_) = parcel.0.iter().find(|v| v.id != a && v.id != b) {
+                Err(anyhow!("unsupported alkane sent to pool"))
             } else {
                 Ok(())
             }
-        } else {
-            Err(anyhow!(
-                "must spend a balance of this alkane to the alkane to use as a proxy"
-            ))
         }
+    }
+    pub fn total_supply(&self) -> u128 {
+        StoragePointer::from_keyword("/totalsupply").get_value::<u128>()
+    }
+    pub fn set_total_supply(&self, v: u128) {
+        StoragePointer::from_keyword("/totalsupply").set_value::<u128>(v);
+    }
+    pub fn reserves(&self) -> (AlkaneTransfer, AlkaneTransfer) {
+        let (a, b) = self.alkanes_for_self().unwrap();
+        let context = self.context().unwrap();
+        (
+            AlkaneTransfer {
+                id: a,
+                value: self.balance(&context.myself, &a),
+            },
+            AlkaneTransfer {
+                id: b,
+                value: self.balance(&context.myself, &b),
+            },
+        )
+    }
+    pub fn previous_reserves(
+        &self,
+        parcel: &AlkaneTransferParcel,
+    ) -> (AlkaneTransfer, AlkaneTransfer) {
+        let (reserve_a, reserve_b) = self.reserves();
+        let mut reserve_sheet: BalanceSheet =
+            AlkaneTransferParcel(vec![reserve_a.clone(), reserve_b.clone()]).into();
+        let incoming_sheet: BalanceSheet = parcel.clone().into();
+        reserve_sheet.debit(&incoming_sheet).unwrap();
+        (
+            AlkaneTransfer {
+                id: reserve_a.id.clone(),
+                value: reserve_sheet.get(&reserve_a.id.clone().into()),
+            },
+            AlkaneTransfer {
+                id: reserve_b.id.clone(),
+                value: reserve_sheet.get(&reserve_b.id.clone().into()),
+            },
+        )
+    }
+    pub fn mint(&self, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
+        self.check_inputs(&parcel, 2)?;
+        let total_supply = self.total_supply();
+        let (reserve_a, reserve_b) = self.reserves();
+        let (previous_a, previous_b) = self.previous_reserves(&parcel);
+        let root_k_last = overflow_error(previous_a.value.checked_mul(previous_b.value))?.sqrt();
+        let root_k = overflow_error(reserve_a.value.checked_mul(reserve_b.value))?.sqrt();
+        if root_k > root_k_last {
+            let numerator = overflow_error(
+                total_supply.checked_mul(overflow_error(root_k.checked_sub(root_k_last))?),
+            )?;
+            let denominator =
+                overflow_error(overflow_error(root_k.checked_mul(5))?.checked_add(root_k_last))?;
+            let liquidity = numerator / denominator;
+            self.set_total_supply(overflow_error(total_supply.checked_add(liquidity))?);
+            let mut response = CallResponse::default();
+            response.alkanes = AlkaneTransferParcel(vec![AlkaneTransfer {
+                id: self.context().unwrap().myself,
+                value: liquidity,
+            }]);
+            Ok(response)
+        } else {
+            Err(anyhow!("root k is less than previous root k"))
+        }
+    }
+    pub fn burn(&self) -> Result<CallResponse> {
+        Ok(CallResponse::default())
+    }
+    pub fn swap(&self) -> Result<CallResponse> {
+        Ok(CallResponse::default())
+    }
+    pub fn pull_ids(&self, v: &mut Vec<u128>) -> Option<(AlkaneId, AlkaneId)> {
+        let a_block = shift(v)?;
+        let a_tx = shift(v)?;
+        let b_block = shift(v)?;
+        let b_tx = shift(v)?;
+        Some((AlkaneId::new(a_block, a_tx), AlkaneId::new(b_block, b_tx)))
     }
 }
 
 impl AlkaneResponder for AMMPool {
     fn execute(&self) -> CallResponse {
-        let mut context = self.context().unwrap();
+        let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
-        let auth = self.pull_incoming(&mut context);
         match shift(&mut inputs).unwrap() {
             0 => {
-                if self.load("/initialized".as_bytes().to_vec()).len() != 0 {
-                    let mut response: CallResponse = CallResponse::default();
-                    response.alkanes = context.incoming_alkanes.clone();
-                    response.alkanes.0.push(AlkaneTransfer {
-                        id: context.myself.clone(),
-                        value: 1,
-                    });
-                    self.store("/initialized".as_bytes().to_vec(), vec![0x01]);
-                    response
+                let mut pointer = StoragePointer::from_keyword("/initialized");
+                if pointer.get().len() == 0 {
+                    pointer.set(Arc::new(vec![0x01]));
+                    let (a, b) = self.pull_ids(&mut inputs).unwrap();
+                    StoragePointer::from_keyword("/alkane/0").set(Arc::new(a.into()));
+                    StoragePointer::from_keyword("/alkane/1").set(Arc::new(b.into()));
+                    self.mint(context.incoming_alkanes).unwrap()
                 } else {
                     panic!("already initialized");
                 }
             }
-            1 => {
-                self.only_owner(auth.clone()).unwrap();
-                let witness_index = shift(&mut inputs).unwrap();
-                let tx =
-                    consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()))
-                        .unwrap();
-                let cellpack = Cellpack::parse(&mut std::io::Cursor::new(
-                    find_witness_payload(&tx, witness_index.try_into().unwrap()).unwrap(),
-                ))
-                .unwrap();
-                let mut response: CallResponse = self
-                    .call(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
-            }
-            2 => {
-                self.only_owner(auth.clone()).unwrap();
-                let witness_index = shift(&mut inputs).unwrap();
-                let tx =
-                    consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()))
-                        .unwrap();
-                let cellpack = Cellpack::parse(&mut std::io::Cursor::new(
-                    find_witness_payload(&tx, witness_index.try_into().unwrap()).unwrap(),
-                ))
-                .unwrap();
-                let mut response: CallResponse = self
-                    .delegatecall(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
-            }
-            3 => {
-                self.only_owner(auth.clone()).unwrap();
-                let cellpack: Cellpack = inputs.try_into().unwrap();
-                let mut response: CallResponse = self
-                    .call(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
-            }
-            4 => {
-                self.only_owner(auth.clone()).unwrap();
-                let cellpack: Cellpack = inputs.try_into().unwrap();
-                let mut response: CallResponse = self
-                    .delegatecall(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
-            }
+            1 => self.mint(context.incoming_alkanes).unwrap(),
+            2 => self.swap().unwrap(),
             _ => {
                 panic!("unrecognized opcode");
             }

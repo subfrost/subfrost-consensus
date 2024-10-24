@@ -1,21 +1,20 @@
-use crate::runtime::{AlkaneResponder};
-use alkanes_support::response::{CallResponse};
-use metashrew_support::index_pointer::{KeyValuePointer};
-use std::sync::{Arc};
+use crate::runtime::AlkaneResponder;
+use alkanes_support::response::CallResponse;
+use metashrew_support::index_pointer::KeyValuePointer;
+use std::sync::Arc;
 
 struct StorageHandle(());
 
 impl AlkaneResponder for StorageHandle {
-  fn execute(&self) -> CallResponse {
-    CallResponse::default()
-  }
+    fn execute(&self) -> CallResponse {
+        CallResponse::default()
+    }
 }
 
-const runtime_storage: StorageHandle = StorageHandle(());
+const RUNTIME_STORAGE: StorageHandle = StorageHandle(());
 
 #[derive(Debug, Clone, Default)]
 pub struct StoragePointer(pub Arc<Vec<u8>>);
-
 
 #[allow(dead_code)]
 impl KeyValuePointer for StoragePointer {
@@ -27,9 +26,9 @@ impl KeyValuePointer for StoragePointer {
     }
     fn inherits(&mut self, _v: &Self) {}
     fn set(&mut self, v: Arc<Vec<u8>>) {
-        runtime_storage.store(self.unwrap().as_ref().clone(), v.as_ref().clone())
+        RUNTIME_STORAGE.store(self.unwrap().as_ref().clone(), v.as_ref().clone())
     }
     fn get(&self) -> Arc<Vec<u8>> {
-        Arc::new(runtime_storage.load(self.unwrap().as_ref().clone()))
+        Arc::new(RUNTIME_STORAGE.load(self.unwrap().as_ref().clone()))
     }
 }
