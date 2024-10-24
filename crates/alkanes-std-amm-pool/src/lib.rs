@@ -10,7 +10,10 @@ use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
 use num::integer::Roots;
 use protorune_support::balance_sheet::BalanceSheet;
+use ruint::Uint;
 use std::sync::Arc;
+
+type U256 = Uint<256, 4>;
 
 #[derive(Default)]
 struct AMMPool(());
@@ -25,6 +28,10 @@ fn shift<T>(v: &mut Vec<T>) -> Option<T> {
 
 pub fn overflow_error(v: Option<u128>) -> Result<u128> {
     v.ok_or("").map_err(|_| anyhow!("overflow error"))
+}
+
+pub fn sub_fees(v: u128) -> Result<u128> {
+    Ok(overflow_error(v.checked_mul(997))? / 1000)
 }
 
 impl AMMPool {
@@ -42,7 +49,12 @@ impl AMMPool {
                 .try_into()?,
         ))
     }
-    pub fn check_inputs(&self, parcel: &AlkaneTransferParcel, n: usize) -> Result<()> {
+    pub fn check_inputs(
+        &self,
+        myself: &AlkaneId,
+        parcel: &AlkaneTransferParcel,
+        n: usize,
+    ) -> Result<()> {
         if parcel.0.len() > n {
             Err(anyhow!(format!(
                 "{} alkanes sent but maximum {} supported",
@@ -51,7 +63,11 @@ impl AMMPool {
             )))
         } else {
             let (a, b) = self.alkanes_for_self()?;
-            if let Some(_) = parcel.0.iter().find(|v| v.id != a && v.id != b) {
+            if let Some(_) = parcel
+                .0
+                .iter()
+                .find(|v| myself != &v.id && v.id != a && v.id != b)
+            {
                 Err(anyhow!("unsupported alkane sent to pool"))
             } else {
                 Ok(())
@@ -99,7 +115,7 @@ impl AMMPool {
         )
     }
     pub fn mint(&self, myself: AlkaneId, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
-        self.check_inputs(&parcel, 2)?;
+        self.check_inputs(&myself, &parcel, 2)?;
         let total_supply = self.total_supply();
         let (reserve_a, reserve_b) = self.reserves();
         let (previous_a, previous_b) = self.previous_reserves(&parcel);
@@ -124,7 +140,7 @@ impl AMMPool {
         }
     }
     pub fn burn(&self, myself: AlkaneId, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
-        self.check_inputs(&parcel, 1)?;
+        self.check_inputs(&myself, &parcel, 1)?;
         let incoming = parcel.0[0].clone();
         if incoming.id != myself {
             return Err(anyhow!("can only burn LP alkane for this pair"));
@@ -139,17 +155,65 @@ impl AMMPool {
             return Err(anyhow!("insufficient liquidity!"));
         }
         self.set_total_supply(overflow_error(total_supply.checked_sub(liquidity))?);
-        response.alkanes = AlkaneTransferParcel(vec![AlkaneTransfer {
-          id: reserve_a.id,
-          value: amount_a
-        }, AlkaneTransfer {
-          id: reserve_b.id,
-          value: amount_b
-        }]);
+        response.alkanes = AlkaneTransferParcel(vec![
+            AlkaneTransfer {
+                id: reserve_a.id,
+                value: amount_a,
+            },
+            AlkaneTransfer {
+                id: reserve_b.id,
+                value: amount_b,
+            },
+        ]);
         Ok(CallResponse::default())
     }
-    pub fn swap(&self, _myself: AlkaneId, _parcel: AlkaneTransferParcel) -> Result<CallResponse> {
-        Ok(CallResponse::default())
+    pub fn get_amount_out(
+        &self,
+        amount: u128,
+        reserve_from: u128,
+        reserve_to: u128,
+    ) -> Result<u128> {
+        Ok((U256::from(amount) * U256::from(reserve_to) / U256::from(reserve_from)).try_into()?)
+    }
+    pub fn swap(
+        &self,
+        parcel: AlkaneTransferParcel,
+        amount_out_predicate: u128,
+    ) -> Result<CallResponse> {
+        if parcel.0.len() != 1 {
+            return Err(anyhow!(format!(
+                "payload can only include 1 alkane, sent {}",
+                parcel.0.len()
+            )));
+        }
+        let transfer = parcel.0[0].clone();
+        let (previous_a, previous_b) = self.previous_reserves(&parcel);
+        let (reserve_a, reserve_b) = self.reserves();
+        let output = if &transfer.id == &reserve_a.id {
+            AlkaneTransfer {
+                id: reserve_b.id,
+                value: sub_fees(self.get_amount_out(
+                    transfer.value,
+                    previous_b.value,
+                    previous_a.value,
+                )?)?,
+            }
+        } else {
+            AlkaneTransfer {
+                id: reserve_a.id,
+                value: sub_fees(self.get_amount_out(
+                    transfer.value,
+                    previous_a.value,
+                    previous_b.value,
+                )?)?,
+            }
+        };
+        if output.value < amount_out_predicate {
+            return Err(anyhow!("predicate failed: insufficient output"));
+        }
+        let mut response = CallResponse::default();
+        response.alkanes = AlkaneTransferParcel(vec![output]);
+        Ok(response)
     }
     pub fn pull_ids(&self, v: &mut Vec<u128>) -> Option<(AlkaneId, AlkaneId)> {
         let a_block = shift(v)?;
@@ -179,7 +243,9 @@ impl AlkaneResponder for AMMPool {
             }
             1 => self.mint(context.myself, context.incoming_alkanes).unwrap(),
             2 => self.burn(context.myself, context.incoming_alkanes).unwrap(),
-            3 => self.swap(context.myself, context.incoming_alkanes).unwrap(),
+            3 => self
+                .swap(context.incoming_alkanes, shift(&mut inputs).unwrap())
+                .unwrap(),
             _ => {
                 panic!("unrecognized opcode");
             }

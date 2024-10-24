@@ -91,6 +91,7 @@ dependencies = [
  "metashrew-support",
  "num",
  "protorune-support",
+ "ruint",
 ]
 
 [[package]]
