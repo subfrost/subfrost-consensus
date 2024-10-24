@@ -1,5 +1,6 @@
 mod tests {
-    use crate::index_pointer::{IndexPointer, KeyValuePointer};
+    use crate::index_pointer::{IndexPointer};
+    use metashrew_support::index_pointer::{KeyValuePointer};
     use anyhow::Result;
     use std::sync::Arc;
     use wasm_bindgen_test::*;

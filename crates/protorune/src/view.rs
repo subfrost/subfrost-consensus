@@ -21,7 +21,7 @@ use bitcoin::OutPoint;
 //use hex;
 use metashrew_support::byte_view::ByteView;
 //use metashrew::utils::{ consume_exact, consume_sized_int };
-use metashrew::index_pointer::KeyValuePointer;
+use metashrew_support::index_pointer::{KeyValuePointer};
 use protobuf::{Message, MessageField, SpecialFields};
 use std::collections::HashMap;
 use std::io::Cursor;

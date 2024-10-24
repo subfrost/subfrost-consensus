@@ -2,7 +2,7 @@ use alkanes_support::id::AlkaneId;
 use alkanes_support::parcel::AlkaneTransferParcel;
 use alkanes_support::storage::StorageMap;
 use anyhow::{anyhow, Result};
-use metashrew::index_pointer::KeyValuePointer;
+use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::Arc;
 pub fn transfer_from<T: KeyValuePointer>(
     parcel: &AlkaneTransferParcel,

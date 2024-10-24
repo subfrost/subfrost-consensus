@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use metashrew::index_pointer::KeyValuePointer;
+use metashrew_support::index_pointer::{KeyValuePointer};
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use std::collections::HashMap;
 pub trait PersistentRecord {
