@@ -98,7 +98,7 @@ impl AMMPool {
             },
         )
     }
-    pub fn mint(&self, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
+    pub fn mint(&self, myself: AlkaneId, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
         self.check_inputs(&parcel, 2)?;
         let total_supply = self.total_supply();
         let (reserve_a, reserve_b) = self.reserves();
@@ -115,7 +115,7 @@ impl AMMPool {
             self.set_total_supply(overflow_error(total_supply.checked_add(liquidity))?);
             let mut response = CallResponse::default();
             response.alkanes = AlkaneTransferParcel(vec![AlkaneTransfer {
-                id: self.context().unwrap().myself,
+                id: myself,
                 value: liquidity,
             }]);
             Ok(response)
@@ -123,10 +123,10 @@ impl AMMPool {
             Err(anyhow!("root k is less than previous root k"))
         }
     }
-    pub fn burn(&self, parcel: &AlkaneTransferParcel) -> Result<CallResponse> {
+    pub fn burn(&self, myself: AlkaneId, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
         self.check_inputs(&parcel, 1)?;
         let incoming = parcel.0[0].clone();
-        if incoming.id != self.context()?.myself {
+        if incoming.id != myself {
             return Err(anyhow!("can only burn LP alkane for this pair"));
         }
         let liquidity = incoming.value;
@@ -135,7 +135,7 @@ impl AMMPool {
         let mut response = CallResponse::default();
         let amount_a = overflow_error(liquidity.checked_mul(reserve_a.value))? / total_supply;
         let amount_b = overflow_error(liquidity.checked_mul(reserve_b.value))? / total_supply;
-        if (amount_a == 0 || amount_b == 0) {
+        if amount_a == 0 || amount_b == 0 {
             return Err(anyhow!("insufficient liquidity!"));
         }
         self.set_total_supply(overflow_error(total_supply.checked_sub(liquidity))?);
@@ -148,7 +148,7 @@ impl AMMPool {
         }]);
         Ok(CallResponse::default())
     }
-    pub fn swap(&self) -> Result<CallResponse> {
+    pub fn swap(&self, _myself: AlkaneId, _parcel: AlkaneTransferParcel) -> Result<CallResponse> {
         Ok(CallResponse::default())
     }
     pub fn pull_ids(&self, v: &mut Vec<u128>) -> Option<(AlkaneId, AlkaneId)> {
@@ -172,13 +172,14 @@ impl AlkaneResponder for AMMPool {
                     let (a, b) = self.pull_ids(&mut inputs).unwrap();
                     StoragePointer::from_keyword("/alkane/0").set(Arc::new(a.into()));
                     StoragePointer::from_keyword("/alkane/1").set(Arc::new(b.into()));
-                    self.mint(context.incoming_alkanes).unwrap()
+                    self.mint(context.myself, context.incoming_alkanes).unwrap()
                 } else {
                     panic!("already initialized");
                 }
             }
-            1 => self.mint(context.incoming_alkanes).unwrap(),
-            2 => self.swap().unwrap(),
+            1 => self.mint(context.myself, context.incoming_alkanes).unwrap(),
+            2 => self.burn(context.myself, context.incoming_alkanes).unwrap(),
+            3 => self.swap(context.myself, context.incoming_alkanes).unwrap(),
             _ => {
                 panic!("unrecognized opcode");
             }
