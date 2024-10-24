@@ -4,12 +4,12 @@ use alkanes_support::{
     storage::StorageMap, witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
-use metashrew_support::index_pointer::KeyValuePointer;
 use metashrew::{
     index_pointer::{AtomicPointer, IndexPointer},
     println,
     stdio::stdout,
 };
+use metashrew_support::index_pointer::KeyValuePointer;
 
 use protorune::message::MessageContextParcel;
 use protorune_support::utils::consensus_encode;

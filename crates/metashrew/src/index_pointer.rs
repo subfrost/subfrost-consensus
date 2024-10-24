@@ -1,11 +1,10 @@
 use crate::{get, set};
-use metashrew_support::{index_pointer::{KeyValuePointer}};
+use metashrew_support::index_pointer::KeyValuePointer;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Clone, Default)]
 pub struct IndexPointer(Arc<Vec<u8>>);
-
 
 #[allow(dead_code)]
 impl KeyValuePointer for IndexPointer {

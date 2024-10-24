@@ -1,11 +1,12 @@
 use crate::runtime::{AlkaneResponder};
 use alkanes_support::response::{CallResponse};
 use metashrew_support::index_pointer::{KeyValuePointer};
+use std::sync::{Arc};
 
 struct StorageHandle(());
 
 impl AlkaneResponder for StorageHandle {
-  fn execute() -> CallResponse {
+  fn execute(&self) -> CallResponse {
     CallResponse::default()
   }
 }
@@ -26,9 +27,9 @@ impl KeyValuePointer for StoragePointer {
     }
     fn inherits(&mut self, _v: &Self) {}
     fn set(&mut self, v: Arc<Vec<u8>>) {
-        runtime_storage.store(self.unwrap(), v.as_ref().clone())
+        runtime_storage.store(self.unwrap().as_ref().clone(), v.as_ref().clone())
     }
     fn get(&self) -> Arc<Vec<u8>> {
-        runtime_storage.load(self.unwrap().as_ref().clone())
+        Arc::new(runtime_storage.load(self.unwrap().as_ref().clone()))
     }
 }

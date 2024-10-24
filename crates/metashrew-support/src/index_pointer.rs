@@ -1,5 +1,5 @@
-use std::sync::{Arc};
-use crate::byte_view::{ByteView};
+use crate::byte_view::ByteView;
+use std::sync::Arc;
 
 pub trait KeyValuePointer {
     fn wrap(word: &Vec<u8>) -> Self;

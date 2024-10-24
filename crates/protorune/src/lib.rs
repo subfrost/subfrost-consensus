@@ -8,8 +8,8 @@ use bitcoin::hashes::Hash;
 use bitcoin::script::Instruction;
 use bitcoin::{opcodes, Address, OutPoint, ScriptBuf, Transaction, TxOut};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew_support::index_pointer::{KeyValuePointer};
 use metashrew::{flush, input};
+use metashrew_support::index_pointer::KeyValuePointer;
 use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr},
     utils::consume_to_end,

@@ -1,4 +1,4 @@
-use alkanes_runtime::runtime::AlkaneResponder;
+use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     cellpack::Cellpack, context::Context, id::AlkaneId, parcel::AlkaneTransfer,
     response::CallResponse, witness::find_witness_payload,
@@ -7,10 +7,12 @@ use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
 use hex;
 use metashrew_support::{
+    index_pointer::{KeyValuePointer},
     compat::{to_arraybuffer_layout, to_ptr},
     utils::consume_sized_int,
 };
 use protorune_support::utils::consensus_decode;
+use std::sync::{Arc};
 
 #[derive(Default)]
 struct AMMFactory(());
@@ -55,8 +57,9 @@ impl AlkaneResponder for AMMFactory {
         let mut inputs = context.inputs.clone();
         match shift(&mut inputs).unwrap() {
             0 => {
-                if self.load("/initialized".as_bytes().to_vec()).len() != 0 {
-                    self.store("/initialized".as_bytes().to_vec(), vec![0x01]);
+                let mut pointer = StoragePointer::from_keyword("/initialized");
+                if pointer.get().len() == 0 {
+                    pointer.set(Arc::new(vec![0x01]));
                     CallResponse::default()
                 } else {
                     panic!("already initialized");
@@ -73,21 +76,17 @@ impl AlkaneResponder for AMMFactory {
                 let mut response = CallResponse::default();
                 response.alkanes = context.incoming_alkanes.clone();
                 let mut cursor = std::io::Cursor::<Vec<u8>>::new(
-                    self.load(
-                        (String::from("/pools/")
-                            + hex::encode(
-                                context
-                                    .incoming_alkanes
-                                    .0
-                                    .into_iter()
-                                    .map(|v| <AlkaneId as Into<Vec<u8>>>::into(v.id))
-                                    .flatten()
-                                    .collect::<Vec<u8>>(),
-                            )
-                            .as_str())
-                        .as_bytes()
-                        .to_vec(),
-                    ),
+                    StoragePointer::from_keyword("/pools/")
+                        .select(
+                            &context
+                                .incoming_alkanes
+                                .0
+                                .into_iter()
+                                .map(|v| <AlkaneId as Into<Vec<u8>>>::into(v.id))
+                                .flatten()
+                                .collect::<Vec<u8>>(),
+                        )
+                        .get().as_ref().clone(),
                 );
                 response.data = (&consume_sized_int::<u128>(&mut cursor)
                     .unwrap()
