@@ -25,6 +25,28 @@ fn shift<T>(v: &mut Vec<T>) -> Option<T> {
     }
 }
 
+pub fn take_two<T: Clone>(v: &Vec<T>) -> (T, T) {
+  (v[0].clone(), v[1].clone())
+}
+
+pub fn sort_alkanes(a: AlkaneId, b: AlkaneId) -> (AlkaneId, AlkaneId) {
+  if a < b {
+    (a, b)
+  } else {
+    (b, a)
+  }
+}
+
+pub fn join_ids(a: AlkaneId, b: AlkaneId) -> Vec<u8> {
+  let mut result: Vec<u8> = a.into();
+  result.extend(&b.into());
+  result
+}
+
+pub fn join_ids_from_tuple(v: (AlkaneId, AlkaneId)) -> Vec<u8> {
+  join_ids(v.0, v.1)
+}
+
 impl AMMFactory {
     pub fn pull_incoming(&self, context: &mut Context) -> Option<AlkaneTransfer> {
         let i = context
@@ -69,7 +91,16 @@ impl AlkaneResponder for AMMFactory {
                 if context.incoming_alkanes.0.len() != 2 {
                     panic!("must send two runes to initialize a pool");
                 } else {
-                    CallResponse::default()
+                    let (a, b) = sort_alkanes(take_two(&context.incoming_alkanes.0));
+                    let next_sequence = self.sequence();
+                    StoragePointer::from_keyword("/pools/").select(&a.clone().into()).select(&b.clone().into()).set(Arc::new(AlkaneId::new(2, next_sequence).into()));
+                    self.call(&Cellpack { 
+                      target: AlkaneId {
+                        block: 6,
+                        tx: 0xffef
+                      },
+                      inputs: vec![0]
+                    }, &AlkaneTransferParcel(vec![ context.incoming_alkanes.0, context.incoming_alkanes.1 ]), self.fuel()).unwrap()
                 }
             }
             2 => {

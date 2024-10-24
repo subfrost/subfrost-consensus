@@ -2,7 +2,7 @@ use anyhow::Result;
 use metashrew_support::utils::consume_sized_int;
 use protorune_support::balance_sheet::ProtoruneRuneId;
 
-#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, Ord)]
 pub struct AlkaneId {
     pub block: u128,
     pub tx: u128,
