@@ -46,6 +46,7 @@ impl AlkanesRuntimeContext {
         result.push(self.myself.tx);
         result.push(self.caller.block);
         result.push(self.caller.tx);
+        result.push(self.message.pointer as u128);
         result.push(self.incoming_alkanes.0.len() as u128);
         for incoming in &self.incoming_alkanes.0 {
             result.push(incoming.id.block);

@@ -1,5 +1,5 @@
 [package]
-name = "alkanes-std-auth-token"
+name = "alkanes-std-merkle-distributor"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,5 +12,7 @@ alkanes-support = { path = "../alkanes-support" }
 anyhow = "1.0.91"
 bitcoin = { version = "0.30.1", features = ["rand"] }
 metashrew-support = { path = "../metashrew-support" }
+num = "0.4.3"
 protorune-support = { path = "../protorune-support" }
-alkanes-lib-token = { path = "../alkanes-lib-token" }
+rs_merkle = "1.4.2"
+ruint = "1.12.3"

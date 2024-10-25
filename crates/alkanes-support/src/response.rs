@@ -32,4 +32,9 @@ impl CallResponse {
         result.extend(&self.data);
         result
     }
+    pub fn forward(incoming_alkanes: &AlkaneTransferParcel) -> CallResponse {
+      let mut response = CallResponse::default();
+      response.alkanes = incoming_alkanes.clone();
+      response
+    }
 }

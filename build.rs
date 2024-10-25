@@ -79,16 +79,19 @@ fn main() {
                     .join("release")
                     .join(subbed.clone() + ".wasm"),
             )?);
+            eprintln!("write: {}", write_dir.join("std").join(subbed.clone() + "_build.rs").into_os_string().to_str().unwrap());
             fs::write(
                 &write_dir.join("std").join(subbed.clone() + "_build.rs"),
                 String::from("use hex_lit::hex;\npub fn get_bytes() -> Vec<u8> { (&hex!(\"")
                     + data.as_str()
                     + "\")).to_vec() }",
             )?;
+            eprintln!("build: {}", write_dir.join("std").join(subbed.clone() + "_build.rs").into_os_string().to_str().unwrap());
             Ok(subbed)
         })
         .collect::<Result<Vec<String>>>()
         .unwrap();
+        eprintln!("write test builds to: {}", write_dir.join("std").join("mod.rs").into_os_string().to_str().unwrap());
     fs::write(
         &write_dir.join("std").join("mod.rs"),
         files.into_iter().fold(String::default(), |r, v| {
