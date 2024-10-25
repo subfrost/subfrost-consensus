@@ -122,6 +122,7 @@ dependencies = [
 name = "alkanes-std-auth"
 version = "0.1.0"
 dependencies = [
+ "alkanes-lib-token",
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",

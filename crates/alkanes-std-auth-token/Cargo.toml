@@ -13,3 +13,4 @@ anyhow = "1.0.91"
 bitcoin = { version = "0.30.1", features = ["rand"] }
 metashrew-support = { path = "../metashrew-support" }
 protorune-support = { path = "../protorune-support" }
+alkanes-lib-token = { path = "../alkanes-lib-token" }

@@ -1,37 +1,24 @@
-use alkanes_lib_auth::AuthenticatedResponder;
 use alkanes_lib_token::Token;
 use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::utils::shift;
-use alkanes_support::{context::Context, parcel::AlkaneTransfer, response::CallResponse};
+use alkanes_support::{parcel::AlkaneTransfer, response::CallResponse};
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::Arc;
 
 #[derive(Default)]
-pub struct OwnedToken(());
+pub struct AuthToken(());
 
-pub trait MintableToken: Token {
-    fn mint(&self, context: &Context, value: u128) -> AlkaneTransfer {
-        AlkaneTransfer {
-            id: context.myself.clone(),
-            value,
-        }
-    }
-}
-
-impl Token for OwnedToken {
+impl Token for AuthToken {
     fn name(&self) -> String {
-        String::from("EXAMPLE")
+        String::from("AUTH")
     }
     fn symbol(&self) -> String {
-        String::from("EXAMPLE")
+        String::from("AUTH")
     }
 }
-impl MintableToken for OwnedToken {}
 
-impl AuthenticatedResponder for OwnedToken {}
-
-impl AlkaneResponder for OwnedToken {
+impl AlkaneResponder for AuthToken {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
@@ -39,17 +26,12 @@ impl AlkaneResponder for OwnedToken {
             0 => {
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() != 0 {
-                    let auth_token_units = shift(&mut inputs).unwrap();
-                    let token_units = shift(&mut inputs).unwrap();
+                    let amount = shift(&mut inputs).unwrap();
                     let mut response: CallResponse = CallResponse::default();
                     response.alkanes = context.incoming_alkanes.clone();
-                    response
-                        .alkanes
-                        .0
-                        .push(self.deploy_auth_token(auth_token_units).unwrap());
                     response.alkanes.0.push(AlkaneTransfer {
                         id: context.myself.clone(),
-                        value: token_units,
+                        value: amount,
                     });
                     pointer.set(Arc::new(vec![0x01]));
                     response
@@ -59,8 +41,17 @@ impl AlkaneResponder for OwnedToken {
             }
             1 => {
                 let mut response = CallResponse::default();
-                let token_units = shift(&mut inputs).unwrap();
-                let transfer = self.mint(&context, token_units);
+                if context.incoming_alkanes.0.len() != 1 {
+                    panic!("did not authenticate with only the authentication token");
+                }
+                let transfer = context.incoming_alkanes.0[0].clone();
+                if transfer.id != context.myself.clone() {
+                    panic!("supplied alkane is not authentication token");
+                }
+                if transfer.value < 1 {
+                    panic!("less than 1 unit of authentication token supplied to authenticate");
+                }
+                response.data = vec![0x01];
                 response.alkanes.0.push(transfer);
                 response
             }
@@ -83,6 +74,6 @@ impl AlkaneResponder for OwnedToken {
 
 #[no_mangle]
 pub extern "C" fn __execute() -> i32 {
-    let mut response = to_arraybuffer_layout(&OwnedToken::default().execute().serialize());
+    let mut response = to_arraybuffer_layout(&AuthToken::default().execute().serialize());
     to_ptr(&mut response) + 4
 }

@@ -7,5 +7,5 @@ pub mod parcel;
 pub mod response;
 pub mod stdio;
 pub mod storage;
-pub mod witness;
 pub mod utils;
+pub mod witness;

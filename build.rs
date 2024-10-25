@@ -74,7 +74,10 @@ fn main() {
             std::env::set_current_dir(&crates_dir)?;
             let subbed = v.clone().replace("-", "_");
             let data: String = hex::encode(&fs::read(
-                &Path::new(&wasm_str).join("wasm32-unknown-unknown").join("release").join(subbed.clone() + ".wasm")
+                &Path::new(&wasm_str)
+                    .join("wasm32-unknown-unknown")
+                    .join("release")
+                    .join(subbed.clone() + ".wasm"),
             )?);
             fs::write(
                 &write_dir.join("std").join(subbed.clone() + "_build.rs"),

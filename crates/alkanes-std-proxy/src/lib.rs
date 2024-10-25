@@ -3,15 +3,12 @@ use alkanes_support::{
     cellpack::Cellpack, context::Context, parcel::AlkaneTransfer, response::CallResponse,
     witness::find_witness_payload,
 };
-use alkanes_support::{
-    println,
-    stdio::{stdout}
-};
-use std::fmt::Write;
+use alkanes_support::{println, stdio::stdout};
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use protorune_support::utils::consensus_decode;
+use std::fmt::Write;
 
 #[derive(Default)]
 struct Proxy(());
