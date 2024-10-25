@@ -15,10 +15,11 @@ mod tests {
     use protorune_support::rune_transfer::RuneTransfer;
     use protorune_support::utils::consensus_encode;
 
-    use metashrew::{clear, index_pointer::KeyValuePointer};
+    use metashrew::clear;
+    use metashrew_support::index_pointer::KeyValuePointer;
     use ordinals::{Etching, Rune, Runestone};
     use std::str::FromStr;
-    use wasm_bindgen_test::wasm_bindgen_test;
+    use wasm_bindgen_test::*;
 
     struct TestMessageContext(());
 
