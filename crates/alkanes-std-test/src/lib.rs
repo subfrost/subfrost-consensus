@@ -12,9 +12,8 @@ impl AlkaneResponder for LoggerAlkane {
             println!("{}", e);
             true
         });
-        println!("hello world!");
         println!(
-            "balance: {}",
+            "hello world! {}",
             self.balance(
                 &AlkaneId {
                     block: 100,

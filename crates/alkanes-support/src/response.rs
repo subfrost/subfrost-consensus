@@ -2,7 +2,7 @@ use crate::parcel::AlkaneTransferParcel;
 use anyhow::Result;
 use metashrew_support::utils::consume_to_end;
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CallResponse {
     pub alkanes: AlkaneTransferParcel,
     pub data: Vec<u8>,

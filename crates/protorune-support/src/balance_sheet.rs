@@ -94,7 +94,7 @@ impl From<Arc<Vec<u8>>> for ProtoruneRuneId {
     }
 }
 
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Eq, Serialize, Deserialize)]
 pub struct BalanceSheet {
     pub balances: HashMap<ProtoruneRuneId, u128>, // Using HashMap to map runes to their balances
 }

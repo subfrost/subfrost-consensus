@@ -3,7 +3,7 @@ use metashrew_support::utils::{consume_exact, consume_sized_int};
 use std::collections::HashMap;
 use std::io::Cursor;
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub struct StorageMap(pub HashMap<Vec<u8>, Vec<u8>>);
 
 impl FromIterator<(Vec<u8>, Vec<u8>)> for StorageMap {

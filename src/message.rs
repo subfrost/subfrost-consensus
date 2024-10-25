@@ -6,10 +6,6 @@ use protorune_support::{
     balance_sheet::BalanceSheet, rune_transfer::RuneTransfer, utils::decode_varint_list,
 };
 use std::io::Cursor;
-use {
-    metashrew::{println, stdio::stdout},
-    std::fmt::Write,
-};
 
 #[derive(Clone, Default)]
 pub struct AlkaneMessageContext(());
@@ -39,10 +35,7 @@ impl MessageContext for AlkaneMessageContext {
     fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
-            Err(e) => {
-                println!("Got error {}, refunding", e);
-                Err(e)
-            }
+            Err(e) => Err(e),
         }
     }
 }

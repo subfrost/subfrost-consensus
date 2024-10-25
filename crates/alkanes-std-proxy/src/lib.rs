@@ -5,8 +5,9 @@ use alkanes_support::{
 };
 use alkanes_support::{
     println,
-    stdio::{stdout, Stdout},
+    stdio::{stdout}
 };
+use std::fmt::Write;
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};

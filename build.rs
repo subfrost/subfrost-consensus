@@ -26,7 +26,9 @@ fn main() {
         .parent()
         .unwrap();
     let out_dir = base_dir.join("release");
-    let out_str = out_dir.to_str().unwrap();
+    let wasm_dir = base_dir.parent().unwrap().join("alkanes");
+    fs::create_dir_all(&wasm_dir).unwrap();
+    let wasm_str = wasm_dir.to_str().unwrap();
     let write_dir = Path::new(&out_dir)
         .parent()
         .unwrap()
@@ -37,6 +39,7 @@ fn main() {
         .join("src")
         .join("tests");
 
+    fs::create_dir_all(&write_dir.join("std")).unwrap();
     let crates_dir = out_dir
         .parent()
         .unwrap()
@@ -59,6 +62,7 @@ fn main() {
         .map(|v| -> Result<String> {
             std::env::set_current_dir(&crates_dir.clone().join(v.clone()))?;
             Command::new("cargo")
+                .env("CARGO_TARGET_DIR", wasm_str)
                 .arg("build")
                 .arg("--release")
                 .stdout(Stdio::inherit())
@@ -70,7 +74,7 @@ fn main() {
             std::env::set_current_dir(&crates_dir)?;
             let subbed = v.clone().replace("-", "_");
             let data: String = hex::encode(&fs::read(
-                &Path::new(&out_str).join(subbed.clone() + ".wasm"),
+                &Path::new(&wasm_str).join("wasm32-unknown-unknown").join("release").join(subbed.clone() + ".wasm")
             )?);
             fs::write(
                 &write_dir.join("std").join(subbed.clone() + "_build.rs"),

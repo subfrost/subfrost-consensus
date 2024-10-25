@@ -3,7 +3,7 @@ use anyhow::Result;
 use metashrew_support::utils::consume_sized_int;
 use protorune_support::{balance_sheet::BalanceSheet, rune_transfer::RuneTransfer};
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AlkaneTransfer {
     pub id: AlkaneId,
     pub value: u128,
@@ -43,7 +43,7 @@ impl Into<BalanceSheet> for AlkaneTransferParcel {
     }
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AlkaneTransferParcel(pub Vec<AlkaneTransfer>);
 
 impl AlkaneTransferParcel {

@@ -4,7 +4,7 @@ use metashrew_support::utils::consume_sized_int;
 use metashrew_support::utils::is_empty;
 use std::io::Cursor;
 
-#[derive(Clone, Default, Debug)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Context {
     pub myself: AlkaneId,
     pub caller: AlkaneId,

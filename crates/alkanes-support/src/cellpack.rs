@@ -4,7 +4,7 @@ use metashrew_support::utils::consume_sized_int;
 use protorune_support::utils::encode_varint_list;
 use std::io::Cursor;
 
-#[derive(Clone, Default, Debug)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Cellpack {
     pub target: AlkaneId,
     pub inputs: Vec<u128>,
