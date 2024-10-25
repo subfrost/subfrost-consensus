@@ -62,11 +62,11 @@ This will provide a stub environment to test a METASHREW indexer program, and it
 
 ### Authors
 
-flex
-v16
-butenprks
-clothic
-m3
+- flex
+- v16
+- butenprks
+- clothic
+- m3
 
 ### License
 
