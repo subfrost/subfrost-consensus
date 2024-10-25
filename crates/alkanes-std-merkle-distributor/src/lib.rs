@@ -1,7 +1,7 @@
 use alkanes_runtime::runtime::AlkaneResponder;
 use alkanes_runtime::storage::StoragePointer;
 use alkanes_support::{
-    id::AlkaneId, parcel::AlkaneTransfer, response::CallResponse, utils::shift,
+    id::AlkaneId, parcel::AlkaneTransfer, response::CallResponse, utils::{shift, shift_id, shift_bytes32, shift_as_long},
     witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
@@ -96,37 +96,6 @@ impl MerkleDistributor {
     }
 }
 
-pub fn shift_or_err(v: &mut Vec<u128>) -> Result<u128> {
-    shift(v)
-        .ok_or("")
-        .map_err(|_| anyhow!("expected u128 value in list but list is exhausted"))
-}
-
-pub fn shift_id(v: &mut Vec<u128>) -> Result<AlkaneId> {
-    let block = shift_or_err(v)?;
-    let tx = shift_or_err(v)?;
-    Ok(AlkaneId { block, tx })
-}
-
-pub fn shift_as_long(v: &mut Vec<u128>) -> Result<u64> {
-    Ok(shift_or_err(v)?.try_into()?)
-}
-
-pub fn shift_root(v: &mut Vec<u128>) -> Result<Vec<u8>> {
-    Ok((&[
-        shift_as_long(v)?,
-        shift_as_long(v)?,
-        shift_as_long(v)?,
-        shift_as_long(v)?,
-    ])
-        .to_vec()
-        .into_iter()
-        .rev()
-        .fold(Vec::<u8>::new(), |mut r, v| {
-            r.extend(&v.to_be_bytes());
-            r
-        }))
-}
 
 impl AlkaneResponder for MerkleDistributor {
     fn execute(&self) -> CallResponse {
@@ -142,7 +111,7 @@ impl AlkaneResponder for MerkleDistributor {
                     }
                     self.set_alkane(context.incoming_alkanes.0[0].id.clone());
                     self.set_length(shift(&mut inputs).unwrap().try_into().unwrap());
-                    self.set_root(shift_root(&mut inputs).unwrap());
+                    self.set_root(shift_bytes32(&mut inputs).unwrap());
                     CallResponse::default()
                 } else {
                     panic!("already initialized");
