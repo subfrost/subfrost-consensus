@@ -9,6 +9,7 @@ pub mod imports;
 pub mod index_pointer;
 pub mod proto;
 pub mod stdio;
+#[cfg(test)]
 pub mod tests;
 
 use crate::compat::panic_hook;

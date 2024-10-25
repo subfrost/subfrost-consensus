@@ -3,6 +3,10 @@ use alkanes_support::{
     cellpack::Cellpack, context::Context, parcel::AlkaneTransfer, response::CallResponse,
     witness::find_witness_payload,
 };
+use alkanes_support::{
+    println,
+    stdio::{stdout, Stdout},
+};
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
@@ -50,6 +54,7 @@ impl AlkaneResponder for Proxy {
         let mut context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
         let auth = self.pull_incoming(&mut context);
+        println!("fetched inputs");
         match shift(&mut inputs).unwrap() {
             0 => {
                 if self.load("/initialized".as_bytes().to_vec()).len() != 0 {
