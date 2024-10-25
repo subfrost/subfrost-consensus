@@ -4,7 +4,7 @@ use alkanes_support::{
     storage::StorageMap, witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
-use metashrew::index_pointer::KeyValuePointer;
+use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 
