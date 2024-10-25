@@ -18,7 +18,8 @@ mod tests {
     use bitcoin::{OutPoint, Txid};
     use hex;
 
-    use metashrew::{clear, index_pointer::KeyValuePointer};
+    use metashrew::clear;
+    use metashrew_support::index_pointer::KeyValuePointer;
     use ordinals::Rune;
 
     use protobuf::{Message, SpecialFields};

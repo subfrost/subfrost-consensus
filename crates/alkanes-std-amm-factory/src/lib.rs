@@ -1,12 +1,22 @@
-use alkanes_runtime::runtime::AlkaneResponder;
+use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
-    cellpack::Cellpack, context::Context, parcel::AlkaneTransfer, response::CallResponse,
+    cellpack::Cellpack,
+    context::Context,
+    id::AlkaneId,
+    parcel::{AlkaneTransfer, AlkaneTransferParcel},
+    response::CallResponse,
     witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
 use bitcoin::blockdata::transaction::Transaction;
-use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
+use hex;
+use metashrew_support::{
+    compat::{to_arraybuffer_layout, to_ptr},
+    index_pointer::KeyValuePointer,
+    utils::consume_sized_int,
+};
 use protorune_support::utils::consensus_decode;
+use std::sync::Arc;
 
 #[derive(Default)]
 struct AMMFactory(());
@@ -19,7 +29,36 @@ fn shift<T>(v: &mut Vec<T>) -> Option<T> {
     }
 }
 
+pub fn take_two<T: Clone>(v: &Vec<T>) -> (T, T) {
+    (v[0].clone(), v[1].clone())
+}
+
+pub fn sort_alkanes((a, b): (AlkaneId, AlkaneId)) -> (AlkaneId, AlkaneId) {
+    if a < b {
+        (a, b)
+    } else {
+        (b, a)
+    }
+}
+
+pub fn join_ids(a: AlkaneId, b: AlkaneId) -> Vec<u8> {
+    let mut result: Vec<u8> = a.into();
+    let value: Vec<u8> = b.into();
+    result.extend_from_slice(&value);
+    result
+}
+
+pub fn join_ids_from_tuple(v: (AlkaneId, AlkaneId)) -> Vec<u8> {
+    join_ids(v.0, v.1)
+}
+
 impl AMMFactory {
+    pub fn pool_pointer(&self, a: &AlkaneId, b: &AlkaneId) -> StoragePointer {
+        StoragePointer::from_keyword("/pools/")
+            .select(&a.clone().into())
+            .keyword("/")
+            .select(&b.clone().into())
+    }
     pub fn pull_incoming(&self, context: &mut Context) -> Option<AlkaneTransfer> {
         let i = context
             .incoming_alkanes
@@ -49,70 +88,58 @@ impl AlkaneResponder for AMMFactory {
     fn execute(&self) -> CallResponse {
         let mut context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
-        let auth = self.pull_incoming(&mut context);
         match shift(&mut inputs).unwrap() {
             0 => {
-                if self.load("/initialized".as_bytes().to_vec()).len() != 0 {
-                    let mut response: CallResponse = CallResponse::default();
-                    response.alkanes = context.incoming_alkanes.clone();
-                    response.alkanes.0.push(AlkaneTransfer {
-                        id: context.myself.clone(),
-                        value: 1,
-                    });
-                    self.store("/initialized".as_bytes().to_vec(), vec![0x01]);
-                    response
+                let mut pointer = StoragePointer::from_keyword("/initialized");
+                if pointer.get().len() == 0 {
+                    pointer.set(Arc::new(vec![0x01]));
+                    CallResponse::default()
                 } else {
                     panic!("already initialized");
                 }
             }
             1 => {
-                self.only_owner(auth.clone()).unwrap();
-                let witness_index = shift(&mut inputs).unwrap();
-                let tx =
-                    consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()))
-                        .unwrap();
-                let cellpack = Cellpack::parse(&mut std::io::Cursor::new(
-                    find_witness_payload(&tx, witness_index.try_into().unwrap()).unwrap(),
-                ))
-                .unwrap();
-                let mut response: CallResponse = self
-                    .call(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
+                if context.incoming_alkanes.0.len() != 2 {
+                    panic!("must send two runes to initialize a pool");
+                } else {
+                    let (alkane_a, alkane_b) = take_two(&context.incoming_alkanes.0);
+                    let (a, b) = sort_alkanes((alkane_a.id.clone(), alkane_b.id.clone()));
+                    let next_sequence = self.sequence();
+                    self.pool_pointer(&a, &b)
+                        .set(Arc::new(AlkaneId::new(2, next_sequence).into()));
+                    self.call(
+                        &Cellpack {
+                            target: AlkaneId {
+                                block: 6,
+                                tx: 0xffef,
+                            },
+                            inputs: vec![0, a.block, a.tx, b.block, b.tx],
+                        },
+                        &AlkaneTransferParcel(vec![
+                            context.incoming_alkanes.0[0].clone(),
+                            context.incoming_alkanes.0[1].clone(),
+                        ]),
+                        self.fuel(),
+                    )
+                    .unwrap()
+                }
             }
             2 => {
-                self.only_owner(auth.clone()).unwrap();
-                let witness_index = shift(&mut inputs).unwrap();
-                let tx =
-                    consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()))
-                        .unwrap();
-                let cellpack = Cellpack::parse(&mut std::io::Cursor::new(
-                    find_witness_payload(&tx, witness_index.try_into().unwrap()).unwrap(),
-                ))
-                .unwrap();
-                let mut response: CallResponse = self
-                    .delegatecall(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
-            }
-            3 => {
-                self.only_owner(auth.clone()).unwrap();
-                let cellpack: Cellpack = inputs.try_into().unwrap();
-                let mut response: CallResponse = self
-                    .call(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
-                response
-            }
-            4 => {
-                self.only_owner(auth.clone()).unwrap();
-                let cellpack: Cellpack = inputs.try_into().unwrap();
-                let mut response: CallResponse = self
-                    .delegatecall(&cellpack, &context.incoming_alkanes, self.fuel())
-                    .unwrap();
-                response.alkanes.0.push(auth.unwrap());
+                let mut response = CallResponse::default();
+                response.alkanes = context.incoming_alkanes.clone();
+                let (alkane_a, alkane_b) = (
+                    AlkaneId::new(shift(&mut inputs).unwrap(), shift(&mut inputs).unwrap()),
+                    AlkaneId::new(shift(&mut inputs).unwrap(), shift(&mut inputs).unwrap()),
+                );
+                let (a, b) = sort_alkanes((alkane_a, alkane_b));
+                let mut cursor = std::io::Cursor::<Vec<u8>>::new(
+                    self.pool_pointer(&a, &b).get().as_ref().clone(),
+                );
+                let id = AlkaneId::new(
+                    consume_sized_int::<u128>(&mut cursor).unwrap(),
+                    consume_sized_int::<u128>(&mut cursor).unwrap(),
+                );
+                response.data = id.into();
                 response
             }
             _ => {

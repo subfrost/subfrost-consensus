@@ -5,11 +5,8 @@ use alkanes_support::{
 };
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::KeyValuePointer;
-use metashrew::{
-    index_pointer::{AtomicPointer, IndexPointer},
-    println,
-    stdio::stdout,
-};
+use metashrew::{println, stdio::stdout};
+use metashrew_support::index_pointer::KeyValuePointer;
 
 use protorune::message::MessageContextParcel;
 use protorune_support::utils::consensus_encode;

@@ -2,7 +2,7 @@ use anyhow::Result;
 use metashrew_support::utils::consume_sized_int;
 use protorune_support::balance_sheet::ProtoruneRuneId;
 
-#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AlkaneId {
     pub block: u128,
     pub tx: u128,
@@ -11,6 +11,16 @@ pub struct AlkaneId {
 impl Into<Vec<u128>> for AlkaneId {
     fn into(self) -> Vec<u128> {
         (&[self.block, self.tx]).to_vec()
+    }
+}
+
+impl TryFrom<Vec<u8>> for AlkaneId {
+    type Error = anyhow::Error;
+    fn try_from(v: Vec<u8>) -> Result<Self> {
+        let mut cursor = std::io::Cursor::new(v);
+        let block = consume_sized_int::<u128>(&mut cursor)?;
+        let tx = consume_sized_int::<u128>(&mut cursor)?;
+        Ok(Self::new(block, tx))
     }
 }
 
@@ -55,9 +65,15 @@ impl AlkaneId {
     }
     pub fn factory(&self) -> Option<AlkaneId> {
         if self.block == 5 {
-            Some(AlkaneId { block: 2, tx: self.tx })
+            Some(AlkaneId {
+                block: 2,
+                tx: self.tx,
+            })
         } else if self.block == 6 {
-            Some(AlkaneId { block: 4, tx: self.tx })
+            Some(AlkaneId {
+                block: 4,
+                tx: self.tx,
+            })
         } else {
             None
         }

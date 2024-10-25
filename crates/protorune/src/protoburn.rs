@@ -1,7 +1,8 @@
 use crate::tables::{RuneTable, RUNES};
 use anyhow::{anyhow, Result};
 use bitcoin::{OutPoint, Txid};
-use metashrew::index_pointer::{AtomicPointer, KeyValuePointer};
+use metashrew::index_pointer::AtomicPointer;
+use metashrew_support::index_pointer::KeyValuePointer;
 use std::{
     cmp::min,
     collections::{HashMap, HashSet},
