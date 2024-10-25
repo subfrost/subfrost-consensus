@@ -1,4 +1,4 @@
-use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
+use crate::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     cellpack::Cellpack,
     id::AlkaneId,

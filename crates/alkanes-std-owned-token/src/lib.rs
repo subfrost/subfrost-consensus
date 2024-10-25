@@ -1,5 +1,4 @@
-use alkanes_lib_auth::AuthenticatedResponder;
-use alkanes_lib_token::Token;
+use alkanes_runtime::{auth::AuthenticatedResponder, token::{Token}};
 use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::utils::shift;
 use alkanes_support::{context::Context, parcel::AlkaneTransfer, response::CallResponse};
