@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::tests::std::alkanes_std_proxy_build;
+    use crate::tests::std::{alkanes_std_proxy_build, alkanes_std_test_build};
     use alkanes_support::cellpack::Cellpack;
     use alkanes_support::id::AlkaneId;
     use protorune::Protorune;
@@ -12,17 +12,30 @@ mod tests {
     use crate::message::AlkaneMessageContext;
 
     #[wasm_bindgen_test]
-    async fn std_proxy_test() {
+    async fn std_test_all() {
         clear();
         let block_height = 840_000;
-        let test_cellpacks = [Cellpack {
-            target: AlkaneId { block: 1, tx: 0 },
-            // input 0 to initialize proxy
-            inputs: vec![0],
-        }];
+
+        let test_cellpacks = [
+            //create alkane
+            Cellpack {
+                target: AlkaneId { block: 1, tx: 0 },
+                inputs: vec![0],
+            },
+            //create second alkane
+            Cellpack {
+                target: AlkaneId { block: 1, tx: 0 },
+                inputs: vec![0],
+            },
+            //target second alkane to be called with custom opcode
+            Cellpack {
+                target: AlkaneId { block: 2, tx: 0 },
+                inputs: vec![1, 1],
+            },
+        ];
 
         let test_block = alkane_helpers::init_with_multiple_cellpacks(
-            alkanes_std_proxy_build::get_bytes(),
+            alkanes_std_test_build::get_bytes(),
             test_cellpacks.into(),
         );
 
