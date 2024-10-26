@@ -13,7 +13,8 @@ use ordinals::{Edict, Etching, Rune, RuneId, Runestone};
 use std::fmt::Write;
 use std::sync::Arc;
 
-use crate::protostone::{Protostone, Protostones};
+use crate::protostone::{Protostones};
+use protorune_support::protostone::{Protostone};
 
 pub const ADDRESS1: &'static str = "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu";
 

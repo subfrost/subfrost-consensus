@@ -90,7 +90,7 @@ fn main() {
             );
             fs::write(
                 &write_dir.join("std").join(subbed.clone() + "_build.rs"),
-                String::from("use hex_lit::hex;\npub fn get_bytes() -> Vec<u8> { (&hex!(\"")
+                String::from("use hex_lit::hex;\n#[allow(long_running_const_eval)]\npub fn get_bytes() -> Vec<u8> { (&hex!(\"")
                     + data.as_str()
                     + "\")).to_vec() }",
             )?;
