@@ -10,12 +10,14 @@ use core::str::FromStr;
 use metashrew::{get_cache, println, stdio::stdout};
 use metashrew_support::utils::format_key;
 use ordinals::{Edict, Etching, Rune, RuneId, Runestone};
+use protorune_support::balance_sheet::ProtoruneRuneId;
 use std::fmt::Write;
 use std::sync::Arc;
 
-use crate::protostone::{Protostones};
-use protorune_support::protostone::{Protostone};
+use crate::protostone::Protostones;
+use protorune_support::protostone::{Protostone, ProtostoneEdict};
 
+// TODO: This module should probably not be compiled into the prod indexer wasm
 pub const ADDRESS1: &'static str = "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu";
 
 pub fn print_cache() {
@@ -468,6 +470,8 @@ pub fn create_protostone_encoded_tx(
 }
 
 /// Create a protoburn given an input that holds runes
+/// Outpoint with protorunes is the txid and vout 0
+/// This outpoint holds 1000 protorunes
 pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128) -> Transaction {
     let input_script = ScriptBuf::new();
 
@@ -533,28 +537,67 @@ pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128
     }
 }
 
-// pub fn create_block_with_protoburn() {
-//     let config = RunesTestingConfig::new(
-//         "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu",
-//         "bc1qwml3ckq4gtmxe7hwvs38nvt5j63gwnwwmvk5r5",
-//         "TESTER",
-//         "Z",
-//         840001,
-//         0,
-//     );
-//     let tx0 = create_rune_etching_transaction(&config);
-//     let outpoint_with_runes = OutPoint {
-//         txid: tx0.txid(),
-//         vout: 0,
-//     };
-//     let rune_id = RuneId::new(config.rune_etch_height, config.rune_etch_vout).unwrap();
+pub fn create_protomessage_from_edict_tx(
+    previous_output: OutPoint,
+    protocol_id: u128,
+    protorune_id: ProtoruneRuneId,
+) -> Transaction {
+    let input_script = ScriptBuf::new();
+    let txin = TxIn {
+        previous_output,
+        script_sig: input_script,
+        sequence: Sequence::MAX,
+        witness: Witness::new(),
+    };
 
-//     let tx1 = create_protoburn_transaction(
-//         &config,
-//         outpoint_with_runes,
-//         rune_id,
-//         edict_amount,
-//         edict_output,
-//     );
-//     return (create_block_with_txs(vec![tx0, tx1]), config);
-// }
+    let address: Address<NetworkChecked> = get_address(&ADDRESS1);
+
+    let txout0 = TxOut {
+        value: Amount::from_sat(1).to_sat(),
+        script_pubkey: address.script_pubkey(),
+    };
+    let txout1 = TxOut {
+        value: Amount::from_sat(2).to_sat(),
+        script_pubkey: address.script_pubkey(),
+    };
+
+    let runestone: ScriptBuf = (Runestone {
+        etching: None,
+        pointer: Some(2), // all leftover runes points to the OP_RETURN, so therefore targets the protoburn. in this case, there are no runes
+        edicts: Vec::new(),
+        mint: None,
+        protocol: match vec![Protostone {
+            // protomessage which should transfer protorunes to the pointer
+            message: vec![1u8],
+            pointer: Some(0),
+            refund: Some(1),
+            edicts: vec![ProtostoneEdict {
+                id: protorune_id,
+                amount: 800,
+                output: 4, // output 0, 1 are the spendable outputs, output 2 is the op_return, output 3 is reserved, output 4 is the protomessage
+            }],
+            from: None,
+            burn: None,
+            protocol_tag: protocol_id as u128,
+        }]
+        .encipher()
+        {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        },
+    })
+    .encipher();
+
+    //     // op return is at output 1
+    let op_return = TxOut {
+        value: Amount::from_sat(0).to_sat(),
+        script_pubkey: runestone,
+    };
+
+    Transaction {
+        version: 1,
+        lock_time: bitcoin::absolute::LockTime::ZERO,
+        input: vec![txin],
+        output: vec![txout0, txout1, op_return],
+    }
+}
