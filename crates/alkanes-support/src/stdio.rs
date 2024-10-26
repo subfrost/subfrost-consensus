@@ -21,9 +21,9 @@ pub fn stdout() -> Stdout {
 
 #[macro_export]
 macro_rules! println {
-  ( $( $x:expr ),* ) => {
+  ( $( $x:tt )* ) => {
     {
-      writeln!(stdout(), $($x),*).unwrap();
+      write!(stdout(), $($x)*).unwrap();
     }
   }
 }
