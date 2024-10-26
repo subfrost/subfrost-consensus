@@ -1,14 +1,15 @@
-use alkanes_runtime::runtime::AlkaneResponder;
-use alkanes_runtime::storage::StoragePointer;
+use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
     response::CallResponse,
-    utils::{shift}
+    utils::shift,
 };
 use anyhow::{anyhow, Result};
-use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
-use metashrew_support::index_pointer::KeyValuePointer;
+use metashrew_support::{
+    compat::{to_arraybuffer_layout, to_ptr},
+    index_pointer::KeyValuePointer,
+};
 use num::integer::Roots;
 use protorune_support::balance_sheet::BalanceSheet;
 use ruint::Uint;

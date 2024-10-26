@@ -2,7 +2,7 @@
 mod tests {
     use crate::balance_sheet::load_sheet;
     use crate::message::{MessageContext, MessageContextParcel};
-    use crate::protostone::{Protostone, Protostones};
+    use crate::protostone::Protostones;
     use crate::test_helpers::{self as helpers, get_address, ADDRESS1};
     use crate::{tables, Protorune};
     use anyhow::Result;
@@ -12,6 +12,7 @@ mod tests {
         Witness,
     };
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
+    use protorune_support::protostone::Protostone;
     use protorune_support::rune_transfer::RuneTransfer;
     use protorune_support::utils::consensus_encode;
 

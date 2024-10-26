@@ -1,5 +1,5 @@
 use alkanes_runtime::{println, runtime::AlkaneResponder, stdio::stdout};
-use alkanes_support::{id::AlkaneId, response::CallResponse};
+use alkanes_support::{cellpack::Cellpack, id::AlkaneId, response::CallResponse};
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use std::fmt::Write;
 
@@ -8,23 +8,27 @@ struct LoggerAlkane(());
 
 impl AlkaneResponder for LoggerAlkane {
     fn execute(&self) -> CallResponse {
-        let _v = self.context().is_err_and(|e| {
-            println!("{}", e);
-            true
-        });
+        let context = self.context().unwrap();
         println!(
-            "hello world! {}",
-            self.balance(
-                &AlkaneId {
-                    block: 100,
-                    tx: 100,
-                },
-                &AlkaneId {
-                    block: 100,
-                    tx: 100,
-                },
-            )
+            "executing alkane with id {:?} and caller {:?}",
+            context.myself, context.caller
         );
+        // TODO: for some reason, this isnt getting executed
+        if context.inputs.len() > 0 && context.inputs[0] == 1 {
+            let cellpack = Cellpack {
+                target: AlkaneId {
+                    block: 2,
+                    tx: context.inputs[1],
+                },
+                inputs: vec![0],
+            };
+            let _r = self
+                .call(&cellpack, &context.incoming_alkanes, 500)
+                .is_err_and(|e| {
+                    println!("{}", e);
+                    true
+                });
+        }
         CallResponse::default()
     }
 }

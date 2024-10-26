@@ -794,7 +794,6 @@ pub fn run(
     start_fuel: u64,
 ) -> Result<CallResponse> {
     let mut payload = cellpack.clone();
-    let mut _new_id: Option<AlkaneId> = None;
     if cellpack.target.is_create() {
         let wasm_payload = Arc::new(
             find_witness_payload(&context.message.transaction, 0)
