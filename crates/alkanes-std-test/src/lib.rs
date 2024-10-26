@@ -14,7 +14,7 @@ impl AlkaneResponder for LoggerAlkane {
             .0
             .into_iter()
             .map(|parcel| {
-                println!("{}", parcel);
+                println!("{:?}", parcel);
             })
             .for_each(drop);
         println!(
