@@ -1,13 +1,13 @@
-use alkanes_runtime::{runtime::AlkaneResponder};
-use metashrew_support::compat::{to_ptr, to_arraybuffer_layout};
-use alkanes_support::response::{CallResponse};
+use alkanes_runtime::runtime::AlkaneResponder;
+use alkanes_support::response::CallResponse;
+use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 
 #[derive(Default)]
 pub struct MinimalExample(());
 
 impl AlkaneResponder for MinimalExample {
     fn execute(&self) -> CallResponse {
-      CallResponse::default()
+        CallResponse::default()
     }
 }
 

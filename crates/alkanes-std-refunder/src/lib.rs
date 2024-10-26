@@ -1,14 +1,14 @@
-use alkanes_runtime::{runtime::AlkaneResponder};
-use metashrew_support::compat::{to_ptr, to_arraybuffer_layout};
-use alkanes_support::response::{CallResponse};
+use alkanes_runtime::runtime::AlkaneResponder;
+use alkanes_support::response::CallResponse;
+use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 
 #[derive(Default)]
 pub struct RefunderAlkane(());
 
 impl AlkaneResponder for RefunderAlkane {
     fn execute(&self) -> CallResponse {
-      let context = self.context().unwrap();
-      CallResponse::forward(&context.incoming_alkanes)
+        let context = self.context().unwrap();
+        CallResponse::forward(&context.incoming_alkanes)
     }
 }
 

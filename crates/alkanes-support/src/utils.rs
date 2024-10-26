@@ -1,4 +1,4 @@
-use crate::id::{AlkaneId};
+use crate::id::AlkaneId;
 use anyhow::{anyhow, Result};
 
 pub fn shift<T>(v: &mut Vec<T>) -> Option<T> {

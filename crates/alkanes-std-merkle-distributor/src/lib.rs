@@ -1,7 +1,10 @@
 use alkanes_runtime::runtime::AlkaneResponder;
 use alkanes_runtime::storage::StoragePointer;
 use alkanes_support::{
-    id::AlkaneId, parcel::AlkaneTransfer, response::CallResponse, utils::{shift, shift_id, shift_bytes32, shift_as_long},
+    id::AlkaneId,
+    parcel::AlkaneTransfer,
+    response::CallResponse,
+    utils::{shift, shift_bytes32},
     witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
@@ -11,7 +14,8 @@ use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr},
     utils::{consume_exact, consume_sized_int, consume_to_end},
 };
-use protorune_support::utils::consensus_decode;
+use ordinals::{Artifact, Runestone};
+use protorune_support::{protostone::Protostone, utils::consensus_decode};
 use rs_merkle::{algorithms::Sha256, Hasher, MerkleProof};
 use std::io::Cursor;
 use std::sync::Arc;
@@ -30,37 +34,50 @@ pub fn sub_fees(v: u128) -> Result<u128> {
 impl MerkleDistributor {
     pub fn verify_output(&self, vout: u32) -> Result<u128> {
         let tx = consensus_decode::<Transaction>(&mut std::io::Cursor::new(self.transaction()))?;
-        let mut cursor: Cursor<Vec<u8>> = Cursor::<Vec<u8>>::new(
-            find_witness_payload(&tx, 0)
-                .ok_or("")
-                .map_err(|_| anyhow!("witness envelope at index 0 does not contain data"))?,
-        );
-        let leaf = consume_exact(&mut cursor, 40)?;
-        let leaf_hash = Sha256::hash(&leaf);
-        let proof = consume_to_end(&mut cursor)?;
-        let mut leaf_cursor = Cursor::new(leaf.clone());
-        let p2sh = consume_exact(&mut leaf_cursor, 20)?;
-        let index = consume_sized_int::<u32>(&mut leaf_cursor)? as usize;
-        let amount = consume_sized_int::<u128>(&mut leaf_cursor)?;
-        if MerkleProof::<Sha256>::try_from(proof)?.verify(
-            self.root()?,
-            &[index],
-            &[leaf_hash],
-            self.length(),
-        ) {
-            if tx.output[vout as usize]
-                .script_pubkey
-                .clone()
-                .into_bytes()
-                .to_vec()
-                != p2sh
-            {
-                Err(anyhow!("spendable output created does not match proof"))
+        if let Some(Artifact::Runestone(ref runestone)) = Runestone::decipher(&tx) {
+            let protostones = Protostone::from_runestone(runestone)?;
+            let message = &protostones[(vout as usize) - tx.output.len() - 1];
+            if message.edicts.len() != 0 {
+                panic!("message cannot contain edicts, only a pointer")
+            }
+            let pointer = message.pointer.ok_or("").map_err(|_| anyhow!("no pointer in message"))?;
+            if pointer as usize >= tx.output.len() {
+                panic!("pointer cannot be a protomessage");
+            }
+            let mut cursor: Cursor<Vec<u8>> = Cursor::<Vec<u8>>::new(
+                find_witness_payload(&tx, 0)
+                    .ok_or("")
+                    .map_err(|_| anyhow!("witness envelope at index 0 does not contain data"))?,
+            );
+            let leaf = consume_exact(&mut cursor, 40)?;
+            let leaf_hash = Sha256::hash(&leaf);
+            let proof = consume_to_end(&mut cursor)?;
+            let mut leaf_cursor = Cursor::new(leaf.clone());
+            let p2sh = consume_exact(&mut leaf_cursor, 20)?;
+            let index = consume_sized_int::<u32>(&mut leaf_cursor)? as usize;
+            let amount = consume_sized_int::<u128>(&mut leaf_cursor)?;
+            if MerkleProof::<Sha256>::try_from(proof)?.verify(
+                self.root()?,
+                &[index],
+                &[leaf_hash],
+                self.length(),
+            ) {
+                if tx.output[(vout as usize) as usize]
+                    .script_pubkey
+                    .clone()
+                    .into_bytes()
+                    .to_vec()
+                    != p2sh
+                {
+                    Err(anyhow!("spendable output created does not match proof"))
+                } else {
+                    Ok(amount)
+                }
             } else {
-                Ok(amount)
+                Err(anyhow!("proof verification failure"))
             }
         } else {
-            Err(anyhow!("proof verification failure"))
+            Err(anyhow!("runestone decipher failed"))
         }
     }
     pub fn length_pointer(&self) -> StoragePointer {
@@ -96,7 +113,6 @@ impl MerkleDistributor {
     }
 }
 
-
 impl AlkaneResponder for MerkleDistributor {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
@@ -120,7 +136,7 @@ impl AlkaneResponder for MerkleDistributor {
             1 => {
                 let mut response = CallResponse::forward(&context.incoming_alkanes);
                 response.alkanes.0.push(AlkaneTransfer {
-                    value: self.verify_output(context.pointer).unwrap(),
+                    value: self.verify_output(context.vout).unwrap(),
                     id: self.alkane().unwrap(),
                 });
                 response

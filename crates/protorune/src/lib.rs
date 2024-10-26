@@ -1,6 +1,5 @@
 use crate::balance_sheet::{load_sheet, PersistentRecord};
 use crate::message::MessageContext;
-use crate::protostone::ProtostoneEdict;
 use crate::tables::RuneTable;
 use anyhow::{anyhow, Ok, Result};
 use bitcoin::blockdata::block::Block;
@@ -15,15 +14,19 @@ use metashrew_support::{
     utils::consume_to_end,
 };
 use ordinals::{Artifact, Runestone};
-use ordinals::{Edict, Etching};
+use ordinals::{Etching};
 use proto::protorune::{Output, RunesResponse, WalletResponse};
 use protobuf::{Message, SpecialFields};
-use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use protorune_support::constants;
-use protorune_support::utils::consensus_encode;
-use protorune_support::utils::field_to_name;
-use protostone::{
-    add_to_indexable_protocols, initialized_protocol_index, into_protostone_edicts, Protostone,
+use protorune_support::{
+    balance_sheet::{BalanceSheet, ProtoruneRuneId},
+    protostone::{ProtostoneEdict, Protostone, into_protostone_edicts},
+    utils::{consensus_encode, field_to_name},
+};
+use crate::protostone::{
+    MessageProcessor,
+    initialized_protocol_index,
+    add_to_indexable_protocols,
     Protostones,
 };
 use std::collections::HashMap;
@@ -45,18 +48,6 @@ pub mod view;
 
 pub struct Protorune(());
 
-impl From<Edict> for ProtostoneEdict {
-    fn from(v: Edict) -> ProtostoneEdict {
-        ProtostoneEdict {
-            id: ProtoruneRuneId {
-                block: v.id.block.into(),
-                tx: v.id.tx.into(),
-            },
-            amount: v.amount,
-            output: v.output as u128,
-        }
-    }
-}
 
 pub fn default_output(tx: &Transaction) -> u32 {
     for i in 0..tx.output.len() {

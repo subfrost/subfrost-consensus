@@ -23,6 +23,7 @@ pub struct MessageContextParcel {
     pub calldata: Vec<u8>,
     pub sheets: Box<BalanceSheet>,
     pub txindex: u32,
+    pub vout: u32,
     pub runtime_balances: Box<BalanceSheet>,
 }
 
@@ -46,6 +47,7 @@ impl Default for MessageContextParcel {
             block: block.clone(),
             height: 0,
             pointer: 0,
+            vout: 0,
             refund_pointer: 0,
             calldata: Vec::<u8>::default(),
             txindex: 0,
