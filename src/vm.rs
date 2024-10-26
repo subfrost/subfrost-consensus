@@ -31,10 +31,12 @@ impl AlkanesRuntimeContext {
         cellpack: &Cellpack,
     ) -> AlkanesRuntimeContext {
         let cloned = cellpack.clone();
+        let message_copy = message.clone();
+        let incoming_alkanes = message_copy.runes.clone().into();
         AlkanesRuntimeContext {
-            message: Box::new(message.clone()),
+            message: Box::new(message_copy),
             returndata: vec![],
-            incoming_alkanes: message.clone().runes.into(),
+            incoming_alkanes,
             myself: cloned.target,
             caller: AlkaneId::default(),
             inputs: cloned.inputs,
@@ -53,9 +55,6 @@ impl AlkanesRuntimeContext {
             result.push(incoming.id.tx);
             result.push(incoming.value);
         }
-        // for input in &self.inputs {
-        //     result.push(input.clone());
-        // }
         result
     }
     pub fn serialize(&self) -> Vec<u8> {

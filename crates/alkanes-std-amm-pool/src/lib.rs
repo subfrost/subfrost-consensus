@@ -4,6 +4,7 @@ use alkanes_support::{
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
     response::CallResponse,
+    utils::{shift}
 };
 use anyhow::{anyhow, Result};
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
@@ -17,14 +18,6 @@ type U256 = Uint<256, 4>;
 
 #[derive(Default)]
 struct AMMPool(());
-
-fn shift<T>(v: &mut Vec<T>) -> Option<T> {
-    if v.is_empty() {
-        None
-    } else {
-        Some(v.remove(0))
-    }
-}
 
 pub fn overflow_error(v: Option<u128>) -> Result<u128> {
     v.ok_or("").map_err(|_| anyhow!("overflow error"))
