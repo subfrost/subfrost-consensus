@@ -107,6 +107,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "alkanes-std-free-mint"
+version = "0.1.0"
+dependencies = [
+ "alkanes-runtime",
+ "alkanes-support",
+ "anyhow",
+ "bitcoin 0.30.2",
+ "metashrew-support",
+ "protorune-support",
+]
+
+[[package]]
 name = "alkanes-std-merkle-distributor"
 version = "0.1.0"
 dependencies = [
@@ -119,6 +131,18 @@ dependencies = [
  "protorune-support",
  "rs_merkle",
  "ruint",
+]
+
+[[package]]
+name = "alkanes-std-minimal"
+version = "0.1.0"
+dependencies = [
+ "alkanes-runtime",
+ "alkanes-support",
+ "anyhow",
+ "bitcoin 0.30.2",
+ "metashrew-support",
+ "protorune-support",
 ]
 
 [[package]]
@@ -135,6 +159,18 @@ dependencies = [
 
 [[package]]
 name = "alkanes-std-proxy"
+version = "0.1.0"
+dependencies = [
+ "alkanes-runtime",
+ "alkanes-support",
+ "anyhow",
+ "bitcoin 0.30.2",
+ "metashrew-support",
+ "protorune-support",
+]
+
+[[package]]
+name = "alkanes-std-refunder"
 version = "0.1.0"
 dependencies = [
  "alkanes-runtime",
