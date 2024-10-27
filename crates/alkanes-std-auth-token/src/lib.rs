@@ -73,6 +73,6 @@ impl AlkaneResponder for AuthToken {
 
 #[no_mangle]
 pub extern "C" fn __execute() -> i32 {
-    let mut response = to_arraybuffer_layout(&AuthToken::default().execute().serialize());
+    let mut response = to_arraybuffer_layout(&AuthToken::default().run());
     to_ptr(&mut response) + 4
 }

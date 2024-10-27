@@ -40,7 +40,10 @@ impl MerkleDistributor {
             if message.edicts.len() != 0 {
                 panic!("message cannot contain edicts, only a pointer")
             }
-            let pointer = message.pointer.ok_or("").map_err(|_| anyhow!("no pointer in message"))?;
+            let pointer = message
+                .pointer
+                .ok_or("")
+                .map_err(|_| anyhow!("no pointer in message"))?;
             if pointer as usize >= tx.output.len() {
                 panic!("pointer cannot be a protomessage");
             }
@@ -150,6 +153,6 @@ impl AlkaneResponder for MerkleDistributor {
 
 #[no_mangle]
 pub extern "C" fn __execute() -> i32 {
-    let mut response = to_arraybuffer_layout(&MerkleDistributor::default().execute().serialize());
+    let mut response = to_arraybuffer_layout(&MerkleDistributor::default().run());
     to_ptr(&mut response) + 4
 }

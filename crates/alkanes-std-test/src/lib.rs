@@ -13,7 +13,6 @@ impl AlkaneResponder for LoggerAlkane {
             "executing alkane with id {:?} and caller {:?}",
             context.myself, context.caller
         );
-        println!("{:#?}", context.inputs);
         if context.inputs.len() > 0 && context.inputs[0] == 1 {
             let cellpack = Cellpack {
                 target: AlkaneId {
@@ -22,12 +21,14 @@ impl AlkaneResponder for LoggerAlkane {
                 },
                 inputs: vec![0],
             };
+            println!("running call with cellpack: {:#?}", cellpack);
             let _r = self
                 .call(&cellpack, &context.incoming_alkanes, 500)
-                .is_err_and(|e| {
-                    println!("{}", e);
-                    true
-                });
+                .inspect_err(|e| {
+                    println!("errored out with: {}", e);
+                })
+                .unwrap();
+            println!("result for call: {:#?}", _r);
         }
         CallResponse::default()
     }
@@ -35,6 +36,6 @@ impl AlkaneResponder for LoggerAlkane {
 
 #[no_mangle]
 pub extern "C" fn __execute() -> i32 {
-    let mut response = to_arraybuffer_layout(&LoggerAlkane::default().execute().serialize());
+    let mut response = to_arraybuffer_layout(&LoggerAlkane::default().run());
     to_ptr(&mut response) + 4
 }

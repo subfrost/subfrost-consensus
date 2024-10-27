@@ -266,6 +266,10 @@ impl AlkanesHostFunctionsImpl {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
         let cellpack = Cellpack::parse(&mut Cursor::new(read_arraybuffer(data, cellpack_ptr)?))?;
+        println!(
+            "cellpack for call: {:#?}, start fuel: {}",
+            cellpack, start_fuel
+        );
         let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(read_arraybuffer(
             data,
             incoming_alkanes_ptr,

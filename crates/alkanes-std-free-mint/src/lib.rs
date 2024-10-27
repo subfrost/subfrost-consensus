@@ -24,6 +24,6 @@ impl AlkaneResponder for MintableAlkane {
 
 #[no_mangle]
 pub extern "C" fn __execute() -> i32 {
-    let mut response = to_arraybuffer_layout(&MintableAlkane::default().execute().serialize());
+    let mut response = to_arraybuffer_layout(&MintableAlkane::default().run());
     to_ptr(&mut response) + 4
 }

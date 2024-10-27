@@ -1,5 +1,3 @@
-use crate::println;
-use crate::stdio::{stdout, Write};
 use crate::{id::AlkaneId, parcel::AlkaneTransferParcel};
 use anyhow::Result;
 use metashrew_support::utils::consume_sized_int;
@@ -22,7 +20,6 @@ impl Context {
         result.caller = AlkaneId::parse(v)?;
         result.vout = consume_sized_int::<u128>(v)?.try_into()?;
         result.incoming_alkanes = AlkaneTransferParcel::parse(v)?;
-        println!("cursor position: {}", v.position());
         while !is_empty(v) {
             result.inputs.push(consume_sized_int::<u128>(v)?);
         }

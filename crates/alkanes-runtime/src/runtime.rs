@@ -41,10 +41,11 @@ pub trait AlkaneResponder {
             (&buffer[4..]).to_vec()
         }
     }
-    fn initialize(&self) {
+    fn initialize(&self) -> &Self {
         unsafe {
             _CACHE = Some(StorageMap::default());
         }
+        self
     }
     fn transaction(&self) -> Vec<u8> {
         unsafe {
@@ -112,19 +113,20 @@ pub trait AlkaneResponder {
         let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
         let mut outgoing_alkanes_buffer: Vec<u8> =
             to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
+        println!("before storage_map_buffer");
         let mut storage_map_buffer =
             to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
-        let mut returndata = vec![
-            0;
-            unsafe {
-                __call(
-                    to_ptr(&mut cellpack_buffer),
-                    to_ptr(&mut outgoing_alkanes_buffer),
-                    to_ptr(&mut storage_map_buffer),
-                    fuel,
-                )
-            } as usize
-        ];
+        let call_result = unsafe {
+            println!("running unsafe call");
+            __call(
+                to_ptr(&mut cellpack_buffer),
+                to_ptr(&mut outgoing_alkanes_buffer),
+                to_ptr(&mut storage_map_buffer),
+                fuel,
+            )
+        } as usize;
+        let mut returndata = vec![0; call_result];
+        println!("got returndata");
         unsafe {
             __returndatacopy(to_ptr(&mut returndata));
         }
@@ -183,6 +185,9 @@ pub trait AlkaneResponder {
             __returndatacopy(to_ptr(&mut returndata));
         }
         CallResponse::parse(&mut Cursor::new(returndata))
+    }
+    fn run(&self) -> Vec<u8> {
+        self.initialize().execute().serialize()
     }
     fn execute(&self) -> CallResponse;
 }

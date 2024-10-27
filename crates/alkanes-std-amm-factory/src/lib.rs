@@ -151,6 +151,6 @@ impl AlkaneResponder for AMMFactory {
 
 #[no_mangle]
 pub extern "C" fn __execute() -> i32 {
-    let mut response = to_arraybuffer_layout(&AMMFactory::default().execute().serialize());
+    let mut response = to_arraybuffer_layout(&AMMFactory::default().run());
     to_ptr(&mut response) + 4
 }
