@@ -55,6 +55,9 @@ impl AlkanesRuntimeContext {
             result.push(incoming.id.tx);
             result.push(incoming.value);
         }
+        for input in self.inputs.clone() {
+            result.push(input);
+        }
         result
     }
     pub fn serialize(&self) -> Vec<u8> {
