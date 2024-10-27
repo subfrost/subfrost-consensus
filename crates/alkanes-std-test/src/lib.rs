@@ -13,7 +13,7 @@ impl AlkaneResponder for LoggerAlkane {
             "executing alkane with id {:?} and caller {:?}",
             context.myself, context.caller
         );
-        // TODO: for some reason, this isnt getting executed
+        println!("{:#?}", context.inputs);
         if context.inputs.len() > 0 && context.inputs[0] == 1 {
             let cellpack = Cellpack {
                 target: AlkaneId {

@@ -5,6 +5,7 @@ edition = "2021"
 description = "ALKANES metaprotocol indexer"
 license = "MIT"
 repository = "https://github.com/kungfuflex/alkanes-rs"
+resolver = "2"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -12,12 +13,14 @@ crate-type = ["cdylib", "rlib"]
 [workspace]
 members = [".", "crates/*"]
 
+[features]
+test = []
+proxy = ["test"]
+
 [dependencies]
 anyhow = "1.0.90"
 bitcoin = { version = "0.30.1", features = ["rand"] }
-metashrew = { path = "crates/metashrew", features = [
-    "mock",
-] }
+metashrew = { path = "crates/metashrew", features = ["mock"] }
 metashrew-support = { path = "crates/metashrew-support" }
 ordinals = { path = "crates/ordinals" }
 protorune = { path = "crates/protorune" }
@@ -37,12 +40,9 @@ js-sys = "0.3.72"
 hex_lit = "0.1.1"
 
 [dev-dependencies]
-metashrew = { path = "crates/metashrew", features = [
-    "mock",
-] }
-protorune = { path = "crates/protorune", features = [
-    "test_utils",
-] }
+metashrew = { path = "crates/metashrew", features = ["mock"] }
+protorune = { path = "crates/protorune", features = ["test_utils"] }
+alkanes = { path = ".", features = ["proxy"] }
 
 [build-dependencies]
 anyhow = "1.0.90"
