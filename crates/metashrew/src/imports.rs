@@ -55,12 +55,12 @@ pub fn __flush(_ptr: i32) -> () {}
 pub fn __get(_ptr: i32, _result: i32) -> () {}
 
 #[cfg(feature = "mock")]
-#[wasm_bindgen(js_namespace = console)]
+#[wasm_bindgen(js_namespace = ["process", "stdout"])]
 extern "C" {
-    fn log(s: &str);
+    fn write(s: &str);
 }
 
 #[cfg(feature = "mock")]
 pub fn __log(ptr: i32) -> () {
-    log(format!("{}", String::from_utf8(ptr_to_vec(ptr)).unwrap()).as_str());
+    write(format!("{}", String::from_utf8(ptr_to_vec(ptr)).unwrap()).as_str());
 }
