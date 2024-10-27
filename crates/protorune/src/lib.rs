@@ -1,5 +1,8 @@
 use crate::balance_sheet::{load_sheet, PersistentRecord};
 use crate::message::MessageContext;
+use crate::protostone::{
+    add_to_indexable_protocols, initialized_protocol_index, MessageProcessor, Protostones,
+};
 use crate::tables::RuneTable;
 use anyhow::{anyhow, Ok, Result};
 use bitcoin::blockdata::block::Block;
@@ -13,26 +16,23 @@ use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr},
     utils::consume_to_end,
 };
+use ordinals::Etching;
 use ordinals::{Artifact, Runestone};
-use ordinals::{Etching};
 use proto::protorune::{Output, RunesResponse, WalletResponse};
 use protobuf::{Message, SpecialFields};
 use protorune_support::constants;
 use protorune_support::{
     balance_sheet::{BalanceSheet, ProtoruneRuneId},
-    protostone::{ProtostoneEdict, Protostone, into_protostone_edicts},
+    protostone::{into_protostone_edicts, Protostone, ProtostoneEdict},
     utils::{consensus_encode, field_to_name},
-};
-use crate::protostone::{
-    MessageProcessor,
-    initialized_protocol_index,
-    add_to_indexable_protocols,
-    Protostones,
 };
 use std::collections::HashMap;
 use std::io::Cursor;
 use std::ops::Sub;
 use std::sync::Arc;
+
+// use metashrew::{println, stdio::stdout};
+// use std::fmt::Write;
 
 pub mod balance_sheet;
 pub mod message;
@@ -47,7 +47,6 @@ pub mod tests;
 pub mod view;
 
 pub struct Protorune(());
-
 
 pub fn default_output(tx: &Transaction) -> u32 {
     for i in 0..tx.output.len() {
@@ -574,6 +573,7 @@ impl Protorune {
         tx: &Transaction,
         map: &HashMap<u32, BalanceSheet>,
     ) -> Result<()> {
+        // TODO: check is -1 necessary? it seems like this is trying to skip the op return, but the op return doesn't have to be at the end
         for i in 0..tx.output.len() - 1 {
             let sheet = map
                 .get(&(i as u32))
