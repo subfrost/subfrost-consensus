@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::balance_sheet::load_sheet;
+    use crate::balance_sheet::{load_sheet, PersistentRecord};
     use crate::message::{MessageContext, MessageContextParcel};
     use crate::protostone::Protostones;
     use crate::test_helpers::{self as helpers, get_address, ADDRESS1};
@@ -28,13 +28,16 @@ mod tests {
     struct OverForward(());
     struct OverStoreInRuntime(());
 
+    struct ModifyAtomicWithoutErr(());
+    struct ModifyAtomicThenErr(());
+
     impl MessageContext for ForwardAll {
         fn protocol_tag() -> u128 {
             122
         }
         // takes half of the first runes balance
         fn handle(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
-            let runes = parcel.runes.clone();
+            let runes: Vec<RuneTransfer> = parcel.runes.clone();
             // transfer protorunes to the pointer
             Ok((runes, BalanceSheet::default()))
         }
@@ -58,7 +61,6 @@ mod tests {
             };
             <BalanceSheet as TryFrom<Vec<RuneTransfer>>>::try_from(vec![transfer_to_runtime])?
                 .pipe(&mut new_runtime_balances);
-            // transfer protorunes to the pointer. the other half is unaccounted for, so it is refunded
             Ok((vec![transfer], *new_runtime_balances))
         }
     }
@@ -78,8 +80,6 @@ mod tests {
         fn protocol_tag() -> u128 {
             122
         }
-        /// quarter forward, eighth store in runtime, rest refund
-        /// only does it for the first input
         fn handle(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
             let mut new_runtime_balances = parcel.runtime_balances.clone();
             let transfer = RuneTransfer {
@@ -93,7 +93,6 @@ mod tests {
             };
             <BalanceSheet as TryFrom<Vec<RuneTransfer>>>::try_from(vec![transfer_to_runtime])?
                 .pipe(&mut new_runtime_balances);
-            // transfer protorunes to the pointer. the other half is unaccounted for, so it is refunded
             Ok((vec![transfer], *new_runtime_balances))
         }
     }
@@ -102,6 +101,46 @@ mod tests {
             122
         }
         fn handle(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
+            Err(anyhow!("full refund"))
+        }
+    }
+
+    impl MessageContext for ModifyAtomicWithoutErr {
+        fn protocol_tag() -> u128 {
+            122
+        }
+        fn handle(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
+            let transfer = RuneTransfer {
+                id: parcel.runes[0].id,
+                value: 50,
+            };
+            let bs = <BalanceSheet as TryFrom<Vec<RuneTransfer>>>::try_from(vec![transfer])?;
+            bs.save(
+                &mut parcel
+                    .atomic
+                    .derive(&tables::RuneTable::for_protocol(122).CAP),
+                false,
+            );
+
+            Ok((vec![], BalanceSheet::default()))
+        }
+    }
+    impl MessageContext for ModifyAtomicThenErr {
+        fn protocol_tag() -> u128 {
+            122
+        }
+        fn handle(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
+            let transfer = RuneTransfer {
+                id: parcel.runes[0].id,
+                value: 50,
+            };
+            let bs = <BalanceSheet as TryFrom<Vec<RuneTransfer>>>::try_from(vec![transfer])?;
+            bs.save(
+                &mut parcel
+                    .atomic
+                    .derive(&tables::RuneTable::for_protocol(122).CAP),
+                false,
+            );
             Err(anyhow!("full refund"))
         }
     }
@@ -339,5 +378,41 @@ mod tests {
     fn protomessage_overallocation_test() {
         protomessage_from_edict_test_template::<OverForward>(0, 800, 0);
         protomessage_from_edict_test_template::<OverStoreInRuntime>(0, 800, 0);
+    }
+
+    /// Tests that the atomic pointer is not rolled back in an Ok
+    #[wasm_bindgen_test]
+    fn protomessage_modify_atomic_then_ok_test() {
+        protomessage_from_edict_test_template::<ModifyAtomicWithoutErr>(0, 800, 0);
+
+        let block_height = 840000;
+        let protocol_id = 122;
+
+        let protorune_id = ProtoruneRuneId {
+            block: block_height as u128,
+            tx: 0,
+        };
+        let bs = load_sheet(&tables::RuneTable::for_protocol(protocol_id as u128).CAP);
+
+        let amount = bs.get(&protorune_id);
+        assert_eq!(amount, 50);
+    }
+
+    /// Tests that the atomic pointer is rolled back in an Err
+    #[wasm_bindgen_test]
+    fn protomessage_modify_atomic_then_err_test() {
+        protomessage_from_edict_test_template::<ModifyAtomicThenErr>(0, 800, 0);
+
+        let block_height = 840000;
+        let protocol_id = 122;
+
+        let protorune_id = ProtoruneRuneId {
+            block: block_height as u128,
+            tx: 0,
+        };
+        let bs = load_sheet(&tables::RuneTable::for_protocol(protocol_id as u128).CAP);
+
+        let amount = bs.get(&protorune_id);
+        assert_eq!(amount, 0);
     }
 }
