@@ -31,6 +31,8 @@ mod tests {
     struct ModifyAtomicWithoutErr(());
     struct ModifyAtomicThenErr(());
 
+    struct MixedForwardingStaticRuntime(());
+
     impl MessageContext for ForwardAll {
         fn protocol_tag() -> u128 {
             122
@@ -142,6 +144,29 @@ mod tests {
                 false,
             );
             Err(anyhow!("full refund"))
+        }
+    }
+
+    impl MessageContext for MixedForwardingStaticRuntime {
+        fn protocol_tag() -> u128 {
+            122
+        }
+        /// quarter forward, eighth store in runtime, rest refund
+        /// only does it for the first input
+        fn handle(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
+            let mut new_runtime_balances = BalanceSheet::default();
+            let transfer = RuneTransfer {
+                id: parcel.runes[0].id,
+                value: parcel.runes[0].value / 4,
+            };
+
+            let transfer_to_runtime = RuneTransfer {
+                id: parcel.runes[0].id,
+                value: parcel.runes[0].value / 8,
+            };
+            <BalanceSheet as TryFrom<Vec<RuneTransfer>>>::try_from(vec![transfer_to_runtime])?
+                .pipe(&mut new_runtime_balances);
+            Ok((vec![transfer], new_runtime_balances))
         }
     }
 
@@ -353,6 +378,67 @@ mod tests {
         assert_eq!(stored_protorune_balance_runtime, expected_runtime_amount);
     }
 
+    fn protomessage_from_edict_multiple_protomessages_test_template<T: MessageContext>(
+        expected_pointer_amount: u128,
+        expected_refunded_amount: u128,
+        expected_runtime_amount: u128,
+    ) {
+        clear();
+
+        let protocol_id = 122;
+        let block_height = 840001;
+
+        let mut test_block = protomessage_from_edict_fixture(protocol_id, block_height);
+        let protorune_id = ProtoruneRuneId {
+            block: block_height,
+            tx: 0,
+        };
+
+        // pointer_outpoint is the pointer that received the forwarded runes during the first protomessage
+        let pointer_outpoint = OutPoint {
+            txid: test_block.txdata[1].txid(),
+            vout: 0,
+        };
+        let protomessage_tx2 =
+            helpers::create_protomessage_from_edict_tx(pointer_outpoint, protocol_id, protorune_id);
+
+        test_block.txdata.push(protomessage_tx2);
+
+        assert!(Protorune::index_block::<T>(test_block.clone(), block_height as u64).is_ok());
+
+        let protorunes_sheet0 = load_sheet(
+            &tables::RuneTable::for_protocol(protocol_id.into())
+                .OUTPOINT_TO_RUNES
+                .select(
+                    &consensus_encode(&OutPoint {
+                        txid: test_block.txdata[2].txid(),
+                        vout: 0,
+                    })
+                    .unwrap(),
+                ),
+        );
+        let protorunes_sheet1 = load_sheet(
+            &tables::RuneTable::for_protocol(protocol_id.into())
+                .OUTPOINT_TO_RUNES
+                .select(
+                    &consensus_encode(&OutPoint {
+                        txid: test_block.txdata[2].txid(),
+                        vout: 1,
+                    })
+                    .unwrap(),
+                ),
+        );
+        let protorunes_sheet_runtime =
+            load_sheet(&tables::RuneTable::for_protocol(protocol_id.into()).RUNTIME_BALANCE);
+
+        let stored_protorune_balance0 = protorunes_sheet0.get(&protorune_id);
+        assert_eq!(stored_protorune_balance0, expected_pointer_amount);
+        let stored_protorune_balance_runtime = protorunes_sheet_runtime.get(&protorune_id);
+        assert_eq!(stored_protorune_balance_runtime, expected_runtime_amount);
+        let stored_protorune_balance1 = protorunes_sheet1.get(&protorune_id);
+        assert_eq!(stored_protorune_balance1, expected_refunded_amount);
+    }
+
     /// protomessage from edict
     /// The first transaction is a protoburn. The next transaction is a protostone that
     /// has an edict that targets the protomessage
@@ -414,5 +500,31 @@ mod tests {
 
         let amount = bs.get(&protorune_id);
         assert_eq!(amount, 0);
+    }
+
+    #[wasm_bindgen_test]
+    fn protomessage_existing_runtime_balance_test() {
+        // there are 200 runes as input.
+        // there is 100 runes in the runtime balance.
+
+        // pointer should get 200/4 = 50
+        // the runtime balance is set to old + 200/8 = 125
+        // the refunded amount should be (100+200) - (50+125) = 125
+        protomessage_from_edict_multiple_protomessages_test_template::<MixedForwarding>(
+            50, 125, 125,
+        )
+    }
+
+    #[wasm_bindgen_test]
+    fn protomessage_decrease_existing_runtime_balance_test() {
+        // there are 200 runes as input.
+        // there is 100 runes in the runtime balance.
+
+        // pointer should get 200/4 = 50
+        // the runtime balance is set to 200/8 = 25
+        // the refunded amount should be (100+200) - (50+25) = 225
+        protomessage_from_edict_multiple_protomessages_test_template::<MixedForwardingStaticRuntime>(
+            50, 225, 25,
+        );
     }
 }

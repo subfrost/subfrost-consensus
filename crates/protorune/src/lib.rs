@@ -613,6 +613,14 @@ impl Protorune {
         if protostones.len() != 0 {
             let mut proto_balances_by_output = HashMap::<u32, BalanceSheet>::new();
             let table = tables::RuneTable::for_protocol(T::protocol_tag());
+
+            // set the starting runtime balance
+            proto_balances_by_output.insert(
+                u32::MAX,
+                load_sheet(&mut atomic.derive(&table.RUNTIME_BALANCE)),
+            );
+
+            // load the balance sheets
             let sheets: Vec<BalanceSheet> = tx
                 .input
                 .iter()

@@ -44,7 +44,7 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
     ) -> Result<()> {
         let runtime_initial = balances_by_output
             .get(&u32::MAX)
-            .map(|_| BalanceSheet::default())
+            .map(|v| v.clone())
             .unwrap_or_else(|| BalanceSheet::default());
         let incoming_initial = balances_by_output
             .get(&vout)
@@ -70,7 +70,7 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
 
         // set the runtime to the ending runtime balance sheet
         // note that u32::MAX is the runtime vout
-        balances_by_output.insert(u32::MAX, self.1.clone());
+        balances_by_output.insert(u32::MAX, outgoing_runtime);
 
         // refund the remaining amount to the refund pointer
         // println!(
