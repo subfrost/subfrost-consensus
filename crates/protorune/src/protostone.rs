@@ -9,10 +9,14 @@ use ordinals::Runestone;
 use protorune_support::{
     balance_sheet::BalanceSheet,
     protostone::{split_bytes, Protostone},
-    rune_transfer::{OutgoingRunes, RuneTransfer},
+    rune_transfer::{refund_to_refund_pointer, OutgoingRunes, RuneTransfer},
     utils::encode_varint_list,
 };
 use std::collections::{HashMap, HashSet};
+
+use metashrew::{println, stdio::stdout};
+use std::fmt::Write;
+
 static mut PROTOCOLS: Option<HashSet<u128>> = None;
 
 pub fn initialized_protocol_index() -> Result<()> {
@@ -30,6 +34,23 @@ pub fn add_to_indexable_protocols(protocol_tag: u128) -> Result<()> {
 }
 
 pub trait MessageProcessor {
+    ///
+    /// Parameters:
+    ///   atomic: Atomic pointer to hold changes to the index,
+    ///           will only be committed upon success
+    ///   transaction: The current transaction
+    ///   txindex: The current transaction's index in the block
+    ///   block: The current block
+    ///   height: The current block height
+    ///   _runestone_output_index: TODO: not used??
+    ///   protomessage_vout: The vout of the current protomessage. These are "virtual"
+    ///                 vouts, meaning they are greater than the number of real vouts
+    ///                 and increase by 1 for each new protostone in the op_return.
+    ///
+    ///                 Protoburns and protostone edicts can target these vouts, so they
+    ///                 will hold balances before the process message
+    ///   balances_by_output: The running store of balances by each transaction output for
+    ///                       the current transaction being handled.
     fn process_message<T: MessageContext>(
         &self,
         atomic: &mut AtomicPointer,
@@ -38,7 +59,7 @@ pub trait MessageProcessor {
         block: &Block,
         height: u64,
         _runestone_output_index: u32,
-        vout: u32,
+        protomessage_vout: u32,
         balances_by_output: &mut HashMap<u32, BalanceSheet>,
         default_output: u32,
     ) -> Result<()>;
@@ -53,13 +74,13 @@ impl MessageProcessor for Protostone {
         block: &Block,
         height: u64,
         _runestone_output_index: u32,
-        vout: u32,
+        protomessage_vout: u32,
         balances_by_output: &mut HashMap<u32, BalanceSheet>,
         default_output: u32,
     ) -> Result<()> {
         if self.is_message() {
             let initial_sheet = balances_by_output
-                .get(&vout)
+                .get(&protomessage_vout)
                 .map(|v| v.clone())
                 .unwrap_or_else(|| BalanceSheet::default());
             atomic.checkpoint();
@@ -69,7 +90,7 @@ impl MessageProcessor for Protostone {
                 transaction: transaction.clone(),
                 block: block.clone(),
                 height,
-                vout,
+                vout: protomessage_vout,
                 pointer: self.pointer.unwrap_or_else(|| default_output),
                 refund_pointer: self.pointer.unwrap_or_else(|| default_output),
                 calldata: self
@@ -90,22 +111,27 @@ impl MessageProcessor for Protostone {
             let pointer = self.pointer.unwrap_or_else(|| default_output);
             let refund_pointer = self.refund.unwrap_or_else(|| default_output);
             match T::handle(&parcel) {
-                Ok(values) => match values.reconcile(balances_by_output, vout, pointer) {
-                    Ok(_) => atomic.commit(),
-                    Err(_) => {
-                        let sheet = balances_by_output
-                            .get(&vout)
-                            .map(|v| v.clone())
-                            .unwrap_or_else(|| BalanceSheet::default());
-                        balances_by_output.remove(&vout);
-                        if !balances_by_output.contains_key(&refund_pointer) {
-                            balances_by_output.insert(refund_pointer, BalanceSheet::default());
+                Ok(values) => {
+                    match values.reconcile(
+                        balances_by_output,
+                        protomessage_vout,
+                        pointer,
+                        refund_pointer,
+                    ) {
+                        Ok(_) => atomic.commit(),
+                        Err(e) => {
+                            println!("Got error inside reconcile! {:?} \n\n", e);
+                            refund_to_refund_pointer(
+                                balances_by_output,
+                                protomessage_vout,
+                                refund_pointer,
+                            );
+                            atomic.rollback()
                         }
-                        sheet.pipe(balances_by_output.get_mut(&refund_pointer).unwrap());
-                        atomic.rollback()
                     }
-                },
+                }
                 Err(_) => {
+                    refund_to_refund_pointer(balances_by_output, protomessage_vout, refund_pointer);
                     atomic.rollback();
                 }
             }
