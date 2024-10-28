@@ -1,5 +1,10 @@
-use crate::id::AlkaneId;
+use crate::{
+    id::AlkaneId,
+    println,
+    stdio::{stdout, Write},
+};
 use anyhow::Result;
+use metashrew_support::byte_view::ByteView;
 use metashrew_support::utils::consume_sized_int;
 use protorune_support::{balance_sheet::BalanceSheet, rune_transfer::RuneTransfer};
 
@@ -49,7 +54,8 @@ pub struct AlkaneTransferParcel(pub Vec<AlkaneTransfer>);
 impl AlkaneTransferParcel {
     pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AlkaneTransferParcel> {
         let mut result = AlkaneTransferParcel::default();
-        for _i in 0..consume_sized_int::<u128>(cursor)? {
+        let len = consume_sized_int::<u128>(cursor)?;
+        for _i in 0..len {
             result.0.push(AlkaneTransfer::parse(cursor)?);
         }
         Ok(result)
@@ -62,14 +68,18 @@ impl AlkaneTransferParcel {
             let transfer_list: Vec<u128> = v.into();
             buffer.extend(&transfer_list);
         }
+        println!("len: {}", buffer.len());
         buffer
     }
     pub fn serialize(&self) -> Vec<u8> {
-        self.to_vec()
+        let v = self
+            .to_vec()
             .into_iter()
-            .map(|v| (&v.to_le_bytes()).to_vec())
+            .map(|v| (v.to_bytes()))
             .flatten()
-            .collect::<Vec<u8>>()
+            .collect::<Vec<u8>>();
+        println!("v len: {}", v.len());
+        v
     }
 }
 

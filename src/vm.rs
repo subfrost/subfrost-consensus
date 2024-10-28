@@ -267,16 +267,17 @@ impl AlkanesHostFunctionsImpl {
         let data = mem.data(&caller);
         let cellpack = Cellpack::parse(&mut Cursor::new(read_arraybuffer(data, cellpack_ptr)?))?;
         println!(
-            "cellpack for call: {:#?}, start fuel: {}",
+            "cellpack for call: {:#?}, start fuel: {} \n",
             cellpack, start_fuel
         );
-        let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(read_arraybuffer(
-            data,
-            incoming_alkanes_ptr,
-        )?))?;
+        let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
+        let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
+        println!("{:?}\n", incoming_alkanes);
         let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
+        println!("parsed storagemap\n");
         let subcontext = {
+            println!("in subcontext\n");
             let mut context = caller.data_mut().context.lock().unwrap();
             context.message.atomic.checkpoint();
             pipe_storagemap_to(
