@@ -21,6 +21,7 @@ pub fn handle_message(myself: &MessageContextParcel) -> Result<(Vec<RuneTransfer
         vm::AlkanesRuntimeContext::from_parcel_and_cellpack(myself, &cellpack),
         &cellpack,
         FUEL_LIMIT,
+        false
     )?;
     let mut combined = myself.runtime_balances.as_ref().clone();
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(myself.runes.clone()).pipe(&mut combined);

@@ -8,7 +8,7 @@ pub fn to_passback_ptr(v: &mut Vec<u8>) -> i32 {
 
 pub fn to_arraybuffer_layout<T: AsRef<[u8]>>(v: T) -> Vec<u8> {
     let mut buffer = Vec::<u8>::new();
-    buffer.extend_from_slice(&v.as_ref().len().to_le_bytes());
+    buffer.extend_from_slice(&(v.as_ref().len() as u32).to_le_bytes());
     buffer.extend_from_slice(v.as_ref());
     return buffer;
 }

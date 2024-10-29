@@ -37,7 +37,7 @@ impl AlkanesRuntimeContext {
             message: Box::new(message_copy),
             returndata: vec![],
             incoming_alkanes,
-            myself: cloned.target,
+            myself: AlkaneId::default(),
             caller: AlkaneId::default(),
             inputs: cloned.inputs,
         }
@@ -222,6 +222,7 @@ impl AlkanesHostFunctionsImpl {
     }
     fn fuel(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
         let buffer: Vec<u8> = (&caller.get_fuel().unwrap().to_le_bytes()).to_vec();
+        println!("fuel bytes: {:#02X?}", buffer);
         send_to_arraybuffer(caller, output.try_into()?, &buffer)?;
         Ok(())
     }
@@ -265,7 +266,9 @@ impl AlkanesHostFunctionsImpl {
     ) -> Result<i32> {
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
-        let cellpack = Cellpack::parse(&mut Cursor::new(read_arraybuffer(data, cellpack_ptr)?))?;
+        let buffer = read_arraybuffer(data, cellpack_ptr)?;
+        println!("{:#02X?}", buffer);
+        let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
         println!(
             "cellpack for call: {:#?}, start fuel: {} \n",
             cellpack, start_fuel
@@ -292,6 +295,7 @@ impl AlkanesHostFunctionsImpl {
                 &context.myself,
                 &cellpack.target,
             ) {
+                println!("transfer_from fail");
                 context.message.atomic.rollback();
                 context.returndata = Vec::<u8>::new();
                 return Ok(0);
@@ -305,15 +309,18 @@ impl AlkanesHostFunctionsImpl {
             subbed.inputs = cellpack.inputs.clone();
             subbed
         };
-        match run(subcontext, &cellpack, start_fuel) {
+        println!("running subcontext");
+        match run(subcontext, &cellpack, start_fuel, false) {
             Ok(response) => {
+                println!("got response");
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.commit();
                 let serialized = response.serialize();
                 context.returndata = serialized;
                 Ok(context.returndata.len().try_into()?)
             }
-            Err(_) => {
+            Err(e) => {
+                println!("err: {}", e);
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.rollback();
                 context.returndata = vec![];
@@ -365,7 +372,7 @@ impl AlkanesHostFunctionsImpl {
             subbed.inputs = cellpack.inputs.clone();
             subbed
         };
-        match run(subcontext, &cellpack, start_fuel) {
+        match run(subcontext, &cellpack, start_fuel, false) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.rollback();
@@ -413,7 +420,7 @@ impl AlkanesHostFunctionsImpl {
             subbed.inputs = cellpack.inputs.clone();
             subbed
         };
-        match run(subcontext, &cellpack, start_fuel) {
+        match run(subcontext, &cellpack, start_fuel, true) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.rollback();
@@ -527,6 +534,7 @@ impl AlkanesInstance {
             .keyword("/alkanes/")
             .select(&alkane.clone().into())
             .get();
+        println!("\nbinary: {}", binary.len());
         let mut config = Config::default();
         config.consume_fuel(true);
         let engine = Engine::new(&config);
@@ -778,7 +786,10 @@ impl AlkanesInstance {
                         (v, false)
                     }
                 }
-                Err(_) => (CallResponse::default(), true),
+                Err(e) => {
+                  println!("{}", e);
+                  (CallResponse::default(), true)
+                }
             }
         };
         self.reset();
@@ -797,9 +808,10 @@ pub fn sequence_pointer(ptr: &AtomicPointer) -> AtomicPointer {
 }
 
 pub fn run(
-    context: AlkanesRuntimeContext,
+    mut context: AlkanesRuntimeContext,
     cellpack: &Cellpack,
     start_fuel: u64,
+    delegate: bool
 ) -> Result<CallResponse> {
     let mut payload = cellpack.clone();
     if cellpack.target.is_create() {
@@ -830,7 +842,7 @@ pub fn run(
                 })?,
         );
         payload.target = AlkaneId {
-            block: 3,
+            block: 4,
             tx: number,
         };
         let mut ptr = context
@@ -866,7 +878,15 @@ pub fn run(
             .select(&payload.target.clone().into())
             .set(Arc::new(binary));
     }
-    AlkanesInstance::from_alkane(&payload.target, context, start_fuel)?.execute()
+    println!("from_alkane enter");
+    println!("payload.target: {:?}", payload.target.clone());
+    if !delegate {
+      context.caller = context.myself.clone();
+      context.myself = payload.target.clone();
+    }
+    let response = AlkanesInstance::from_alkane(&payload.target, context, start_fuel)?.execute()?;
+    println!("{:#02X?}", &response.data);
+    Ok(response)
 }
 
 pub fn send_to_arraybuffer<'a>(

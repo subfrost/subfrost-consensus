@@ -1,7 +1,5 @@
 use crate::{
-    id::AlkaneId,
-    println,
-    stdio::{stdout, Write},
+    id::AlkaneId
 };
 use anyhow::Result;
 use metashrew_support::byte_view::ByteView;

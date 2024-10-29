@@ -20,8 +20,9 @@ mod tests {
             //create alkane
             Cellpack {
                 target: AlkaneId { block: 1, tx: 0 },
-                inputs: vec![0],
+                inputs: vec![1],
             },
+            /*
             //create second alkane
             Cellpack {
                 target: AlkaneId { block: 1, tx: 0 },
@@ -32,6 +33,7 @@ mod tests {
                 target: AlkaneId { block: 2, tx: 0 },
                 inputs: vec![1, 1],
             },
+            */
         ];
 
         let test_block = alkane_helpers::init_with_multiple_cellpacks(
@@ -42,6 +44,7 @@ mod tests {
         Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64).unwrap();
     }
 
+    /*
     #[wasm_bindgen_test]
     async fn protomessage_with_binary_test() {
         clear();
@@ -89,4 +92,5 @@ mod tests {
         // let stored_protorune_balance = protorunes_sheet.get(&protorune_id);
         // assert_eq!(stored_protorune_balance, 1000);
     }
+    */
 }

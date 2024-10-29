@@ -124,11 +124,13 @@ pub trait AlkaneResponder {
                 fuel,
             )
         } as usize;
+        println!("call_result: {}", call_result);
         let mut returndata = vec![0; call_result];
         println!("got returndata");
         unsafe {
             __returndatacopy(to_passback_ptr(&mut returndata));
         }
+        println!("{:#02X?}", returndata);
         CallResponse::parse(&mut Cursor::new(returndata))
     }
     fn delegatecall(

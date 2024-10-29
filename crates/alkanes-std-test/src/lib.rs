@@ -9,28 +9,28 @@ struct LoggerAlkane(());
 impl AlkaneResponder for LoggerAlkane {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
+        println!("\nfuel: {}\n", self.fuel());
         println!(
             "executing alkane with id {:?} and caller {:?}",
-            context.myself, context.caller
+            context.myself.clone(), context.caller.clone()
         );
         if context.inputs.len() > 0 && context.inputs[0] == 1 {
             let cellpack = Cellpack {
-                target: AlkaneId {
-                    block: 2,
-                    tx: context.inputs[1],
-                },
-                inputs: vec![0],
+                target: context.myself,
+                inputs: vec![],
             };
             println!("running call with cellpack: {:#?}", cellpack);
             let _r = self
-                .call(&cellpack, &context.incoming_alkanes, 500)
+                .call(&cellpack, &context.incoming_alkanes, self.fuel())
                 .inspect_err(|e| {
                     println!("errored out with: {}", e);
                 })
                 .unwrap();
             println!("result for call: {:#?}", _r);
         }
-        CallResponse::default()
+        let mut response = CallResponse::default();
+        response.data = vec![0x01, 0x02];
+        response
     }
 }
 
