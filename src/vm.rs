@@ -106,6 +106,46 @@ pub fn get_memory<'a>(caller: &mut Caller<'_, AlkanesState>) -> Result<Memory> {
 
 const MEMORY_LIMIT: usize = 33554432;
 
+pub trait Extcall {
+  fn isdelegate() -> bool;
+  fn isstatic() -> bool;
+  fn handle_atomic(atomic: &mut AtomicPointer) {
+    if Self::isstatic() {
+      atomic.rollback();
+    } else {
+      atomic.commit();
+    }
+  }
+  fn change_context(target: AlkaneId, caller: AlkaneId, myself: AlkaneId) -> (AlkaneId, AlkaneId) {
+    if Self::isdelegate() {
+      (caller, myself)
+    } else {
+      (myself, target)
+    }
+  }
+}
+
+pub struct Call(());
+
+impl Extcall for Call {
+  fn isdelegate() -> bool { false }
+  fn isstatic() -> bool { false }
+}
+
+pub struct Delegatecall(());
+
+impl Extcall for Delegatecall {
+  fn isdelegate() -> bool { true }
+  fn isstatic() -> bool { false }
+}
+
+pub struct Staticcall(());
+
+impl Extcall for Staticcall {
+  fn isdelegate() -> bool { false }
+  fn isstatic() -> bool { true }
+}
+
 pub struct AlkanesHostFunctionsImpl(());
 impl AlkanesHostFunctionsImpl {
     fn _abort<'a>(caller: Caller<'_, AlkanesState>) {
@@ -257,7 +297,7 @@ impl AlkanesHostFunctionsImpl {
         send_to_arraybuffer(caller, output.try_into()?, &balance)?;
         Ok(())
     }
-    fn call<'a>(
+    fn extcall<'a, T: Extcall>(
         caller: &mut Caller<'_, AlkanesState>,
         cellpack_ptr: i32,
         incoming_alkanes_ptr: i32,
@@ -302,128 +342,16 @@ impl AlkanesHostFunctionsImpl {
             }
             let mut subbed = (&*context).clone();
             subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
-            subbed.myself = cellpack.target.clone();
-            subbed.caller = context.caller.clone();
+            (subbed.caller, subbed.myself) = T::change_context(cellpack.target.clone(), context.caller.clone(), context.myself.clone());
             subbed.returndata = vec![];
             subbed.incoming_alkanes = incoming_alkanes.clone();
             subbed.inputs = cellpack.inputs.clone();
             subbed
         };
-        println!("running subcontext");
-        match run(subcontext, &cellpack, start_fuel, false) {
-            Ok(response) => {
-                println!("got response");
-                let mut context = caller.data_mut().context.lock().unwrap();
-                context.message.atomic.commit();
-                let serialized = response.serialize();
-                context.returndata = serialized;
-                Ok(context.returndata.len().try_into()?)
-            }
-            Err(e) => {
-                println!("err: {}", e);
-                let mut context = caller.data_mut().context.lock().unwrap();
-                context.message.atomic.rollback();
-                context.returndata = vec![];
-                Ok(0)
-            }
-        }
-    }
-    fn staticcall<'a>(
-        caller: &mut Caller<'_, AlkanesState>,
-        cellpack_ptr: i32,
-        incoming_alkanes_ptr: i32,
-        checkpoint_ptr: i32,
-        start_fuel: u64,
-    ) -> Result<i32> {
-        let mem = get_memory(caller)?;
-        let data = mem.data(&caller);
-        let cellpack = Cellpack::parse(&mut Cursor::new(read_arraybuffer(data, cellpack_ptr)?))?;
-        let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(read_arraybuffer(
-            data,
-            incoming_alkanes_ptr,
-        )?))?;
-        let storage_map =
-            StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-        let subcontext = {
-            let mut context = caller.data_mut().context.lock().unwrap();
-            context.message.atomic.checkpoint();
-            pipe_storagemap_to(
-                &storage_map,
-                &mut context.message.atomic.derive(
-                    &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
-                ),
-            );
-            if let Err(_) = transfer_from(
-                &incoming_alkanes,
-                &mut context.message.atomic.derive(&IndexPointer::default()),
-                &context.myself,
-                &cellpack.target,
-            ) {
-                context.message.atomic.rollback();
-                context.returndata = Vec::<u8>::new();
-                return Ok(0);
-            }
-            let mut subbed = (&*context).clone();
-            subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
-            subbed.myself = cellpack.target.clone();
-            subbed.caller = context.caller.clone();
-            subbed.returndata = vec![];
-            subbed.incoming_alkanes = incoming_alkanes.clone();
-            subbed.inputs = cellpack.inputs.clone();
-            subbed
-        };
-        match run(subcontext, &cellpack, start_fuel, false) {
+        match run(subcontext, &cellpack, start_fuel, T::isdelegate()) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
-                context.message.atomic.rollback();
-                let serialized = response.serialize();
-                context.returndata = serialized;
-                Ok(context.returndata.len().try_into()?)
-            }
-            Err(_) => {
-                let mut context = caller.data_mut().context.lock().unwrap();
-                context.message.atomic.rollback();
-                context.returndata = vec![];
-                Ok(0)
-            }
-        }
-    }
-    fn delegatecall<'a>(
-        caller: &mut Caller<'_, AlkanesState>,
-        cellpack_ptr: i32,
-        incoming_alkanes_ptr: i32,
-        checkpoint_ptr: i32,
-        start_fuel: u64,
-    ) -> Result<i32> {
-        let mem = get_memory(caller)?;
-        let data = mem.data(&caller);
-        let cellpack = Cellpack::parse(&mut Cursor::new(read_arraybuffer(data, cellpack_ptr)?))?;
-        let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(read_arraybuffer(
-            data,
-            incoming_alkanes_ptr,
-        )?))?;
-        let storage_map =
-            StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-        let subcontext = {
-            let mut context = caller.data_mut().context.lock().unwrap();
-            context.message.atomic.checkpoint();
-            pipe_storagemap_to(
-                &storage_map,
-                &mut context.message.atomic.derive(
-                    &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
-                ),
-            );
-            let mut subbed = (&*context).clone();
-            subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
-            subbed.returndata = vec![];
-            subbed.incoming_alkanes = incoming_alkanes.clone();
-            subbed.inputs = cellpack.inputs.clone();
-            subbed
-        };
-        match run(subcontext, &cellpack, start_fuel, true) {
-            Ok(response) => {
-                let mut context = caller.data_mut().context.lock().unwrap();
-                context.message.atomic.rollback();
+                T::handle_atomic(&mut context.message.atomic);
                 let serialized = response.serialize();
                 context.returndata = serialized;
                 Ok(context.returndata.len().try_into()?)
@@ -524,7 +452,6 @@ impl AlkanesInstance {
             .rollback();
     }
     pub fn from_alkane(
-        alkane: &AlkaneId,
         context: AlkanesRuntimeContext,
         start_fuel: u64,
     ) -> Result<Self> {
@@ -532,7 +459,7 @@ impl AlkanesInstance {
             .message
             .atomic
             .keyword("/alkanes/")
-            .select(&alkane.clone().into())
+            .select(&context.myself.clone().into())
             .get();
         println!("\nbinary: {}", binary.len());
         let mut config = Config::default();
@@ -702,7 +629,7 @@ impl AlkanesInstance {
              checkpoint_ptr: i32,
              start_fuel: u64|
              -> i32 {
-                match AlkanesHostFunctionsImpl::call(
+                match AlkanesHostFunctionsImpl::extcall::<Call>(
                     &mut caller,
                     cellpack_ptr,
                     incoming_alkanes_ptr,
@@ -726,7 +653,7 @@ impl AlkanesInstance {
              checkpoint_ptr: i32,
              start_fuel: u64|
              -> i32 {
-                match AlkanesHostFunctionsImpl::delegatecall(
+                match AlkanesHostFunctionsImpl::extcall::<Delegatecall>(
                     &mut caller,
                     cellpack_ptr,
                     incoming_alkanes_ptr,
@@ -750,7 +677,7 @@ impl AlkanesInstance {
              checkpoint_ptr: i32,
              start_fuel: u64|
              -> i32 {
-                match AlkanesHostFunctionsImpl::staticcall(
+                match AlkanesHostFunctionsImpl::extcall::<Staticcall>(
                     &mut caller,
                     cellpack_ptr,
                     incoming_alkanes_ptr,
@@ -807,12 +734,7 @@ pub fn sequence_pointer(ptr: &AtomicPointer) -> AtomicPointer {
     ptr.derive(&IndexPointer::from_keyword("/alkanes/sequence"))
 }
 
-pub fn run(
-    mut context: AlkanesRuntimeContext,
-    cellpack: &Cellpack,
-    start_fuel: u64,
-    delegate: bool
-) -> Result<CallResponse> {
+pub fn run_special_cellpacks(context: &mut AlkanesRuntimeContext, cellpack: &Cellpack) -> Result<(AlkaneId, AlkaneId)> {
     let mut payload = cellpack.clone();
     if cellpack.target.is_create() {
         let wasm_payload = Arc::new(
@@ -878,15 +800,21 @@ pub fn run(
             .select(&payload.target.clone().into())
             .set(Arc::new(binary));
     }
-    println!("from_alkane enter");
-    println!("payload.target: {:?}", payload.target.clone());
+    Ok((context.myself.clone(), payload.target.clone()))
+}
+
+pub fn run(
+    mut context: AlkanesRuntimeContext,
+    cellpack: &Cellpack,
+    start_fuel: u64,
+    delegate: bool
+) -> Result<CallResponse> {
+    let (caller, myself) = run_special_cellpacks(&mut context, cellpack)?;
     if !delegate {
-      context.caller = context.myself.clone();
-      context.myself = payload.target.clone();
+      context.caller = caller;
+      context.myself = myself;
     }
-    let response = AlkanesInstance::from_alkane(&payload.target, context, start_fuel)?.execute()?;
-    println!("{:#02X?}", &response.data);
-    Ok(response)
+    Ok(AlkanesInstance::from_alkane(context, start_fuel)?.execute()?)
 }
 
 pub fn send_to_arraybuffer<'a>(
