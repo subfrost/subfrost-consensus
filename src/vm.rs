@@ -824,6 +824,25 @@ pub fn run_special_cellpacks(
     Ok((context.myself.clone(), payload.target.clone()))
 }
 
+pub fn run_after_special(
+    context: AlkanesRuntimeContext,
+    start_fuel: u64
+) -> Result<CallResponse> {
+    Ok(AlkanesInstance::from_alkane(context, start_fuel)?.execute()?)
+}
+
+pub fn prepare_context(
+    context: &mut AlkanesRuntimeContext,
+    caller: &AlkaneId,
+    myself: &AlkaneId,
+    delegate: bool,
+) {
+    if delegate {
+        context.caller = caller.clone();
+        context.myself = myself.clone();
+    }
+}
+
 pub fn run(
     mut context: AlkanesRuntimeContext,
     cellpack: &Cellpack,
@@ -831,11 +850,8 @@ pub fn run(
     delegate: bool,
 ) -> Result<CallResponse> {
     let (caller, myself) = run_special_cellpacks(&mut context, cellpack)?;
-    if !delegate {
-        context.caller = caller;
-        context.myself = myself;
-    }
-    Ok(AlkanesInstance::from_alkane(context, start_fuel)?.execute()?)
+    prepare_context(&mut context, &caller, &myself, delegate);
+    run_after_special(context, start_fuel)
 }
 
 pub fn send_to_arraybuffer<'a>(
