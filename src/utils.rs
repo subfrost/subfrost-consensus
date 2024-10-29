@@ -4,8 +4,10 @@ use alkanes_support::storage::StorageMap;
 use anyhow::{anyhow, Result};
 use protorune_support::{rune_transfer::{RuneTransfer}};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+use metashrew::{println, stdio::{stdout}};
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::Arc;
+use std::fmt::{Write};
 
 pub fn balance_pointer(
     atomic: &mut AtomicPointer,
@@ -15,9 +17,9 @@ pub fn balance_pointer(
     atomic
         .derive(&IndexPointer::default())
         .keyword("/alkanes/")
-        .select(&who.clone().into())
-        .keyword("/balances/")
         .select(&what.clone().into())
+        .keyword("/balances/")
+        .select(&who.clone().into())
 }
 
 pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<RuneTransfer>) {
@@ -26,34 +28,22 @@ pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<Ru
     }
 }
 
-pub fn transfer_from<T: KeyValuePointer>(
+pub fn transfer_from(
     parcel: &AlkaneTransferParcel,
-    pointer: &mut T,
+    atomic: &mut AtomicPointer,
     from: &AlkaneId,
     to: &AlkaneId,
 ) -> Result<()> {
+    println!("parcel: {:?}", parcel);
     for transfer in &parcel.0 {
-        let balance = pointer
-            .keyword("/alkanes/")
-            .select(&transfer.id.into())
-            .keyword("/balances/")
-            .select(&from.into())
-            .get_value::<u128>();
+        let mut from_pointer = balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
+        let balance = from_pointer.get_value::<u128>();
+        println!("balance: {}\n", balance);
         if balance < transfer.value {
             return Err(anyhow!("balance underflow"));
         }
-        pointer
-            .keyword("/alkanes/")
-            .select(&transfer.id.into())
-            .keyword("/balances/")
-            .select(&from.into())
-            .set_value::<u128>(balance - transfer.value);
-        pointer
-            .keyword("/alkanes/")
-            .select(&transfer.id.into())
-            .keyword("/balances/")
-            .select(&to.into())
-            .set_value::<u128>(balance + transfer.value);
+        from_pointer.set_value::<u128>(balance - transfer.value);
+        balance_pointer(atomic, &to.clone().into(), &transfer.id.clone().into()).set_value::<u128>(balance + transfer.value);
     }
     Ok(())
 }

@@ -278,7 +278,6 @@ impl AlkanesHostFunctionsImpl {
     }
     fn fuel(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
         let buffer: Vec<u8> = (&caller.get_fuel().unwrap().to_le_bytes()).to_vec();
-        println!("fuel bytes: {:#02X?}", buffer);
         send_to_arraybuffer(caller, output.try_into()?, &buffer)?;
         Ok(())
     }
@@ -320,10 +319,11 @@ impl AlkanesHostFunctionsImpl {
         checkpoint_ptr: i32,
         start_fuel: u64,
     ) -> Result<i32> {
+        println!("enter extcall");
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
         let buffer = read_arraybuffer(data, cellpack_ptr)?;
-        println!("{:#02X?}", buffer);
+        println!("buffer: {:#02X?}", buffer);
         let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
         println!(
             "cellpack for call: {:#?}, start fuel: {} \n",
@@ -331,10 +331,10 @@ impl AlkanesHostFunctionsImpl {
         );
         let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
         let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
-        println!("{:?}\n", incoming_alkanes);
+        println!("incoming_alkanes: {:?}\n", incoming_alkanes);
         let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-        println!("parsed storagemap\n");
+        println!("parsed storagemap: {:?}\n", storage_map);
         let subcontext = {
             println!("in subcontext\n");
             let mut context = caller.data_mut().context.lock().unwrap();
@@ -473,6 +473,7 @@ impl AlkanesInstance {
             .rollback();
     }
     pub fn from_alkane(context: AlkanesRuntimeContext, start_fuel: u64) -> Result<Self> {
+        println!("myself: {:?}", &context.myself);
         let binary = context
             .message
             .atomic
@@ -837,7 +838,7 @@ pub fn prepare_context(
     myself: &AlkaneId,
     delegate: bool,
 ) {
-    if delegate {
+    if !delegate {
         context.caller = caller.clone();
         context.myself = myself.clone();
     }

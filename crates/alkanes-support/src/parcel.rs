@@ -64,7 +64,6 @@ impl AlkaneTransferParcel {
             let transfer_list: Vec<u128> = v.into();
             buffer.extend(&transfer_list);
         }
-        println!("len: {}", buffer.len());
         buffer
     }
     pub fn serialize(&self) -> Vec<u8> {
@@ -74,7 +73,6 @@ impl AlkaneTransferParcel {
             .map(|v| (v.to_bytes()))
             .flatten()
             .collect::<Vec<u8>>();
-        println!("v len: {}", v.len());
         v
     }
 }

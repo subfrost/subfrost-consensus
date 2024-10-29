@@ -5,13 +5,11 @@ use crate::imports::{
     __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
 };
 #[allow(unused_imports)]
-use crate::{
-    println,
-    stdio::{stdout, Write},
-};
 use anyhow::Result;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr, to_ptr};
 use std::io::Cursor;
+use std::fmt::{Write};
+use crate::{println, stdio::{stdout}};
 
 #[allow(unused_imports)]
 use alkanes_support::{
@@ -113,7 +111,6 @@ pub trait AlkaneResponder {
         let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
         let mut outgoing_alkanes_buffer: Vec<u8> =
             to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
-        println!("outgoing_alkanes_length: {}", outgoing_alkanes_buffer.len());
         let mut storage_map_buffer =
             to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
         let call_result = unsafe {
@@ -126,12 +123,11 @@ pub trait AlkaneResponder {
         } as usize;
         println!("call_result: {}", call_result);
         let mut returndata = vec![0; call_result];
-        println!("got returndata");
         unsafe {
             __returndatacopy(to_passback_ptr(&mut returndata));
         }
-        println!("{:#02X?}", returndata);
-        CallResponse::parse(&mut Cursor::new(returndata))
+        let response = CallResponse::parse(&mut Cursor::new(returndata))?;
+        Ok(response)
     }
     fn delegatecall(
         &self,

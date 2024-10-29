@@ -486,7 +486,8 @@ impl Protorune {
                     block,
                     runestone_output_index,
                 ) {
-                    Err(_) => {
+                    Err(e) => {
+                        println!("err: {:?}", e);
                         atomic.rollback();
                     }
                     _ => {

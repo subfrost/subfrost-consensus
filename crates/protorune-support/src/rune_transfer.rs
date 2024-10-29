@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use crate::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use anyhow::{anyhow, Result};
 
-// use metashrew::{println, stdio::stdout};
-// use std::fmt::Write;
 
 #[derive(Default, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RuneTransfer {

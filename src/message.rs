@@ -7,7 +7,9 @@ use metashrew::index_pointer::{IndexPointer};
 use protorune_support::{
     balance_sheet::BalanceSheet, rune_transfer::RuneTransfer, utils::decode_varint_list,
 };
+use metashrew::{println, stdio::{stdout}};
 use std::io::Cursor;
+use std::fmt::{Write};
 
 #[derive(Clone, Default)]
 pub struct AlkaneMessageContext(());
