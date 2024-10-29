@@ -12,7 +12,8 @@ impl AlkaneResponder for LoggerAlkane {
         println!("\nfuel: {}\n", self.fuel());
         println!(
             "executing alkane with id {:?} and caller {:?}",
-            context.myself.clone(), context.caller.clone()
+            context.myself.clone(),
+            context.caller.clone()
         );
         if context.inputs.len() > 0 && context.inputs[0] == 1 {
             let cellpack = Cellpack {

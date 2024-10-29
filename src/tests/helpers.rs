@@ -4,9 +4,9 @@ use bitcoin::{
     address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut, Witness,
 };
 use bitcoin::{Block, Transaction};
-use protorune::protostone::{Protostones};
-use protorune_support::protostone::{Protostone};
+use protorune::protostone::Protostones;
 use protorune::test_helpers::{create_block_with_coinbase_tx, get_address, ADDRESS1};
+use protorune_support::protostone::Protostone;
 
 use ordinals::{Etching, Rune, Runestone};
 use std::str::FromStr;

@@ -1,6 +1,4 @@
-use crate::{
-    id::AlkaneId
-};
+use crate::id::AlkaneId;
 use anyhow::Result;
 use metashrew_support::byte_view::ByteView;
 use metashrew_support::utils::consume_sized_int;

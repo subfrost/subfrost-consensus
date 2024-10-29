@@ -107,43 +107,59 @@ pub fn get_memory<'a>(caller: &mut Caller<'_, AlkanesState>) -> Result<Memory> {
 const MEMORY_LIMIT: usize = 33554432;
 
 pub trait Extcall {
-  fn isdelegate() -> bool;
-  fn isstatic() -> bool;
-  fn handle_atomic(atomic: &mut AtomicPointer) {
-    if Self::isstatic() {
-      atomic.rollback();
-    } else {
-      atomic.commit();
+    fn isdelegate() -> bool;
+    fn isstatic() -> bool;
+    fn handle_atomic(atomic: &mut AtomicPointer) {
+        if Self::isstatic() {
+            atomic.rollback();
+        } else {
+            atomic.commit();
+        }
     }
-  }
-  fn change_context(target: AlkaneId, caller: AlkaneId, myself: AlkaneId) -> (AlkaneId, AlkaneId) {
-    if Self::isdelegate() {
-      (caller, myself)
-    } else {
-      (myself, target)
+    fn change_context(
+        target: AlkaneId,
+        caller: AlkaneId,
+        myself: AlkaneId,
+    ) -> (AlkaneId, AlkaneId) {
+        if Self::isdelegate() {
+            (caller, myself)
+        } else {
+            (myself, target)
+        }
     }
-  }
 }
 
 pub struct Call(());
 
 impl Extcall for Call {
-  fn isdelegate() -> bool { false }
-  fn isstatic() -> bool { false }
+    fn isdelegate() -> bool {
+        false
+    }
+    fn isstatic() -> bool {
+        false
+    }
 }
 
 pub struct Delegatecall(());
 
 impl Extcall for Delegatecall {
-  fn isdelegate() -> bool { true }
-  fn isstatic() -> bool { false }
+    fn isdelegate() -> bool {
+        true
+    }
+    fn isstatic() -> bool {
+        false
+    }
 }
 
 pub struct Staticcall(());
 
 impl Extcall for Staticcall {
-  fn isdelegate() -> bool { false }
-  fn isstatic() -> bool { true }
+    fn isdelegate() -> bool {
+        false
+    }
+    fn isstatic() -> bool {
+        true
+    }
 }
 
 pub struct AlkanesHostFunctionsImpl(());
@@ -329,6 +345,7 @@ impl AlkanesHostFunctionsImpl {
                     &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
                 ),
             );
+            println!("incoming_alkanes: {:?}", &incoming_alkanes);
             if let Err(_) = transfer_from(
                 &incoming_alkanes,
                 &mut context.message.atomic.derive(&IndexPointer::default()),
@@ -342,7 +359,11 @@ impl AlkanesHostFunctionsImpl {
             }
             let mut subbed = (&*context).clone();
             subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
-            (subbed.caller, subbed.myself) = T::change_context(cellpack.target.clone(), context.caller.clone(), context.myself.clone());
+            (subbed.caller, subbed.myself) = T::change_context(
+                cellpack.target.clone(),
+                context.caller.clone(),
+                context.myself.clone(),
+            );
             subbed.returndata = vec![];
             subbed.incoming_alkanes = incoming_alkanes.clone();
             subbed.inputs = cellpack.inputs.clone();
@@ -451,10 +472,7 @@ impl AlkanesInstance {
             .atomic
             .rollback();
     }
-    pub fn from_alkane(
-        context: AlkanesRuntimeContext,
-        start_fuel: u64,
-    ) -> Result<Self> {
+    pub fn from_alkane(context: AlkanesRuntimeContext, start_fuel: u64) -> Result<Self> {
         let binary = context
             .message
             .atomic
@@ -714,8 +732,8 @@ impl AlkanesInstance {
                     }
                 }
                 Err(e) => {
-                  println!("{}", e);
-                  (CallResponse::default(), true)
+                    println!("{}", e);
+                    (CallResponse::default(), true)
                 }
             }
         };
@@ -734,7 +752,10 @@ pub fn sequence_pointer(ptr: &AtomicPointer) -> AtomicPointer {
     ptr.derive(&IndexPointer::from_keyword("/alkanes/sequence"))
 }
 
-pub fn run_special_cellpacks(context: &mut AlkanesRuntimeContext, cellpack: &Cellpack) -> Result<(AlkaneId, AlkaneId)> {
+pub fn run_special_cellpacks(
+    context: &mut AlkanesRuntimeContext,
+    cellpack: &Cellpack,
+) -> Result<(AlkaneId, AlkaneId)> {
     let mut payload = cellpack.clone();
     if cellpack.target.is_create() {
         let wasm_payload = Arc::new(
@@ -807,12 +828,12 @@ pub fn run(
     mut context: AlkanesRuntimeContext,
     cellpack: &Cellpack,
     start_fuel: u64,
-    delegate: bool
+    delegate: bool,
 ) -> Result<CallResponse> {
     let (caller, myself) = run_special_cellpacks(&mut context, cellpack)?;
     if !delegate {
-      context.caller = caller;
-      context.myself = myself;
+        context.caller = caller;
+        context.myself = myself;
     }
     Ok(AlkanesInstance::from_alkane(context, start_fuel)?.execute()?)
 }
