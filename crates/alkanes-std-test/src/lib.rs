@@ -1,4 +1,4 @@
-use alkanes_support::{cellpack::Cellpack, id::AlkaneId, response::CallResponse};
+use alkanes_support::{cellpack::Cellpack, response::CallResponse};
 use alkanes_runtime::{println, stdio::{stdout}};
 use alkanes_runtime::runtime::AlkaneResponder;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
@@ -10,7 +10,6 @@ struct LoggerAlkane(());
 impl AlkaneResponder for LoggerAlkane {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
-        println!("incoming_alkanes: {:?}", context.incoming_alkanes);
         if context.inputs.len() > 0 && context.inputs[0] == 1 {
             let cellpack = Cellpack {
                 target: context.myself,

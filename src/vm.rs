@@ -417,7 +417,6 @@ impl AlkanesExportsImpl {
         let response = ExtendedCallResponse::parse(&mut std::io::Cursor::new(Self::_get_result(
             vm, &result,
         )?))?;
-        println!("response: {:?}", response);
         Ok(response)
     }
 }

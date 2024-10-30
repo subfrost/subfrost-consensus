@@ -42,7 +42,6 @@ pub trait AlkaneResponder {
         }
     }
     fn initialize(&self) -> &Self {
-        println!("test!\n");
         unsafe {
             if _CACHE.is_none() {
                 _CACHE = Some(StorageMap::default());
@@ -127,9 +126,9 @@ pub trait AlkaneResponder {
                 fuel,
             )
         } as usize;
-        let mut returndata = vec![0; call_result];
+        let mut returndata = to_arraybuffer_layout(&vec![0; call_result]);
         unsafe {
-            __returndatacopy(to_passback_ptr(&mut to_arraybuffer_layout(&returndata)));
+            __returndatacopy(to_passback_ptr(&mut returndata));
         }
         let response = CallResponse::parse(&mut Cursor::new((&returndata[4..]).to_vec()))?;
         Ok(response)
