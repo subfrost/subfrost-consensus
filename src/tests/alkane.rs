@@ -1,12 +1,16 @@
 #[cfg(test)]
 mod tests {
     use crate::tests::std::{alkanes_std_proxy_build, alkanes_std_test_build};
+    use std::fmt::{Write};
     use alkanes_support::cellpack::Cellpack;
     use alkanes_support::id::AlkaneId;
-    use protorune::Protorune;
+    use protorune::{view::{protorune_outpoint_to_outpoint_response}, Protorune};
 
     use crate::tests::helpers as alkane_helpers;
+    use bitcoin::OutPoint;
     use metashrew::clear;
+    use metashrew_support::utils::{format_key};
+    use metashrew::{get_cache, println, stdio::{stdout}};
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::message::AlkaneMessageContext;
@@ -37,8 +41,23 @@ mod tests {
         ];
 
         let test_block = alkane_helpers::init_test_with_cellpack(test_cellpacks[0].clone());
+        let outpoint = OutPoint {
+          txid: test_block.txdata[0].txid(),
+          vout: 0
+        };
 
         Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64).unwrap();
+        get_cache().into_iter().for_each(|(k, v)| {
+          if k.starts_with(b"/alkanes/") {
+            ()
+          } else {
+            println!("{}: {}", format_key(&k.as_ref().to_vec()), hex::encode(v.as_ref()));
+            ()
+          }
+        });
+        let result = protorune_outpoint_to_outpoint_response(&outpoint, 1);
+        println!("result: {:?}", result);
+
     }
 
     /*

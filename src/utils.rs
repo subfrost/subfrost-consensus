@@ -5,7 +5,6 @@ use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::rune_transfer::RuneTransfer;
-use std::fmt::Write;
 use std::sync::Arc;
 
 pub fn balance_pointer(

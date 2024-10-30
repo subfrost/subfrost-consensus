@@ -2,7 +2,7 @@ use crate::utils::{credit_balances, pipe_storagemap_to};
 use crate::vm;
 use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
-use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+use metashrew::index_pointer::{IndexPointer};
 use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune::message::{MessageContext, MessageContextParcel};
@@ -27,13 +27,11 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let (caller, myself) = vm::run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself.clone().into(), &parcel.runes);
     vm::prepare_context(&mut context, &caller, &myself, false);
-    println!("prepare to execute\n");
     let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)?.execute()?;
     pipe_storagemap_to(
         &response.storage,
         &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),
     );
-    println!("executed: {:?}\n", response);
     let mut combined = parcel.runtime_balances.as_ref().clone();
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());

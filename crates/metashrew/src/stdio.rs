@@ -27,6 +27,15 @@ macro_rules! println {
   }
 }
 
+#[macro_export]
+macro_rules! print {
+  ( $( $x:tt )* ) => {
+    {
+      write!(stdout(), $($x)*).unwrap();
+    }
+  }
+}
+
 /*
 #[cfg(not(test))]
 #[link(wasm_import_module = "env")]

@@ -384,6 +384,7 @@ impl AlkanesHostFunctionsImpl {
             let data = mem.data(&caller);
             read_arraybuffer(data, v)?
         };
+        println!("{}", String::from_utf8(message)?);
         Ok(())
     }
 }
@@ -413,7 +414,6 @@ impl AlkanesExportsImpl {
         let mut result = [Val::I32(0)];
         let func = Self::_get_export(vm, "__execute")?;
         func.call(&mut vm.store, &[], &mut result)?;
-        println!("call");
         let response = ExtendedCallResponse::parse(&mut std::io::Cursor::new(Self::_get_result(
             vm, &result,
         )?))?;
@@ -648,7 +648,9 @@ impl AlkanesInstance {
                     checkpoint_ptr,
                     start_fuel,
                 ) {
-                    Ok(v) => v,
+                    Ok(v) => {
+                      v
+                    },
                     Err(_e) => {
                         AlkanesHostFunctionsImpl::_abort(caller);
                         -1
@@ -725,8 +727,7 @@ impl AlkanesInstance {
                         (v, false)
                     }
                 }
-                Err(e) => {
-                    println!("error: {}", e);
+                Err(_) => {
                     (ExtendedCallResponse::default(), true)
                 }
             }
