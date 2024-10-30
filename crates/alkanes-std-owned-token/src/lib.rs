@@ -1,4 +1,6 @@
 use alkanes_runtime::{auth::AuthenticatedResponder, token::Token};
+use alkanes_runtime::{println, stdio::stdout};
+use std::fmt::{Write};
 use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::utils::shift;
 use alkanes_support::{context::Context, parcel::AlkaneTransfer, response::CallResponse};
@@ -32,8 +34,10 @@ impl AuthenticatedResponder for OwnedToken {}
 
 impl AlkaneResponder for OwnedToken {
     fn execute(&self) -> CallResponse {
+        println!("enter");
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
+        println!("inputs: {:?}", inputs);
         match shift(&mut inputs).unwrap() {
             0 => {
                 let mut pointer = StoragePointer::from_keyword("/initialized");
@@ -41,7 +45,7 @@ impl AlkaneResponder for OwnedToken {
                     let auth_token_units = shift(&mut inputs).unwrap();
                     let token_units = shift(&mut inputs).unwrap();
                     let mut response: CallResponse = CallResponse::default();
-                    response.alkanes = context.incoming_alkanes.clone();
+        //            response.alkanes = context.incoming_alkanes.clone();
                     response
                         .alkanes
                         .0

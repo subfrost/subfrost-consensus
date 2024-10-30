@@ -102,7 +102,6 @@ pub fn protorune_outpoint_to_outpoint_response(
         .select(&outpoint_bytes)
         .get_value::<u64>()
         .into();
-    println!("height: {}", height);
     let mut txindex: u128 = tables::RUNES.HEIGHT_TO_TRANSACTION_IDS
         .select_value::<u64>(height as u64)
         .get_list()

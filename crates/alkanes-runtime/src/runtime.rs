@@ -4,11 +4,9 @@ use crate::imports::{
     __load_transaction, __log, __request_block, __request_context, __request_storage,
     __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
 };
-use crate::{println, stdio::stdout};
 #[allow(unused_imports)]
 use anyhow::Result;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr, to_ptr};
-use std::fmt::Write;
 use std::io::Cursor;
 
 use crate::compat::panic_hook;
@@ -28,7 +26,6 @@ static mut _CACHE: Option<StorageMap> = None;
 pub trait Extcall {
     fn __call(cellpack: i32, outgoing_alkanes: i32, checkpoint: i32, fuel: u64) -> i32;
     fn call(
-        &self,
         cellpack: &Cellpack,
         outgoing_alkanes: &AlkaneTransferParcel,
         fuel: u64,
@@ -38,14 +35,12 @@ pub trait Extcall {
             to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
         let mut storage_map_buffer =
             to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
-        let call_result = unsafe {
-            Self::__call(
+        let call_result = Self::__call(
                 to_passback_ptr(&mut cellpack_buffer),
                 to_passback_ptr(&mut outgoing_alkanes_buffer),
                 to_passback_ptr(&mut storage_map_buffer),
                 fuel,
-            )
-        } as usize;
+        ) as usize;
         let mut returndata = to_arraybuffer_layout(&vec![0; call_result]);
         unsafe {
             __returndatacopy(to_passback_ptr(&mut returndata));
@@ -59,7 +54,7 @@ pub struct Call(());
 
 impl Extcall for Call {
     fn __call(cellpack: i32, outgoing_alkanes: i32, checkpoint: i32, fuel: u64) -> i32 {
-      __call(cellpack, outgoing_alkanes, checkpoint, fuel)
+      unsafe { __call(cellpack, outgoing_alkanes, checkpoint, fuel) }
     }
 }
 
@@ -67,7 +62,7 @@ pub struct Delegatecall(());
 
 impl Extcall for Delegatecall {
     fn __call(cellpack: i32, outgoing_alkanes: i32, checkpoint: i32, fuel: u64) -> i32 {
-      __delegatecall(cellpack, outgoing_alkanes, checkpoint, fuel)
+      unsafe { __delegatecall(cellpack, outgoing_alkanes, checkpoint, fuel) }
     }
 }
 
@@ -75,7 +70,7 @@ pub struct Staticcall(());
 
 impl Extcall for Staticcall {
     fn __call(cellpack: i32, outgoing_alkanes: i32, checkpoint: i32, fuel: u64) -> i32 {
-      __staticcall(cellpack, outgoing_alkanes, checkpoint, fuel)
+      unsafe { __staticcall(cellpack, outgoing_alkanes, checkpoint, fuel) }
     }
 }
 

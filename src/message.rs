@@ -25,7 +25,6 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let mut context = vm::AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
     let (caller, myself) = vm::run_special_cellpacks(&mut context, &cellpack)?;
-    println!("myself: {:?}", myself.clone());
     credit_balances(&mut atomic, &myself, &parcel.runes);
     vm::prepare_context(&mut context, &caller, &myself, false);
     let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)?.execute()?;
@@ -36,6 +35,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let mut combined = parcel.runtime_balances.as_ref().clone();
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
+    println!("{:?}", sheet);
     combined.debit(&sheet)?;
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
     Ok((response.alkanes.into(), combined))

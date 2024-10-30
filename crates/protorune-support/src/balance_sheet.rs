@@ -1,5 +1,5 @@
 use crate::rune_transfer::RuneTransfer;
-use anyhow::{anyhow, Result};
+use anyhow::{Result};
 #[allow(unused_imports)]
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
