@@ -8,6 +8,7 @@ mod tests {
 
     use crate::tests::helpers as alkane_helpers;
     use bitcoin::OutPoint;
+    use hex;
     use metashrew::clear;
     use metashrew_support::utils::{format_key};
     use metashrew::{get_cache, println, stdio::{stdout}};
@@ -42,11 +43,12 @@ mod tests {
 
         let test_block = alkane_helpers::init_test_with_cellpack(test_cellpacks[0].clone());
         let outpoint = OutPoint {
-          txid: test_block.txdata[0].txid(),
+          txid: test_block.txdata[1].txid(),
           vout: 0
         };
 
         Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64).unwrap();
+        /*
         get_cache().into_iter().for_each(|(k, v)| {
           if v.len() > 100 {
             ()
@@ -55,7 +57,9 @@ mod tests {
             ()
           }
         });
-//        let result = protorune_outpoint_to_outpoint_response(&outpoint, 1);
+        */
+        let result = protorune_outpoint_to_outpoint_response(&outpoint, 1);
+        println!("{:?}", result);
 
     }
 
