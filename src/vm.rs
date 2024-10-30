@@ -5,7 +5,7 @@ use alkanes_support::{
 };
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew::{println, stdio::stdout};
+use metashrew::{print, println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use protorune::message::MessageContextParcel;
@@ -384,7 +384,7 @@ impl AlkanesHostFunctionsImpl {
             let data = mem.data(&caller);
             read_arraybuffer(data, v)?
         };
-        println!("{}", String::from_utf8(message)?);
+        print!("{}", String::from_utf8(message)?);
         Ok(())
     }
 }

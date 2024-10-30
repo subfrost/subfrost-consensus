@@ -42,6 +42,7 @@ pub trait AlkaneResponder {
         }
     }
     fn initialize(&self) -> &Self {
+        println!("test!\n");
         unsafe {
             if _CACHE.is_none() {
                 _CACHE = Some(StorageMap::default());
