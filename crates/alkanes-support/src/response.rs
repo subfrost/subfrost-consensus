@@ -57,6 +57,15 @@ impl Into<ExtendedCallResponse> for CallResponse {
     }
 }
 
+impl Into<CallResponse> for ExtendedCallResponse {
+  fn into(self) -> CallResponse {
+    CallResponse {
+      alkanes: self.alkanes,
+      data: self.data
+    }
+  }
+}
+
 impl ExtendedCallResponse {
     pub fn serialize(&self) -> Vec<u8> {
         let mut list = Vec::<Vec<u128>>::new();

@@ -1,6 +1,6 @@
 use crate::utils::{pipe_storagemap_to, transfer_from};
 use alkanes_support::{
-    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::ExtendedCallResponse,
+    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::{CallResponse, ExtendedCallResponse},
     storage::StorageMap, witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
@@ -358,11 +358,15 @@ impl AlkanesHostFunctionsImpl {
             subbed.inputs = cellpack.inputs.clone();
             subbed
         };
-        match run(subcontext, &cellpack, start_fuel, T::isdelegate()) {
+        match run(subcontext.clone(), &cellpack, start_fuel, T::isdelegate()) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
+                let mut saveable: SaveableExtendedCallResponse = response.clone().into();
+                saveable.associate(&subcontext);
+                saveable.save(&mut context.message.atomic)?;
                 T::handle_atomic(&mut context.message.atomic);
-                let serialized = response.serialize();
+                let plain_response: CallResponse = response.into();
+                let serialized = plain_response.serialize();
                 context.returndata = serialized;
                 Ok(context.returndata.len().try_into()?)
             }
@@ -814,11 +818,70 @@ pub fn run_special_cellpacks(
     Ok((context.myself.clone(), payload.target.clone()))
 }
 
+#[derive(Clone, Default, Debug)]
+pub struct SaveableExtendedCallResponse {
+  pub result: ExtendedCallResponse,
+  pub _from: AlkaneId,
+  pub _to: AlkaneId,
+}
+
+impl From<ExtendedCallResponse> for SaveableExtendedCallResponse {
+  fn from(v: ExtendedCallResponse) -> Self {
+    let mut response = Self::default();
+    response.result = v;
+    response
+  }
+}
+
+impl SaveableExtendedCallResponse {
+  fn associate(&mut self, context: &AlkanesRuntimeContext) {
+    self._from = context.myself.clone();
+    self._to = context.caller.clone();
+  }
+}
+
+impl Saveable for SaveableExtendedCallResponse {
+  fn from(&self) -> AlkaneId {
+    self._from.clone()
+  }
+  fn to(&self) -> AlkaneId {
+    self._to.clone()
+  }
+  fn storage_map(&self) -> StorageMap {
+    self.result.storage.clone()
+  }
+  fn alkanes(&self) -> AlkaneTransferParcel {
+    self.result.alkanes.clone()
+  }
+}
+
+
+pub trait Saveable {
+  fn from(&self) -> AlkaneId;
+  fn to(&self) -> AlkaneId;
+  fn storage_map(&self) -> StorageMap;
+  fn alkanes(&self) -> AlkaneTransferParcel;
+  fn save(&self, atomic: &mut AtomicPointer) -> Result<()> {
+    pipe_storagemap_to(
+      &self.storage_map(),
+      &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&self.from().into()))
+    );
+    transfer_from(
+      &self.alkanes(),
+      &mut atomic.derive(&IndexPointer::default()),
+      &self.from().into(),
+      &self.to().into()
+    )?;
+    Ok(())
+  }
+}
+
 pub fn run_after_special(
     context: AlkanesRuntimeContext,
     start_fuel: u64,
 ) -> Result<ExtendedCallResponse> {
-    Ok(AlkanesInstance::from_alkane(context, start_fuel)?.execute()?)
+    let response = AlkanesInstance::from_alkane(context, start_fuel)?.execute()?;
+    Ok(response)
 }
 
 pub fn prepare_context(
