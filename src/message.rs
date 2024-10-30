@@ -1,8 +1,8 @@
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
 use crate::vm;
-use alkanes_support::{utils::{overflow_error}, cellpack::Cellpack};
+use alkanes_support::{cellpack::Cellpack, utils::overflow_error};
 use anyhow::Result;
-use metashrew::index_pointer::{IndexPointer};
+use metashrew::index_pointer::IndexPointer;
 use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune::message::{MessageContext, MessageContextParcel};
@@ -27,7 +27,14 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let (caller, myself) = vm::run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself, &parcel.runes);
     vm::prepare_context(&mut context, &caller, &myself, false);
-    let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)?.execute()?;
+    let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)
+        .inspect_err(|e| {
+            println!("error in from_alkane {:?}", e);
+        })?
+        .execute()
+        .inspect_err(|e| {
+            println!("error in execute {:?}", e);
+        })?;
     pipe_storagemap_to(
         &response.storage,
         &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),
@@ -35,7 +42,6 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let mut combined = parcel.runtime_balances.as_ref().clone();
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
-    println!("{:?}", sheet);
     combined.debit(&sheet)?;
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
     Ok((response.alkanes.into(), combined))
@@ -48,9 +54,7 @@ impl MessageContext for AlkaneMessageContext {
     fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
-            Err(e) => {
-                Err(e)
-            }
+            Err(e) => Err(e),
         }
     }
 }

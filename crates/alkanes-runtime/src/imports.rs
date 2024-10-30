@@ -7,7 +7,7 @@ extern "C" {
     pub fn __balance(who: i32, what: i32, output: i32);
     pub fn __request_context() -> i32;
     pub fn __load_context(output: i32) -> i32;
-    pub fn __sequence(output: i32) -> i32;
+    pub fn __sequence(output: i32);
     pub fn __fuel(output: i32);
     pub fn __returndatacopy(output: i32);
     pub fn __request_transaction() -> i32;

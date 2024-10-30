@@ -1,16 +1,22 @@
 use crate::utils::{pipe_storagemap_to, transfer_from};
 use alkanes_support::{
-    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::{CallResponse, ExtendedCallResponse},
-    storage::StorageMap, witness::find_witness_payload,
+    cellpack::Cellpack,
+    id::AlkaneId,
+    parcel::AlkaneTransferParcel,
+    response::{CallResponse, ExtendedCallResponse},
+    storage::StorageMap,
+    witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew::{print, println, stdio::stdout};
+use metashrew::{
+    print, println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use protorune::message::MessageContextParcel;
 use protorune_support::utils::consensus_encode;
-use std::fmt::Write;
 use std::io::Cursor;
 use std::sync::{Arc, Mutex};
 use wasmi::*;
@@ -647,9 +653,7 @@ impl AlkanesInstance {
                     checkpoint_ptr,
                     start_fuel,
                 ) {
-                    Ok(v) => {
-                      v
-                    },
+                    Ok(v) => v,
                     Err(_e) => {
                         AlkanesHostFunctionsImpl::_abort(caller);
                         -1
@@ -726,9 +730,7 @@ impl AlkanesInstance {
                         (v, false)
                     }
                 }
-                Err(_) => {
-                    (ExtendedCallResponse::default(), true)
-                }
+                Err(_) => (ExtendedCallResponse::default(), true),
             }
         };
         self.reset();
@@ -820,60 +822,60 @@ pub fn run_special_cellpacks(
 
 #[derive(Clone, Default, Debug)]
 pub struct SaveableExtendedCallResponse {
-  pub result: ExtendedCallResponse,
-  pub _from: AlkaneId,
-  pub _to: AlkaneId,
+    pub result: ExtendedCallResponse,
+    pub _from: AlkaneId,
+    pub _to: AlkaneId,
 }
 
 impl From<ExtendedCallResponse> for SaveableExtendedCallResponse {
-  fn from(v: ExtendedCallResponse) -> Self {
-    let mut response = Self::default();
-    response.result = v;
-    response
-  }
+    fn from(v: ExtendedCallResponse) -> Self {
+        let mut response = Self::default();
+        response.result = v;
+        response
+    }
 }
 
 impl SaveableExtendedCallResponse {
-  fn associate(&mut self, context: &AlkanesRuntimeContext) {
-    self._from = context.myself.clone();
-    self._to = context.caller.clone();
-  }
+    fn associate(&mut self, context: &AlkanesRuntimeContext) {
+        self._from = context.myself.clone();
+        self._to = context.caller.clone();
+    }
 }
 
 impl Saveable for SaveableExtendedCallResponse {
-  fn from(&self) -> AlkaneId {
-    self._from.clone()
-  }
-  fn to(&self) -> AlkaneId {
-    self._to.clone()
-  }
-  fn storage_map(&self) -> StorageMap {
-    self.result.storage.clone()
-  }
-  fn alkanes(&self) -> AlkaneTransferParcel {
-    self.result.alkanes.clone()
-  }
+    fn from(&self) -> AlkaneId {
+        self._from.clone()
+    }
+    fn to(&self) -> AlkaneId {
+        self._to.clone()
+    }
+    fn storage_map(&self) -> StorageMap {
+        self.result.storage.clone()
+    }
+    fn alkanes(&self) -> AlkaneTransferParcel {
+        self.result.alkanes.clone()
+    }
 }
 
-
 pub trait Saveable {
-  fn from(&self) -> AlkaneId;
-  fn to(&self) -> AlkaneId;
-  fn storage_map(&self) -> StorageMap;
-  fn alkanes(&self) -> AlkaneTransferParcel;
-  fn save(&self, atomic: &mut AtomicPointer) -> Result<()> {
-    pipe_storagemap_to(
-      &self.storage_map(),
-      &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&self.from().into()))
-    );
-    transfer_from(
-      &self.alkanes(),
-      &mut atomic.derive(&IndexPointer::default()),
-      &self.from().into(),
-      &self.to().into()
-    )?;
-    Ok(())
-  }
+    fn from(&self) -> AlkaneId;
+    fn to(&self) -> AlkaneId;
+    fn storage_map(&self) -> StorageMap;
+    fn alkanes(&self) -> AlkaneTransferParcel;
+    fn save(&self, atomic: &mut AtomicPointer) -> Result<()> {
+        pipe_storagemap_to(
+            &self.storage_map(),
+            &mut atomic
+                .derive(&IndexPointer::from_keyword("/alkanes/").select(&self.from().into())),
+        );
+        transfer_from(
+            &self.alkanes(),
+            &mut atomic.derive(&IndexPointer::default()),
+            &self.from().into(),
+            &self.to().into(),
+        )?;
+        Ok(())
+    }
 }
 
 pub fn run_after_special(

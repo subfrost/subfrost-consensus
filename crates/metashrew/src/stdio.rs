@@ -1,7 +1,7 @@
 use std::sync::Arc;
 //use std::io::{Write, Result};
 use crate::imports::__log;
-use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
+use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
 pub use std::fmt::{Error, Write};
 
 pub struct Stdout(());
@@ -47,6 +47,6 @@ extern "C" {
 #[allow(unused_unsafe)]
 pub fn log(v: Arc<Vec<u8>>) -> () {
     unsafe {
-        __log(to_ptr(&mut to_arraybuffer_layout(v.as_ref())) + 4);
+        __log(to_passback_ptr(&mut to_arraybuffer_layout(v.as_ref())));
     }
 }

@@ -1,22 +1,22 @@
 #[cfg(test)]
 mod tests {
-    use crate::tests::std::{alkanes_std_proxy_build, alkanes_std_test_build};
-    use std::fmt::{Write};
-    use bitcoin::{Block};
+    use crate::tests::std::alkanes_std_test_build;
     use alkanes_support::cellpack::Cellpack;
-    use alkanes_support::id::AlkaneId;
     use alkanes_support::envelope::RawEnvelope;
-    use protorune::{view::{protorune_outpoint_to_outpoint_response}, Protorune};
+    use alkanes_support::id::AlkaneId;
+    use bitcoin::Block;
+    use protorune::{view::protorune_outpoint_to_outpoint_response, Protorune};
+    use std::fmt::Write;
 
     use crate::tests::helpers as alkane_helpers;
+    use crate::tests::std::alkanes_std_owned_token_build;
     use bitcoin::OutPoint;
     use hex;
     use metashrew::clear;
-    use metashrew_support::utils::{format_key};
-    use metashrew::{get_cache, println, stdio::{stdout}};
-    use wasm_bindgen_test::wasm_bindgen_test;
+    use metashrew::{get_cache, println, stdio::stdout};
+    use metashrew_support::utils::format_key;
     use protorune::test_helpers::{create_block_with_coinbase_tx, get_address, ADDRESS1};
-    use crate::tests::std::alkanes_std_owned_token_build;
+    use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::message::AlkaneMessageContext;
     pub fn init_test_with_cellpack(cellpack: Cellpack, wasm_binary: Vec<u8>) -> Block {
@@ -31,11 +31,13 @@ mod tests {
 
         test_block
             .txdata
-            .push(alkane_helpers::create_cellpack_with_witness(witness, cellpack));
+            .push(alkane_helpers::create_cellpack_with_witness(
+                witness, cellpack,
+            ));
         test_block
     }
 
-//    #[wasm_bindgen_test]
+    //    #[wasm_bindgen_test]
     /*
     fn std_test_all() {
         clear();
@@ -109,10 +111,13 @@ mod tests {
         ];
 
         println!("test!");
-        let test_block = init_test_with_cellpack(test_cellpacks[0].clone(), alkanes_std_owned_token_build::get_bytes());
+        let test_block = init_test_with_cellpack(
+            test_cellpacks[0].clone(),
+            alkanes_std_owned_token_build::get_bytes(),
+        );
         let outpoint = OutPoint {
-          txid: test_block.txdata[1].txid(),
-          vout: 0
+            txid: test_block.txdata[1].txid(),
+            vout: 0,
         };
 
         Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64).unwrap();
@@ -128,7 +133,6 @@ mod tests {
         */
         let result = protorune_outpoint_to_outpoint_response(&outpoint, 1);
         println!("{:?}", result);
-
     }
 
     /*
