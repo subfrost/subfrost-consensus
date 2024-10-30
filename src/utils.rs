@@ -2,11 +2,11 @@ use alkanes_support::id::AlkaneId;
 use alkanes_support::parcel::AlkaneTransferParcel;
 use alkanes_support::storage::StorageMap;
 use anyhow::{anyhow, Result};
-use protorune_support::{rune_transfer::{RuneTransfer}};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew_support::index_pointer::KeyValuePointer;
+use protorune_support::rune_transfer::RuneTransfer;
+use std::fmt::Write;
 use std::sync::Arc;
-use std::fmt::{Write};
 
 pub fn balance_pointer(
     atomic: &mut AtomicPointer,
@@ -34,13 +34,15 @@ pub fn transfer_from(
     to: &AlkaneId,
 ) -> Result<()> {
     for transfer in &parcel.0 {
-        let mut from_pointer = balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
+        let mut from_pointer =
+            balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
         let balance = from_pointer.get_value::<u128>();
         if balance < transfer.value {
             return Err(anyhow!("balance underflow"));
         }
         from_pointer.set_value::<u128>(balance - transfer.value);
-        balance_pointer(atomic, &to.clone().into(), &transfer.id.clone().into()).set_value::<u128>(balance + transfer.value);
+        balance_pointer(atomic, &to.clone().into(), &transfer.id.clone().into())
+            .set_value::<u128>(balance + transfer.value);
     }
     Ok(())
 }

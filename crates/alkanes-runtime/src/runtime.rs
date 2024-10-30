@@ -4,22 +4,24 @@ use crate::imports::{
     __load_transaction, __log, __request_block, __request_context, __request_storage,
     __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
 };
+use crate::{println, stdio::stdout};
 #[allow(unused_imports)]
 use anyhow::Result;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr, to_ptr};
+use std::fmt::Write;
 use std::io::Cursor;
-use crate::{println, stdio::{stdout}};
-use std::fmt::{Write};
 
+use crate::compat::panic_hook;
 #[allow(unused_imports)]
 use alkanes_support::{
     cellpack::Cellpack,
     context::Context,
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
-    response::CallResponse,
+    response::{CallResponse, ExtendedCallResponse},
     storage::StorageMap,
 };
+use std::panic;
 
 static mut _CACHE: Option<StorageMap> = None;
 
@@ -41,9 +43,12 @@ pub trait AlkaneResponder {
     }
     fn initialize(&self) -> &Self {
         unsafe {
-            _CACHE = Some(StorageMap::default());
+            if _CACHE.is_none() {
+                _CACHE = Some(StorageMap::default());
+                panic::set_hook(Box::new(panic_hook));
+            }
+            self
         }
-        self
     }
     fn transaction(&self) -> Vec<u8> {
         unsafe {
@@ -185,7 +190,9 @@ pub trait AlkaneResponder {
         CallResponse::parse(&mut Cursor::new(returndata))
     }
     fn run(&self) -> Vec<u8> {
-        self.initialize().execute().serialize()
+        let mut extended: ExtendedCallResponse = self.initialize().execute().into();
+        extended.storage = unsafe { _CACHE.as_ref().unwrap().clone() };
+        extended.serialize()
     }
     fn execute(&self) -> CallResponse;
 }

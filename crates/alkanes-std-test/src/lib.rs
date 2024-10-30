@@ -1,6 +1,6 @@
 use alkanes_support::{cellpack::Cellpack, id::AlkaneId, response::CallResponse};
 //use alkanes_runtime::{println, stdio::{stdout}, runtime::{AlkaneResponder}};
-use alkanes_runtime::{runtime::AlkaneResponder};
+use alkanes_runtime::runtime::AlkaneResponder;
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use std::fmt::Write;
 
@@ -20,7 +20,7 @@ impl AlkaneResponder for LoggerAlkane {
                 .unwrap();
             ()
         } else {
-          ()
+            ()
         }
         let mut response = CallResponse::default();
         response.data = vec![0x01, 0x02];

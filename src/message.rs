@@ -1,15 +1,16 @@
-use crate::utils::credit_balances;
+use crate::utils::{credit_balances, pipe_storagemap_to};
 use crate::vm;
 use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
+use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+use metashrew::{println, stdio::stdout};
+use metashrew_support::index_pointer::KeyValuePointer;
 use protorune::message::{MessageContext, MessageContextParcel};
-use metashrew::index_pointer::{IndexPointer};
-use metashrew::{stdio::stdout, println};
 use protorune_support::{
     balance_sheet::BalanceSheet, rune_transfer::RuneTransfer, utils::decode_varint_list,
 };
+use std::fmt::Write;
 use std::io::Cursor;
-use std::fmt::{Write};
 
 #[derive(Clone, Default)]
 pub struct AlkaneMessageContext(());
@@ -28,6 +29,10 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     vm::prepare_context(&mut context, &caller, &myself, false);
     println!("prepare to execute\n");
     let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)?.execute()?;
+    pipe_storagemap_to(
+        &response.storage,
+        &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),
+    );
     println!("executed: {:?}\n", response);
     let mut combined = parcel.runtime_balances.as_ref().clone();
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
@@ -44,8 +49,8 @@ impl MessageContext for AlkaneMessageContext {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
             Err(e) => {
-              println!("error: {}", e);
-              Err(e)
+                println!("error: {}", e);
+                Err(e)
             }
         }
     }

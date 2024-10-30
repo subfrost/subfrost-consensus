@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod compat;
 pub mod imports;
 pub mod runtime;
 pub mod stdio;

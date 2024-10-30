@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use anyhow::{anyhow, Result};
 
-
 #[derive(Default, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RuneTransfer {
     pub id: ProtoruneRuneId,

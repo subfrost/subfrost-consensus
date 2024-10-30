@@ -36,9 +36,7 @@ mod tests {
             */
         ];
 
-        let test_block = alkane_helpers::init_test_with_cellpack(
-            test_cellpacks[0].clone()
-        );
+        let test_block = alkane_helpers::init_test_with_cellpack(test_cellpacks[0].clone());
 
         Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64).unwrap();
     }

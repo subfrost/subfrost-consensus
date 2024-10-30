@@ -1,11 +1,11 @@
 use crate::utils::{pipe_storagemap_to, transfer_from};
 use alkanes_support::{
-    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
+    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::ExtendedCallResponse,
     storage::StorageMap, witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew::{stdio::stdout, println};
+use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use protorune::message::MessageContextParcel;
@@ -405,14 +405,14 @@ impl AlkanesExportsImpl {
         )
     }
 
-    pub fn execute(vm: &mut AlkanesInstance) -> Result<CallResponse> {
+    pub fn execute(vm: &mut AlkanesInstance) -> Result<ExtendedCallResponse> {
         let mut result = [Val::I32(0)];
         let func = Self::_get_export(vm, "__execute")?;
         func.call(&mut vm.store, &[], &mut result)?;
         println!("call");
-        let response = CallResponse::parse(&mut std::io::Cursor::new(
-            Self::_get_result(vm, &result)?,
-        ))?;
+        let response = ExtendedCallResponse::parse(&mut std::io::Cursor::new(Self::_get_result(
+            vm, &result,
+        )?))?;
         println!("response: {:?}", response);
         Ok(response)
     }
@@ -710,20 +710,20 @@ impl AlkanesInstance {
     pub fn reset(&mut self) {
         self.store.data_mut().had_failure = false;
     }
-    pub fn execute(&mut self) -> Result<CallResponse> {
+    pub fn execute(&mut self) -> Result<ExtendedCallResponse> {
         self.checkpoint();
-        let (call_response, had_failure): (CallResponse, bool) = {
+        let (call_response, had_failure): (ExtendedCallResponse, bool) = {
             match AlkanesExportsImpl::execute(self) {
                 Ok(v) => {
                     if self.store.data().had_failure {
-                        (CallResponse::default(), true)
+                        (ExtendedCallResponse::default(), true)
                     } else {
                         (v, false)
                     }
                 }
                 Err(e) => {
                     println!("error: {}", e);
-                    (CallResponse::default(), true)
+                    (ExtendedCallResponse::default(), true)
                 }
             }
         };
@@ -816,8 +816,8 @@ pub fn run_special_cellpacks(
 
 pub fn run_after_special(
     context: AlkanesRuntimeContext,
-    start_fuel: u64
-) -> Result<CallResponse> {
+    start_fuel: u64,
+) -> Result<ExtendedCallResponse> {
     Ok(AlkanesInstance::from_alkane(context, start_fuel)?.execute()?)
 }
 
@@ -838,7 +838,7 @@ pub fn run(
     cellpack: &Cellpack,
     start_fuel: u64,
     delegate: bool,
-) -> Result<CallResponse> {
+) -> Result<ExtendedCallResponse> {
     let (caller, myself) = run_special_cellpacks(&mut context, cellpack)?;
     prepare_context(&mut context, &caller, &myself, delegate);
     run_after_special(context, start_fuel)
