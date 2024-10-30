@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::tests::std::alkanes_std_test_build;
+    use crate::tests::std::{alkanes_std_test_build, alkanes_std_auth_token_build};
     use alkanes_support::cellpack::Cellpack;
     use alkanes_support::envelope::RawEnvelope;
     use alkanes_support::id::AlkaneId;
@@ -111,10 +111,19 @@ mod tests {
         ];
 
         println!("test!");
-        let test_block = init_test_with_cellpack(
+        let mut test_block = init_test_with_cellpack(
             test_cellpacks[0].clone(),
             alkanes_std_owned_token_build::get_bytes(),
         );
+        let auth_cellpack = Cellpack {
+          target: AlkaneId { block: 3, tx: 0xffee },
+          inputs: vec![100]
+        };
+        let auth_block = init_test_with_cellpack(
+            auth_cellpack,
+            alkanes_std_auth_token_build::get_bytes()
+        );
+        test_block.txdata = vec![ auth_block.txdata[1].clone(), test_block.txdata[1].clone() ];
         let outpoint = OutPoint {
             txid: test_block.txdata[1].txid(),
             vout: 0,

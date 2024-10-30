@@ -43,7 +43,8 @@ impl AlkaneResponder for OwnedToken {
         match shift(&mut inputs).unwrap() {
             0 => {
                 let mut pointer = StoragePointer::from_keyword("/initialized");
-                if pointer.get().len() != 0 {
+                println!("len: {}", pointer.get().len());
+                if pointer.get().len() == 0 {
                     let auth_token_units = shift(&mut inputs).unwrap();
                     let token_units = shift(&mut inputs).unwrap();
                     let mut response: CallResponse = CallResponse::default();
@@ -57,6 +58,7 @@ impl AlkaneResponder for OwnedToken {
                         value: token_units,
                     });
                     pointer.set(Arc::new(vec![0x01]));
+                    println!("response: {:?}", response);
                     response
                 } else {
                     panic!("already initialized");

@@ -12,7 +12,7 @@ pub trait AuthenticatedResponder: AlkaneResponder {
     fn deploy_auth_token(&self, units: u128) -> Result<AlkaneTransfer> {
         let cellpack = Cellpack {
             target: AlkaneId {
-                block: 3,
+                block: 6,
                 tx: 0xffee,
             },
             inputs: vec![0x0, units],

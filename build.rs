@@ -52,13 +52,14 @@ fn main() {
     let files = fs::read_dir(&crates_dir)
         .unwrap()
         .filter_map(|v| {
-            // let name = v.ok()?.file_name().into_string().ok()?;
-            // if name.starts_with("alkanes-std-") {
-            //   Some(name)
-            // } else {
-            //   None
-            // }
+             let name = v.ok()?.file_name().into_string().ok()?;
+             if name.starts_with("alkanes-std-") {
+               Some(name)
+             } else {
+               None
+             }
 
+            /*
             let name = v.ok()?.file_name().into_string().ok()?;
             if name.starts_with("alkanes-std-") {
                 if let Some(feature_name) = name.strip_prefix("alkanes-std-") {
@@ -75,6 +76,7 @@ fn main() {
             } else {
                 None
             }
+            */
 
         })
         .map(|v| -> Result<String> {
