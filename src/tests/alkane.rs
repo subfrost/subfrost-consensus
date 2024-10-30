@@ -47,16 +47,14 @@ mod tests {
         };
 
         Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64).unwrap();
-        /*
         get_cache().into_iter().for_each(|(k, v)| {
-          if k.starts_with(b"/alkanes/") {
+          if v.len() > 100 {
             ()
           } else {
             println!("{}: {}", format_key(&k.as_ref().to_vec()), hex::encode(v.as_ref()));
             ()
           }
         });
-        */
 //        let result = protorune_outpoint_to_outpoint_response(&outpoint, 1);
 
     }

@@ -1,6 +1,6 @@
-use crate::utils::{credit_balances, pipe_storagemap_to};
+use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
 use crate::vm;
-use alkanes_support::cellpack::Cellpack;
+use alkanes_support::{utils::{overflow_error}, cellpack::Cellpack};
 use anyhow::Result;
 use metashrew::index_pointer::{IndexPointer};
 use metashrew::{println, stdio::stdout};
@@ -25,7 +25,8 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let mut context = vm::AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
     let (caller, myself) = vm::run_special_cellpacks(&mut context, &cellpack)?;
-    credit_balances(&mut atomic, &myself.clone().into(), &parcel.runes);
+    println!("myself: {:?}", myself.clone());
+    credit_balances(&mut atomic, &myself, &parcel.runes);
     vm::prepare_context(&mut context, &caller, &myself, false);
     let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)?.execute()?;
     pipe_storagemap_to(
@@ -36,6 +37,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
     combined.debit(&sheet)?;
+    debit_balances(&mut atomic, &myself, &response.alkanes)?;
     Ok((response.alkanes.into(), combined))
 }
 

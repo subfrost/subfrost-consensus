@@ -3,7 +3,7 @@ use alkanes_support::{
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
     response::CallResponse,
-    utils::shift,
+    utils::{shift, overflow_error}
 };
 use anyhow::{anyhow, Result};
 use metashrew_support::{
@@ -19,10 +19,6 @@ type U256 = Uint<256, 4>;
 
 #[derive(Default)]
 struct AMMPool(());
-
-pub fn overflow_error(v: Option<u128>) -> Result<u128> {
-    v.ok_or("").map_err(|_| anyhow!("overflow error"))
-}
 
 pub fn sub_fees(v: u128) -> Result<u128> {
     Ok(overflow_error(v.checked_mul(997))? / 1000)
