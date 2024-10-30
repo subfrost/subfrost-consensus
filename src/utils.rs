@@ -49,9 +49,13 @@ pub fn transfer_from(
     for transfer in &parcel.0 {
         let mut from_pointer =
             balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
-        let balance = from_pointer.get_value::<u128>();
+        let mut balance = from_pointer.get_value::<u128>();
         if balance < transfer.value {
-            return Err(anyhow!("balance underflow"));
+            if &transfer.id == from {
+              balance = transfer.value;
+            } else {
+              return Err(anyhow!("balance underflow"));
+            }
         }
         from_pointer.set_value::<u128>(balance - transfer.value);
         let mut to_pointer = balance_pointer(atomic, &to.clone().into(), &transfer.id.clone().into());

@@ -121,10 +121,11 @@ impl BalanceSheet {
     }
     pub fn debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
         for (rune, balance) in &sheet.balances {
+            let mut amount = *balance;
             if sheet.get(&rune) > self.get(&rune) {
-                return Err(anyhow!("balance underflow"));
+              amount = self.get(&rune);
             }
-            self.decrease(rune, *balance);
+            self.decrease(rune, amount);
         }
         Ok(())
     }
