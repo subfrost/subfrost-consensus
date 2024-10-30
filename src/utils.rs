@@ -4,7 +4,6 @@ use alkanes_support::storage::StorageMap;
 use anyhow::{anyhow, Result};
 use protorune_support::{rune_transfer::{RuneTransfer}};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew::{println, stdio::{stdout}};
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::Arc;
 use std::fmt::{Write};
@@ -34,11 +33,9 @@ pub fn transfer_from(
     from: &AlkaneId,
     to: &AlkaneId,
 ) -> Result<()> {
-    println!("parcel: {:?}", parcel);
     for transfer in &parcel.0 {
         let mut from_pointer = balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
         let balance = from_pointer.get_value::<u128>();
-        println!("balance: {}\n", balance);
         if balance < transfer.value {
             return Err(anyhow!("balance underflow"));
         }

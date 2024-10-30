@@ -8,8 +8,8 @@ use crate::imports::{
 use anyhow::Result;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr, to_ptr};
 use std::io::Cursor;
-use std::fmt::{Write};
 use crate::{println, stdio::{stdout}};
+use std::fmt::{Write};
 
 #[allow(unused_imports)]
 use alkanes_support::{
@@ -113,6 +113,7 @@ pub trait AlkaneResponder {
             to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
         let mut storage_map_buffer =
             to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
+        println!("enter call\n");
         let call_result = unsafe {
             __call(
                 to_passback_ptr(&mut cellpack_buffer),
@@ -121,7 +122,7 @@ pub trait AlkaneResponder {
                 fuel,
             )
         } as usize;
-        println!("call_result: {}", call_result);
+        println!("call\n");
         let mut returndata = vec![0; call_result];
         unsafe {
             __returndatacopy(to_passback_ptr(&mut returndata));

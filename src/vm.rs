@@ -5,7 +5,7 @@ use alkanes_support::{
 };
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew::{println, stdio::stdout};
+use metashrew::{stdio::stdout, println};
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use protorune::message::MessageContextParcel;
@@ -319,24 +319,15 @@ impl AlkanesHostFunctionsImpl {
         checkpoint_ptr: i32,
         start_fuel: u64,
     ) -> Result<i32> {
-        println!("enter extcall");
         let mem = get_memory(caller)?;
         let data = mem.data(&caller);
         let buffer = read_arraybuffer(data, cellpack_ptr)?;
-        println!("buffer: {:#02X?}", buffer);
         let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
-        println!(
-            "cellpack for call: {:#?}, start fuel: {} \n",
-            cellpack, start_fuel
-        );
         let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
         let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
-        println!("incoming_alkanes: {:?}\n", incoming_alkanes);
         let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-        println!("parsed storagemap: {:?}\n", storage_map);
         let subcontext = {
-            println!("in subcontext\n");
             let mut context = caller.data_mut().context.lock().unwrap();
             context.message.atomic.checkpoint();
             pipe_storagemap_to(
@@ -345,14 +336,12 @@ impl AlkanesHostFunctionsImpl {
                     &IndexPointer::from_keyword("/alkanes/").select(&context.myself.into()),
                 ),
             );
-            println!("incoming_alkanes: {:?}", &incoming_alkanes);
             if let Err(_) = transfer_from(
                 &incoming_alkanes,
                 &mut context.message.atomic.derive(&IndexPointer::default()),
                 &context.myself,
                 &cellpack.target,
             ) {
-                println!("transfer_from fail");
                 context.message.atomic.rollback();
                 context.returndata = Vec::<u8>::new();
                 return Ok(0);
@@ -391,7 +380,6 @@ impl AlkanesHostFunctionsImpl {
             let data = mem.data(&caller);
             read_arraybuffer(data, v)?
         };
-        println!("{}", String::from_utf8(message)?);
         Ok(())
     }
 }
@@ -421,9 +409,12 @@ impl AlkanesExportsImpl {
         let mut result = [Val::I32(0)];
         let func = Self::_get_export(vm, "__execute")?;
         func.call(&mut vm.store, &[], &mut result)?;
-        Ok(CallResponse::parse(&mut std::io::Cursor::new(
+        println!("call");
+        let response = CallResponse::parse(&mut std::io::Cursor::new(
             Self::_get_result(vm, &result)?,
-        ))?)
+        ))?;
+        println!("response: {:?}", response);
+        Ok(response)
     }
 }
 
@@ -473,14 +464,12 @@ impl AlkanesInstance {
             .rollback();
     }
     pub fn from_alkane(context: AlkanesRuntimeContext, start_fuel: u64) -> Result<Self> {
-        println!("myself: {:?}", &context.myself);
         let binary = context
             .message
             .atomic
             .keyword("/alkanes/")
             .select(&context.myself.clone().into())
             .get();
-        println!("\nbinary: {}", binary.len());
         let mut config = Config::default();
         config.consume_fuel(true);
         let engine = Engine::new(&config);
@@ -733,7 +722,7 @@ impl AlkanesInstance {
                     }
                 }
                 Err(e) => {
-                    println!("{}", e);
+                    println!("error: {}", e);
                     (CallResponse::default(), true)
                 }
             }

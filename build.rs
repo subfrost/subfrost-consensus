@@ -54,6 +54,13 @@ fn main() {
         .filter_map(|v| {
             let name = v.ok()?.file_name().into_string().ok()?;
             if name.starts_with("alkanes-std-") {
+              Some(name)
+            } else {
+              None
+            }
+                /*
+            let name = v.ok()?.file_name().into_string().ok()?;
+            if name.starts_with("alkanes-std-") {
                 if let Some(feature_name) = name.strip_prefix("alkanes-std-") {
                     if let Some(_) = env::var(format!("CARGO_FEATURE_{}", feature_name.to_uppercase().as_str())).ok() {
                         Some(name)
@@ -66,6 +73,7 @@ fn main() {
             } else {
                 None
             }
+            */
         })
         .map(|v| -> Result<String> {
             std::env::set_current_dir(&crates_dir.clone().join(v.clone()))?;

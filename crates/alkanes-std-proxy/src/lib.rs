@@ -50,7 +50,6 @@ impl AlkaneResponder for Proxy {
         let mut context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
         let auth = self.pull_incoming(&mut context);
-        println!("fetched inputs");
         match shift(&mut inputs).unwrap() {
             0 => {
                 if self.load("/initialized".as_bytes().to_vec()).len() != 0 {

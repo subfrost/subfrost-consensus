@@ -49,8 +49,6 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
             .ok_or("")
             .map_err(|_| anyhow!("balance sheet not found"))?
             .clone();
-        // println!("incoming initial is: {:?}\n\n", incoming_initial);
-        // println!("runtime initial is: {:?}\n\n", runtime_initial);
         let mut initial = BalanceSheet::merge(&incoming_initial, &runtime_initial);
 
         // self.0 is the amount to forward to the pointer
@@ -71,10 +69,6 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
         balances_by_output.insert(u32::MAX, outgoing_runtime);
 
         // refund the remaining amount to the refund pointer
-        // println!(
-        //     "remaining unaccounted runes to be refunded: {:?}\n\n",
-        //     initial
-        // );
         increase_balances_using_sheet(balances_by_output, &initial, refund_pointer);
         Ok(())
     }

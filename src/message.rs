@@ -4,10 +4,10 @@ use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
 use protorune::message::{MessageContext, MessageContextParcel};
 use metashrew::index_pointer::{IndexPointer};
+use metashrew::{stdio::stdout, println};
 use protorune_support::{
     balance_sheet::BalanceSheet, rune_transfer::RuneTransfer, utils::decode_varint_list,
 };
-use metashrew::{println, stdio::{stdout}};
 use std::io::Cursor;
 use std::fmt::{Write};
 
@@ -26,7 +26,9 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let (caller, myself) = vm::run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself.clone().into(), &parcel.runes);
     vm::prepare_context(&mut context, &caller, &myself, false);
+    println!("prepare to execute\n");
     let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)?.execute()?;
+    println!("executed: {:?}\n", response);
     let mut combined = parcel.runtime_balances.as_ref().clone();
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
@@ -41,7 +43,10 @@ impl MessageContext for AlkaneMessageContext {
     fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
-            Err(e) => Err(e),
+            Err(e) => {
+              println!("error: {}", e);
+              Err(e)
+            }
         }
     }
 }

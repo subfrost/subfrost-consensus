@@ -22,7 +22,7 @@ pub fn stdout() -> Stdout {
 macro_rules! println {
   ( $( $x:tt )* ) => {
     {
-      write!(stdout(), $($x)*).unwrap();
+      writeln!(stdout(), $($x)*).unwrap();
     }
   }
 }
