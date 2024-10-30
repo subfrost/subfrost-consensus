@@ -25,6 +25,60 @@ use std::panic;
 
 static mut _CACHE: Option<StorageMap> = None;
 
+pub trait Extcall {
+    fn __call(cellpack: i32, outgoing_alkanes: i32, checkpoint: i32, fuel: u64) -> i32;
+    fn call(
+        &self,
+        cellpack: &Cellpack,
+        outgoing_alkanes: &AlkaneTransferParcel,
+        fuel: u64,
+    ) -> Result<CallResponse> {
+        let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
+        let mut outgoing_alkanes_buffer: Vec<u8> =
+            to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
+        let mut storage_map_buffer =
+            to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
+        let call_result = unsafe {
+            Self::__call(
+                to_passback_ptr(&mut cellpack_buffer),
+                to_passback_ptr(&mut outgoing_alkanes_buffer),
+                to_passback_ptr(&mut storage_map_buffer),
+                fuel,
+            )
+        } as usize;
+        let mut returndata = to_arraybuffer_layout(&vec![0; call_result]);
+        unsafe {
+            __returndatacopy(to_passback_ptr(&mut returndata));
+        }
+        let response = CallResponse::parse(&mut Cursor::new((&returndata[4..]).to_vec()))?;
+        Ok(response)
+    }
+}
+
+pub struct Call(());
+
+impl Extcall for Call {
+    fn __call(cellpack: i32, outgoing_alkanes: i32, checkpoint: i32, fuel: u64) -> i32 {
+      __call(cellpack, outgoing_alkanes, checkpoint, fuel)
+    }
+}
+
+pub struct Delegatecall(());
+
+impl Extcall for Delegatecall {
+    fn __call(cellpack: i32, outgoing_alkanes: i32, checkpoint: i32, fuel: u64) -> i32 {
+      __delegatecall(cellpack, outgoing_alkanes, checkpoint, fuel)
+    }
+}
+
+pub struct Staticcall(());
+
+impl Extcall for Staticcall {
+    fn __call(cellpack: i32, outgoing_alkanes: i32, checkpoint: i32, fuel: u64) -> i32 {
+      __staticcall(cellpack, outgoing_alkanes, checkpoint, fuel)
+    }
+}
+
 pub trait AlkaneResponder {
     fn context(&self) -> Result<Context> {
         unsafe {
@@ -107,31 +161,21 @@ pub trait AlkaneResponder {
             u64::from_le_bytes((&buffer[4..]).try_into().unwrap())
         }
     }
+    fn extcall<T: Extcall>(
+        &self,
+        cellpack: &Cellpack,
+        outgoing_alkanes: &AlkaneTransferParcel,
+        fuel: u64,
+    ) -> Result<CallResponse> {
+      T::call(cellpack, outgoing_alkanes, fuel)
+    }
     fn call(
         &self,
         cellpack: &Cellpack,
         outgoing_alkanes: &AlkaneTransferParcel,
         fuel: u64,
     ) -> Result<CallResponse> {
-        let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
-        let mut outgoing_alkanes_buffer: Vec<u8> =
-            to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
-        let mut storage_map_buffer =
-            to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
-        let call_result = unsafe {
-            __call(
-                to_passback_ptr(&mut cellpack_buffer),
-                to_passback_ptr(&mut outgoing_alkanes_buffer),
-                to_passback_ptr(&mut storage_map_buffer),
-                fuel,
-            )
-        } as usize;
-        let mut returndata = to_arraybuffer_layout(&vec![0; call_result]);
-        unsafe {
-            __returndatacopy(to_passback_ptr(&mut returndata));
-        }
-        let response = CallResponse::parse(&mut Cursor::new((&returndata[4..]).to_vec()))?;
-        Ok(response)
+      self.extcall::<Call>(cellpack, outgoing_alkanes, fuel)
     }
     fn delegatecall(
         &self,
@@ -139,26 +183,7 @@ pub trait AlkaneResponder {
         outgoing_alkanes: &AlkaneTransferParcel,
         fuel: u64,
     ) -> Result<CallResponse> {
-        let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
-        let mut outgoing_alkanes_buffer: Vec<u8> =
-            to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
-        let mut storage_map_buffer =
-            to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
-        let mut returndata = vec![
-            0;
-            unsafe {
-                __delegatecall(
-                    to_ptr(&mut cellpack_buffer),
-                    to_ptr(&mut outgoing_alkanes_buffer),
-                    to_ptr(&mut storage_map_buffer),
-                    fuel,
-                )
-            } as usize
-        ];
-        unsafe {
-            __returndatacopy(to_ptr(&mut returndata));
-        }
-        CallResponse::parse(&mut Cursor::new(returndata))
+      self.extcall::<Delegatecall>(cellpack, outgoing_alkanes, fuel)
     }
     fn staticcall(
         &self,
@@ -166,26 +191,7 @@ pub trait AlkaneResponder {
         outgoing_alkanes: &AlkaneTransferParcel,
         fuel: u64,
     ) -> Result<CallResponse> {
-        let mut cellpack_buffer = to_arraybuffer_layout::<&[u8]>(&cellpack.serialize());
-        let mut outgoing_alkanes_buffer: Vec<u8> =
-            to_arraybuffer_layout::<&[u8]>(&outgoing_alkanes.serialize());
-        let mut storage_map_buffer =
-            to_arraybuffer_layout::<&[u8]>(&unsafe { _CACHE.as_ref().unwrap().serialize() });
-        let mut returndata = vec![
-            0;
-            unsafe {
-                __staticcall(
-                    to_ptr(&mut cellpack_buffer),
-                    to_ptr(&mut outgoing_alkanes_buffer),
-                    to_ptr(&mut storage_map_buffer),
-                    fuel,
-                )
-            } as usize
-        ];
-        unsafe {
-            __returndatacopy(to_ptr(&mut returndata));
-        }
-        CallResponse::parse(&mut Cursor::new(returndata))
+      self.extcall::<Staticcall>(cellpack, outgoing_alkanes, fuel)
     }
     fn run(&self) -> Vec<u8> {
         let mut extended: ExtendedCallResponse = self.initialize().execute().into();
