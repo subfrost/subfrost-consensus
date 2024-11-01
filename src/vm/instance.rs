@@ -4,6 +4,10 @@ use super::{
 };
 use alkanes_support::response::ExtendedCallResponse;
 use anyhow::{anyhow, Result};
+use metashrew::{
+    println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::{Arc, Mutex};
 use wasmi::*;
@@ -241,6 +245,7 @@ impl AlkanesInstance {
                 ) {
                     Ok(v) => v,
                     Err(_e) => {
+                        println!("error, aborting");
                         AlkanesHostFunctionsImpl::_abort(caller);
                         -1
                     }

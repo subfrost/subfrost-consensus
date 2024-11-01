@@ -10,7 +10,7 @@ use alkanes_support::{
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
 use metashrew::{
-    print,
+    print, println,
     stdio::{stdout, Write},
 };
 use metashrew_support::index_pointer::KeyValuePointer;
@@ -103,6 +103,7 @@ impl AlkanesHostFunctionsImpl {
     }
     pub(super) fn returndatacopy(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
         let context = caller.data_mut().context.lock().unwrap().returndata.clone();
+        println!("returndata length actual: {}", context.len());
         send_to_arraybuffer(caller, output.try_into()?, &context)?;
         Ok(())
     }
@@ -187,8 +188,10 @@ impl AlkanesHostFunctionsImpl {
         let data = mem.data(&caller);
         let buffer = read_arraybuffer(data, cellpack_ptr)?;
         let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
+        println!("got cellpack inside host call: {:?}", cellpack);
         let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
         let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
+        println!("got incoming alkanes");
         let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
         let subcontext = {
@@ -222,6 +225,7 @@ impl AlkanesHostFunctionsImpl {
             subbed.inputs = cellpack.inputs.clone();
             subbed
         };
+        println!("about to enter subcontext");
         match run(subcontext.clone(), &cellpack, start_fuel, T::isdelegate()) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
@@ -232,6 +236,7 @@ impl AlkanesHostFunctionsImpl {
                 let plain_response: CallResponse = response.into();
                 let serialized = plain_response.serialize();
                 context.returndata = serialized;
+                println!("returndata length: {}", context.returndata.len());
                 Ok(context.returndata.len().try_into()?)
             }
             Err(_) => {
