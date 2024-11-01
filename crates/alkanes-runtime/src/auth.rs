@@ -1,3 +1,7 @@
+use crate::{
+    println,
+    stdio::{stdout, Write},
+};
 use crate::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     cellpack::Cellpack,
@@ -18,7 +22,9 @@ pub trait AuthenticatedResponder: AlkaneResponder {
             inputs: vec![0x0, units],
         };
         let sequence = self.sequence();
+        println!("sequence: {}", sequence);
         let response = self.call(&cellpack, &AlkaneTransferParcel::default(), self.fuel())?;
+        println!("received response to call: {:#?}", response);
         StoragePointer::from_keyword("/auth").set(Arc::new(<AlkaneId as Into<Vec<u8>>>::into(
             AlkaneId {
                 block: 2,

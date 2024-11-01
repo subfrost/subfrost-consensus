@@ -36,23 +36,22 @@ impl AuthenticatedResponder for OwnedToken {}
 
 impl AlkaneResponder for OwnedToken {
     fn execute(&self) -> CallResponse {
-        println!("enter");
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
-        println!("inputs: {:?}", inputs);
         match shift(&mut inputs).unwrap() {
             0 => {
                 let mut pointer = StoragePointer::from_keyword("/initialized");
-                println!("len: {}", pointer.get().len());
                 if pointer.get().len() == 0 {
+                    println!("initializing");
                     let auth_token_units = shift(&mut inputs).unwrap();
                     let token_units = shift(&mut inputs).unwrap();
                     let mut response: CallResponse = CallResponse::default();
-                    //            response.alkanes = context.incoming_alkanes.clone();
+                    println!("created response");
                     response
                         .alkanes
                         .0
                         .push(self.deploy_auth_token(auth_token_units).unwrap());
+                    println!("pushed deploy response back");
                     response.alkanes.0.push(AlkaneTransfer {
                         id: context.myself.clone(),
                         value: token_units,
