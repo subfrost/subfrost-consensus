@@ -1,19 +1,19 @@
 use alkanes_support::id::AlkaneId;
 use alkanes_support::parcel::AlkaneTransferParcel;
 use alkanes_support::storage::StorageMap;
-use alkanes_support::utils::{overflow_error};
-use anyhow::{anyhow, Result};
-use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+use alkanes_support::utils::{ overflow_error };
+use anyhow::{ anyhow, Result };
+use metashrew::index_pointer::{ AtomicPointer, IndexPointer };
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::rune_transfer::RuneTransfer;
 use std::sync::Arc;
-use metashrew::{println, stdio::{stdout}};
-use std::fmt::{Write};
+use metashrew::{ println, stdio::{ stdout } };
+use std::fmt::{ Write };
 
 pub fn balance_pointer(
     atomic: &mut AtomicPointer,
     who: &AlkaneId,
-    what: &AlkaneId,
+    what: &AlkaneId
 ) -> AtomicPointer {
     let who_bytes: Vec<u8> = who.clone().into();
     let what_bytes: Vec<u8> = what.clone().into();
@@ -23,6 +23,19 @@ pub fn balance_pointer(
         .select(&what_bytes)
         .keyword("/balances/")
         .select(&who_bytes);
+    if ptr.get().len() != 0 {
+        alkane_inventory_pointer(atomic, who).append(Arc::new(what_bytes));
+    }
+    ptr
+}
+
+pub fn alkane_inventory_pointer(atomic: &mut AtomicPointer, who: &AlkaneId) -> AtomicPointer {
+    let who_bytes: Vec<u8> = who.clone().into();
+    let ptr = atomic
+        .derive(&IndexPointer::default())
+        .keyword("/alkanes/")
+        .select(&who_bytes)
+        .keyword("/inventory/");
     ptr
 }
 
@@ -32,10 +45,16 @@ pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<Ru
     }
 }
 
-pub fn debit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &AlkaneTransferParcel) -> Result<()> {
+pub fn debit_balances(
+    atomic: &mut AtomicPointer,
+    to: &AlkaneId,
+    runes: &AlkaneTransferParcel
+) -> Result<()> {
     for rune in runes.0.clone() {
         let mut pointer = balance_pointer(atomic, to, &rune.id.clone().into());
-        pointer.set_value::<u128>(overflow_error(pointer.get_value::<u128>().checked_sub(rune.value))?);
+        pointer.set_value::<u128>(
+            overflow_error(pointer.get_value::<u128>().checked_sub(rune.value))?
+        );
     }
     Ok(())
 }
@@ -44,30 +63,34 @@ pub fn transfer_from(
     parcel: &AlkaneTransferParcel,
     atomic: &mut AtomicPointer,
     from: &AlkaneId,
-    to: &AlkaneId,
+    to: &AlkaneId
 ) -> Result<()> {
     for transfer in &parcel.0 {
-        let mut from_pointer =
-            balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
+        let mut from_pointer = balance_pointer(
+            atomic,
+            &from.clone().into(),
+            &transfer.id.clone().into()
+        );
         let mut balance = from_pointer.get_value::<u128>();
         if balance < transfer.value {
             if &transfer.id == from {
-              balance = transfer.value;
+                balance = transfer.value;
             } else {
-              return Err(anyhow!("balance underflow"));
+                return Err(anyhow!("balance underflow"));
             }
         }
         from_pointer.set_value::<u128>(balance - transfer.value);
-        let mut to_pointer = balance_pointer(atomic, &to.clone().into(), &transfer.id.clone().into());
+        let mut to_pointer = balance_pointer(
+            atomic,
+            &to.clone().into(),
+            &transfer.id.clone().into()
+        );
         to_pointer.set_value::<u128>(to_pointer.get_value::<u128>() + transfer.value);
     }
     Ok(())
 }
 pub fn pipe_storagemap_to<T: KeyValuePointer>(map: &StorageMap, pointer: &mut T) {
     map.0.iter().for_each(|(k, v)| {
-        pointer
-            .keyword("/storage/")
-            .select(k)
-            .set(Arc::new(v.clone()));
+        pointer.keyword("/storage/").select(k).set(Arc::new(v.clone()));
     });
 }

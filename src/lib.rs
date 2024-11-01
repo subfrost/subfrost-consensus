@@ -2,7 +2,7 @@ use crate::message::AlkaneMessageContext;
 use anyhow::Result;
 use bitcoin::blockdata::block::Block;
 use bitcoin::consensus::Decodable;
-use metashrew::{flush, input};
+use metashrew::{ flush, input };
 use protorune::Protorune;
 
 pub mod message;
@@ -10,6 +10,7 @@ pub mod message;
 pub mod tests;
 pub mod utils;
 pub mod vm;
+pub mod view;
 
 pub fn index_block() -> Result<()> {
     let data = input();
