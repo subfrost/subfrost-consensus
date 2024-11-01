@@ -1,14 +1,12 @@
 use alkanes_support::id::AlkaneId;
 use alkanes_support::parcel::AlkaneTransferParcel;
 use alkanes_support::storage::StorageMap;
-use alkanes_support::utils::{overflow_error};
+use alkanes_support::utils::overflow_error;
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::rune_transfer::RuneTransfer;
 use std::sync::Arc;
-use metashrew::{println, stdio::{stdout}};
-use std::fmt::{Write};
 
 pub fn balance_pointer(
     atomic: &mut AtomicPointer,
@@ -32,10 +30,16 @@ pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<Ru
     }
 }
 
-pub fn debit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &AlkaneTransferParcel) -> Result<()> {
+pub fn debit_balances(
+    atomic: &mut AtomicPointer,
+    to: &AlkaneId,
+    runes: &AlkaneTransferParcel,
+) -> Result<()> {
     for rune in runes.0.clone() {
         let mut pointer = balance_pointer(atomic, to, &rune.id.clone().into());
-        pointer.set_value::<u128>(overflow_error(pointer.get_value::<u128>().checked_sub(rune.value))?);
+        pointer.set_value::<u128>(overflow_error(
+            pointer.get_value::<u128>().checked_sub(rune.value),
+        )?);
     }
     Ok(())
 }
@@ -52,13 +56,14 @@ pub fn transfer_from(
         let mut balance = from_pointer.get_value::<u128>();
         if balance < transfer.value {
             if &transfer.id == from {
-              balance = transfer.value;
+                balance = transfer.value;
             } else {
-              return Err(anyhow!("balance underflow"));
+                return Err(anyhow!("balance underflow"));
             }
         }
         from_pointer.set_value::<u128>(balance - transfer.value);
-        let mut to_pointer = balance_pointer(atomic, &to.clone().into(), &transfer.id.clone().into());
+        let mut to_pointer =
+            balance_pointer(atomic, &to.clone().into(), &transfer.id.clone().into());
         to_pointer.set_value::<u128>(to_pointer.get_value::<u128>() + transfer.value);
     }
     Ok(())

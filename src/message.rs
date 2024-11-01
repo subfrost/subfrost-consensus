@@ -1,6 +1,6 @@
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
 use crate::vm;
-use alkanes_support::{cellpack::Cellpack, utils::overflow_error};
+use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
 use metashrew::{println, stdio::stdout};

@@ -10,7 +10,7 @@ use alkanes_support::{
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew::{
-    print, println,
+    print,
     stdio::{stdout, Write},
 };
 use metashrew_support::index_pointer::KeyValuePointer;

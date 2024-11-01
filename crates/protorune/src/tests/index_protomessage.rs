@@ -12,7 +12,7 @@ mod tests {
         Witness,
     };
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
-    use protorune_support::protostone::{Protostone, ProtostoneEdict};
+    use protorune_support::protostone::Protostone;
     use protorune_support::rune_transfer::RuneTransfer;
     use protorune_support::utils::consensus_encode;
 
@@ -102,7 +102,7 @@ mod tests {
         fn protocol_tag() -> u128 {
             122
         }
-        fn handle(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
+        fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
             Err(anyhow!("full refund"))
         }
     }

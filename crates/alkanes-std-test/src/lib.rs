@@ -1,8 +1,6 @@
-use alkanes_support::{cellpack::Cellpack, response::CallResponse};
-use alkanes_runtime::{println, stdio::{stdout}};
 use alkanes_runtime::runtime::AlkaneResponder;
+use alkanes_support::{cellpack::Cellpack, response::CallResponse};
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
-use std::fmt::Write;
 
 #[derive(Default)]
 struct LoggerAlkane(());

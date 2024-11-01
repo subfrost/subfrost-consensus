@@ -19,8 +19,6 @@ use protorune_support::utils::consensus_decode;
 use bitcoin::hashes::Hash;
 use bitcoin::OutPoint;
 //use hex;
-use metashrew::{println, stdio::{stdout}};
-use std::fmt::Write;
 use metashrew_support::byte_view::ByteView;
 //use metashrew::utils::{ consume_exact, consume_sized_int };
 use metashrew_support::index_pointer::KeyValuePointer;
@@ -98,11 +96,13 @@ pub fn protorune_outpoint_to_outpoint_response(
             .select(&outpoint_bytes),
     );
 
-    let mut height: u128 = tables::RUNES.OUTPOINT_TO_HEIGHT
+    let mut height: u128 = tables::RUNES
+        .OUTPOINT_TO_HEIGHT
         .select(&outpoint_bytes)
         .get_value::<u64>()
         .into();
-    let mut txindex: u128 = tables::RUNES.HEIGHT_TO_TRANSACTION_IDS
+    let mut txindex: u128 = tables::RUNES
+        .HEIGHT_TO_TRANSACTION_IDS
         .select_value::<u64>(height as u64)
         .get_list()
         .into_iter()
