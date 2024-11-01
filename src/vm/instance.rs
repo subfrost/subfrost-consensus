@@ -17,6 +17,17 @@ pub struct AlkanesInstance {
     pub(crate) store: Store<AlkanesState>,
 }
 
+fn handle_extcall(v: Result<i32>, caller: Caller<'_, AlkanesState>) -> i32 {
+    match v {
+        Ok(v) => v,
+        Err(e) => {
+            println!("extcall failed with error: {:#?}", e);
+            AlkanesHostFunctionsImpl::_abort(caller);
+            -1
+        }
+    }
+}
+
 impl AlkanesInstance {
     pub fn consume_fuel(&mut self, fuel: u64) -> Result<()> {
         let fuel_remaining = self.store.get_fuel().unwrap();
@@ -236,20 +247,16 @@ impl AlkanesInstance {
              checkpoint_ptr: i32,
              start_fuel: u64|
              -> i32 {
-                match AlkanesHostFunctionsImpl::extcall::<Call>(
-                    &mut caller,
-                    cellpack_ptr,
-                    incoming_alkanes_ptr,
-                    checkpoint_ptr,
-                    start_fuel,
-                ) {
-                    Ok(v) => v,
-                    Err(_e) => {
-                        println!("error, aborting");
-                        AlkanesHostFunctionsImpl::_abort(caller);
-                        -1
-                    }
-                }
+                handle_extcall(
+                    AlkanesHostFunctionsImpl::extcall::<Call>(
+                        &mut caller,
+                        cellpack_ptr,
+                        incoming_alkanes_ptr,
+                        checkpoint_ptr,
+                        start_fuel,
+                    ),
+                    caller,
+                )
             },
         )?;
         linker.func_wrap(
@@ -261,19 +268,16 @@ impl AlkanesInstance {
              checkpoint_ptr: i32,
              start_fuel: u64|
              -> i32 {
-                match AlkanesHostFunctionsImpl::extcall::<Delegatecall>(
-                    &mut caller,
-                    cellpack_ptr,
-                    incoming_alkanes_ptr,
-                    checkpoint_ptr,
-                    start_fuel,
-                ) {
-                    Ok(v) => v,
-                    Err(_e) => {
-                        AlkanesHostFunctionsImpl::_abort(caller);
-                        -1
-                    }
-                }
+                handle_extcall(
+                    AlkanesHostFunctionsImpl::extcall::<Delegatecall>(
+                        &mut caller,
+                        cellpack_ptr,
+                        incoming_alkanes_ptr,
+                        checkpoint_ptr,
+                        start_fuel,
+                    ),
+                    caller,
+                )
             },
         )?;
         linker.func_wrap(
@@ -285,19 +289,16 @@ impl AlkanesInstance {
              checkpoint_ptr: i32,
              start_fuel: u64|
              -> i32 {
-                match AlkanesHostFunctionsImpl::extcall::<Staticcall>(
-                    &mut caller,
-                    cellpack_ptr,
-                    incoming_alkanes_ptr,
-                    checkpoint_ptr,
-                    start_fuel,
-                ) {
-                    Ok(v) => v,
-                    Err(_e) => {
-                        AlkanesHostFunctionsImpl::_abort(caller);
-                        -1
-                    }
-                }
+                handle_extcall(
+                    AlkanesHostFunctionsImpl::extcall::<Staticcall>(
+                        &mut caller,
+                        cellpack_ptr,
+                        incoming_alkanes_ptr,
+                        checkpoint_ptr,
+                        start_fuel,
+                    ),
+                    caller,
+                )
             },
         )?;
         Ok(AlkanesInstance {
