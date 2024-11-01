@@ -1,5 +1,9 @@
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
-use crate::vm;
+use crate::vm::{
+    instance::AlkanesInstance,
+    runtime::AlkanesRuntimeContext,
+    utils::{prepare_context, run_special_cellpacks},
+};
 use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
@@ -22,12 +26,12 @@ const FUEL_LIMIT: u64 = 0x100000;
 pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
     let cellpack: Cellpack =
         decode_varint_list(&mut Cursor::new(parcel.calldata.clone()))?.try_into()?;
-    let mut context = vm::AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
+    let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
-    let (caller, myself) = vm::run_special_cellpacks(&mut context, &cellpack)?;
+    let (caller, myself) = run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself, &parcel.runes);
-    vm::prepare_context(&mut context, &caller, &myself, false);
-    let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)
+    prepare_context(&mut context, &caller, &myself, false);
+    let response = AlkanesInstance::from_alkane(context, FUEL_LIMIT)
         .inspect_err(|e| {
             println!("error in from_alkane {:?}", e);
         })?
