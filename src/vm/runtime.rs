@@ -1,3 +1,5 @@
+use std::fmt;
+
 use alkanes_support::{cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel};
 
 use protorune::message::MessageContextParcel;
@@ -10,6 +12,17 @@ pub struct AlkanesRuntimeContext {
     pub returndata: Vec<u8>,
     pub inputs: Vec<u128>,
     pub message: Box<MessageContextParcel>,
+}
+
+impl fmt::Debug for AlkanesRuntimeContext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AlkanesRuntimeContext")
+            .field("myself", &self.myself)
+            .field("caller", &self.caller)
+            .field("incoming_alkanes", &self.incoming_alkanes)
+            .field("inputs", &self.inputs)
+            .finish()
+    }
 }
 
 impl AlkanesRuntimeContext {

@@ -225,7 +225,10 @@ impl AlkanesHostFunctionsImpl {
             subbed.inputs = cellpack.inputs.clone();
             subbed
         };
-        println!("about to enter subcontext");
+        println!(
+            "about to enter subcontext: {:#?} with cellpack: {:#?}",
+            subcontext, cellpack
+        );
         match run(subcontext.clone(), &cellpack, start_fuel, T::isdelegate()) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();

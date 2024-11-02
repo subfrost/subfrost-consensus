@@ -11,7 +11,7 @@ pub trait MessageContext {
     fn protocol_tag() -> u128;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MessageContextParcel {
     pub atomic: AtomicPointer,
     pub runes: Vec<RuneTransfer>,

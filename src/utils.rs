@@ -3,7 +3,11 @@ use alkanes_support::parcel::AlkaneTransferParcel;
 use alkanes_support::storage::StorageMap;
 use alkanes_support::utils::overflow_error;
 use anyhow::{anyhow, Result};
-use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+use metashrew::{
+    index_pointer::{AtomicPointer, IndexPointer},
+    println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::rune_transfer::RuneTransfer;
 use std::sync::Arc;
@@ -51,6 +55,7 @@ pub fn transfer_from(
     to: &AlkaneId,
 ) -> Result<()> {
     for transfer in &parcel.0 {
+        println!("transferring {:?} from {:?} to {:?}", transfer, from, to);
         let mut from_pointer =
             balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
         let mut balance = from_pointer.get_value::<u128>();

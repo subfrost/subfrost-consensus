@@ -5,7 +5,11 @@ use alkanes_support::{
     storage::StorageMap, witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
-use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+use metashrew::{
+    index_pointer::{AtomicPointer, IndexPointer},
+    println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use std::sync::Arc;
@@ -191,6 +195,10 @@ pub fn run(
     delegate: bool,
 ) -> Result<ExtendedCallResponse> {
     let (caller, myself) = run_special_cellpacks(&mut context, cellpack)?;
+    println!(
+        "running special cellpack, caller: {:?}, myself: {:?}",
+        caller, myself
+    );
     prepare_context(&mut context, &caller, &myself, delegate);
     run_after_special(context, start_fuel)
 }
