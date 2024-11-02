@@ -9,6 +9,7 @@ extern "C" {
     pub fn __load_context(output: i32) -> i32;
     pub fn __sequence(output: i32);
     pub fn __fuel(output: i32);
+    pub fn __height(output: i32);
     pub fn __returndatacopy(output: i32);
     pub fn __request_transaction() -> i32;
     pub fn __load_transaction(output: i32);

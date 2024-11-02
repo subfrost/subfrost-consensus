@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use crate::imports::{
-    __balance, __call, __delegatecall, __fuel, __load_block, __load_context, __load_storage,
+    __balance, __call, __delegatecall, __fuel, __load_block, __load_context, __load_storage, __height,
     __load_transaction, __log, __request_block, __request_context, __request_storage,
     __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
 };
@@ -165,6 +165,13 @@ pub trait AlkaneResponder {
         unsafe {
             let mut buffer: Vec<u8> = to_arraybuffer_layout(vec![0; 8]);
             __fuel(to_ptr(&mut buffer) + 4);
+            u64::from_le_bytes((&buffer[4..]).try_into().unwrap())
+        }
+    }
+    fn height(&self) -> u64 {
+        unsafe {
+            let mut buffer: Vec<u8> = to_arraybuffer_layout(vec![0; 8]);
+            __height(to_ptr(&mut buffer) + 4);
             u64::from_le_bytes((&buffer[4..]).try_into().unwrap())
         }
     }

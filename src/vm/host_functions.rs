@@ -148,6 +148,11 @@ impl AlkanesHostFunctionsImpl {
         send_to_arraybuffer(caller, output.try_into()?, &buffer)?;
         Ok(())
     }
+    pub(super) fn height(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
+        let mut height = (&caller.data_mut().context.lock().unwrap().message.height.to_le_bytes()).to_vec();
+        send_to_arraybuffer(caller, output.try_into()?, &height)?;
+        Ok(())
+    }
     pub(super) fn balance<'a>(
         caller: &mut Caller<'a, AlkanesState>,
         who_ptr: i32,

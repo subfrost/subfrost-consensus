@@ -186,6 +186,15 @@ impl AlkanesInstance {
                 }
             },
         )?;
+        linker.func_wrap(
+             "env",
+             "__height",
+             |mut caller: Caller<'_, AlkanesState>, output: i32| {
+                if let Err(_e) = AlkanesHostFunctionsImpl::height(&mut caller, output) {
+                    AlkanesHostFunctionsImpl::_abort(caller);
+                }
+             }
+        )?;
 
         linker.func_wrap(
             "env",

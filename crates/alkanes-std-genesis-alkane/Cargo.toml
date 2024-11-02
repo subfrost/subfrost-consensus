@@ -1,0 +1,16 @@
+[package]
+name = "alkanes-std-genesis-alkane"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+alkanes-runtime = { path = "../alkanes-runtime" }
+alkanes-support = { path = "../alkanes-support" }
+anyhow = "1.0.91"
+bitcoin = { version = "0.30.1", features = ["rand"] }
+hex = "0.4.3"
+metashrew-support = { path = "../metashrew-support" }
+protorune-support = { path = "../protorune-support" }
