@@ -41,8 +41,9 @@ pub fn sequence_pointer(ptr: &AtomicPointer) -> AtomicPointer {
 pub fn run_special_cellpacks(
     context: &mut AlkanesRuntimeContext,
     cellpack: &Cellpack,
-) -> Result<(AlkaneId, AlkaneId)> {
+) -> Result<(AlkaneId, AlkaneId, Arc<Vec<u8>>)> {
     let mut payload = cellpack.clone();
+    let mut binary = Arc::<Vec<u8>>::new(vec![]);
     if cellpack.target.is_create() {
         let wasm_payload = Arc::new(
             find_witness_payload(&context.message.transaction, 0)
@@ -55,12 +56,9 @@ pub fn run_special_cellpacks(
             block: 2,
             tx: next_sequence,
         };
-        context
-            .message
-            .atomic
-            .keyword("/alkanes/")
-            .select(&payload.target.clone().into())
-            .set(wasm_payload.clone());
+        let mut pointer = context.message.atomic.keyword("/alkanes/").select(&payload.target.clone().into());
+        pointer.set(wasm_payload.clone());
+        binary = wasm_payload.clone();
         next_sequence_pointer.set_value(next_sequence + 1);
     } else if let Some(number) = cellpack.target.reserved() {
         let wasm_payload = Arc::new(
@@ -87,12 +85,13 @@ pub fn run_special_cellpacks(
                 number
             )));
         }
+        binary = wasm_payload.clone();
     } else if let Some(factory) = cellpack.target.factory() {
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
         payload.target = AlkaneId::new(2, next_sequence);
         next_sequence_pointer.set_value(next_sequence + 1);
-        let binary: Vec<u8> = context
+        let context_binary: Vec<u8> = context
             .message
             .atomic
             .keyword("/alkanes/")
@@ -100,14 +99,16 @@ pub fn run_special_cellpacks(
             .get()
             .as_ref()
             .clone();
+        let rc = Arc::new(context_binary);
         context
             .message
             .atomic
             .keyword("/alkanes/")
             .select(&payload.target.clone().into())
-            .set(Arc::new(binary));
+            .set(rc.clone());
+        binary = rc.clone();
     }
-    Ok((context.myself.clone(), payload.target.clone()))
+    Ok((context.myself.clone(), payload.target.clone(), binary.clone()))
 }
 
 #[derive(Clone, Default, Debug)]
@@ -170,9 +171,10 @@ pub trait Saveable {
 
 pub fn run_after_special(
     context: AlkanesRuntimeContext,
+    binary: Arc<Vec<u8>>,
     start_fuel: u64,
 ) -> Result<ExtendedCallResponse> {
-    let response = AlkanesInstance::from_alkane(context, start_fuel)?.execute()?;
+    let response = AlkanesInstance::from_alkane(context, binary.clone(), start_fuel)?.execute()?;
     Ok(response)
 }
 
@@ -194,13 +196,13 @@ pub fn run(
     start_fuel: u64,
     delegate: bool,
 ) -> Result<ExtendedCallResponse> {
-    let (caller, myself) = run_special_cellpacks(&mut context, cellpack)?;
+    let (caller, myself, binary) = run_special_cellpacks(&mut context, cellpack)?;
     println!(
         "running special cellpack, caller: {:?}, myself: {:?}",
         caller, myself
     );
     prepare_context(&mut context, &caller, &myself, delegate);
-    run_after_special(context, start_fuel)
+    run_after_special(context, binary, start_fuel)
 }
 
 pub fn send_to_arraybuffer<'a>(

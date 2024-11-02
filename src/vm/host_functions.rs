@@ -3,6 +3,8 @@ use super::{
     Extcall, Saveable, SaveableExtendedCallResponse,
 };
 use crate::utils::{pipe_storagemap_to, transfer_from};
+use std::sync::Arc;
+use crate::vm::{run_after_special, run_special_cellpacks};
 use alkanes_support::{
     cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
     storage::StorageMap,
@@ -194,9 +196,12 @@ impl AlkanesHostFunctionsImpl {
         println!("got incoming alkanes");
         let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
+        let mut binary_rc = Arc::<Vec<u8>>::new(vec![]);
         let subcontext = {
             let mut context = caller.data_mut().context.lock().unwrap();
             context.message.atomic.checkpoint();
+            let (subcaller, submyself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
+            binary_rc = binary.clone();
             pipe_storagemap_to(
                 &storage_map,
                 &mut context.message.atomic.derive(
@@ -207,7 +212,7 @@ impl AlkanesHostFunctionsImpl {
                 &incoming_alkanes,
                 &mut context.message.atomic.derive(&IndexPointer::default()),
                 &context.myself,
-                &cellpack.target,
+                &submyself,
             ) {
                 context.message.atomic.rollback();
                 context.returndata = Vec::<u8>::new();
@@ -216,7 +221,7 @@ impl AlkanesHostFunctionsImpl {
             let mut subbed = (&*context).clone();
             subbed.message.atomic = context.message.atomic.derive(&IndexPointer::default());
             (subbed.caller, subbed.myself) = T::change_context(
-                cellpack.target.clone(),
+                submyself.clone(),
                 context.caller.clone(),
                 context.myself.clone(),
             );
@@ -229,7 +234,7 @@ impl AlkanesHostFunctionsImpl {
             "about to enter subcontext: {:#?} with cellpack: {:#?}",
             subcontext, cellpack
         );
-        match run(subcontext.clone(), &cellpack, start_fuel, T::isdelegate()) {
+        match run_after_special(subcontext.clone(), binary_rc.clone(), start_fuel) {
             Ok(response) => {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 let mut saveable: SaveableExtendedCallResponse = response.clone().into();

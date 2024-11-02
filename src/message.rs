@@ -2,7 +2,7 @@ use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
 use crate::vm::{
     instance::AlkanesInstance,
     runtime::AlkanesRuntimeContext,
-    utils::{prepare_context, run_special_cellpacks},
+    utils::{prepare_context, run_special_cellpacks, run_after_special},
 };
 use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
@@ -28,17 +28,10 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
         decode_varint_list(&mut Cursor::new(parcel.calldata.clone()))?.try_into()?;
     let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
-    let (caller, myself) = run_special_cellpacks(&mut context, &cellpack)?;
+    let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself, &parcel.runes);
     prepare_context(&mut context, &caller, &myself, false);
-    let response = AlkanesInstance::from_alkane(context, FUEL_LIMIT)
-        .inspect_err(|e| {
-            println!("error in from_alkane {:?}", e);
-        })?
-        .execute()
-        .inspect_err(|e| {
-            println!("error in execute {:?}", e);
-        })?;
+    let response = run_after_special(context, binary, FUEL_LIMIT)?;
     pipe_storagemap_to(
         &response.storage,
         &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),

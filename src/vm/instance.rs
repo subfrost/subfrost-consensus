@@ -73,13 +73,15 @@ impl AlkanesInstance {
             .atomic
             .rollback();
     }
-    pub fn from_alkane(context: AlkanesRuntimeContext, start_fuel: u64) -> Result<Self> {
+    pub fn from_alkane(context: AlkanesRuntimeContext, binary: Arc<Vec<u8>>, start_fuel: u64) -> Result<Self> {
+        /*
         let binary = context
             .message
             .atomic
             .keyword("/alkanes/")
             .select(&context.myself.clone().into())
             .get();
+            */
         let mut config = Config::default();
         config.consume_fuel(true);
         let engine = Engine::new(&config);
