@@ -3,11 +3,11 @@ use super::{
     Extcall, Saveable, SaveableExtendedCallResponse,
 };
 use crate::utils::{pipe_storagemap_to, transfer_from};
-use std::sync::Arc;
 use crate::vm::{run_after_special, run_special_cellpacks};
 use alkanes_support::{
     cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
     storage::StorageMap,
+    utils::{overflow_error}
 };
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
@@ -16,6 +16,7 @@ use metashrew::{
     stdio::{stdout, Write},
 };
 use metashrew_support::index_pointer::KeyValuePointer;
+use std::sync::Arc;
 
 use protorune_support::utils::consensus_encode;
 use std::io::Cursor;
@@ -149,7 +150,15 @@ impl AlkanesHostFunctionsImpl {
         Ok(())
     }
     pub(super) fn height(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
-        let mut height = (&caller.data_mut().context.lock().unwrap().message.height.to_le_bytes()).to_vec();
+        let mut height = (&caller
+            .data_mut()
+            .context
+            .lock()
+            .unwrap()
+            .message
+            .height
+            .to_le_bytes())
+            .to_vec();
         send_to_arraybuffer(caller, output.try_into()?, &height)?;
         Ok(())
     }
@@ -191,16 +200,19 @@ impl AlkanesHostFunctionsImpl {
         checkpoint_ptr: i32,
         start_fuel: u64,
     ) -> Result<i32> {
-        let mem = get_memory(caller)?;
-        let data = mem.data(&caller);
-        let buffer = read_arraybuffer(data, cellpack_ptr)?;
-        let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
-        println!("got cellpack inside host call: {:?}", cellpack);
-        let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
-        let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
-        println!("got incoming alkanes");
-        let storage_map =
+        let (cellpack, incoming_alkanes, storage_map) = {
+          let mem = get_memory(caller)?;
+          let data = mem.data(&caller);
+          let buffer = read_arraybuffer(data, cellpack_ptr)?;
+          let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
+          println!("got cellpack inside host call: {:?}", cellpack);
+          let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
+          let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
+          println!("got incoming alkanes");
+          let storage_map =
             StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
+          (cellpack, incoming_alkanes, storage_map)
+        };
         let mut binary_rc = Arc::<Vec<u8>>::new(vec![]);
         let subcontext = {
             let mut context = caller.data_mut().context.lock().unwrap();
@@ -239,9 +251,12 @@ impl AlkanesHostFunctionsImpl {
             "about to enter subcontext: {:#?} with cellpack: {:#?}",
             subcontext, cellpack
         );
-        match run_after_special(subcontext.clone(), binary_rc.clone(), start_fuel) {
-            Ok(response) => {
-                let mut context = caller.data_mut().context.lock().unwrap();
+        run_after_special(subcontext.clone(), binary_rc.clone(), start_fuel)
+            .and_then(|(response, gas_used)| {
+                println!("gas used: {}", gas_used);
+                caller.set_fuel(overflow_error(start_fuel.checked_sub(gas_used))?)?;
+                println!("gas left: {}", (&caller).get_fuel().unwrap());
+                let mut context = caller.data().context.lock().unwrap();
                 let mut saveable: SaveableExtendedCallResponse = response.clone().into();
                 saveable.associate(&subcontext);
                 saveable.save(&mut context.message.atomic)?;
@@ -251,14 +266,18 @@ impl AlkanesHostFunctionsImpl {
                 context.returndata = serialized;
                 println!("returndata length: {}", context.returndata.len());
                 Ok(context.returndata.len().try_into()?)
-            }
-            Err(_) => {
+            })
+            .and_then(|len| {
+                let mut context = caller.data_mut().context.lock().unwrap();
+                T::handle_atomic(&mut context.message.atomic);
+                Ok(len)
+            })
+            .or_else(|e| {
                 let mut context = caller.data_mut().context.lock().unwrap();
                 context.message.atomic.rollback();
                 context.returndata = vec![];
                 Ok(0)
-            }
-        }
+            })
     }
     pub(super) fn log<'a>(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
         let mem = get_memory(caller)?;

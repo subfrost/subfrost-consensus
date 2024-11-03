@@ -57,12 +57,12 @@ pub fn __get(_ptr: i32, _result: i32) -> () {}
 #[cfg(feature = "mock")]
 #[wasm_bindgen(js_namespace = Date)]
 extern "C" {
-   fn now() -> f64;
+    fn now() -> f64;
 }
 
 #[cfg(feature = "mock")]
 pub fn __now() -> u64 {
-  now() as u64
+    now() as u64
 }
 
 #[cfg(feature = "mock")]

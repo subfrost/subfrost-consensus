@@ -1,8 +1,8 @@
 #[allow(unused_imports)]
 use crate::imports::{
-    __balance, __call, __delegatecall, __fuel, __load_block, __load_context, __load_storage, __height,
-    __load_transaction, __log, __request_block, __request_context, __request_storage,
-    __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
+    __balance, __call, __delegatecall, __fuel, __height, __load_block, __load_context,
+    __load_storage, __load_transaction, __log, __request_block, __request_context,
+    __request_storage, __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
 };
 use anyhow::anyhow;
 #[allow(unused_imports)]

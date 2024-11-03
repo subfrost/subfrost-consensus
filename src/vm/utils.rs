@@ -2,7 +2,7 @@ use super::{AlkanesInstance, AlkanesRuntimeContext, AlkanesState};
 use crate::utils::{pipe_storagemap_to, transfer_from};
 use alkanes_support::{
     cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::ExtendedCallResponse,
-    storage::StorageMap, witness::find_witness_payload,
+    storage::StorageMap, utils::overflow_error, witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
 use metashrew::{
@@ -181,9 +181,11 @@ pub fn run_after_special(
     context: AlkanesRuntimeContext,
     binary: Arc<Vec<u8>>,
     start_fuel: u64,
-) -> Result<ExtendedCallResponse> {
-    let response = AlkanesInstance::from_alkane(context, binary.clone(), start_fuel)?.execute()?;
-    Ok(response)
+) -> Result<(ExtendedCallResponse, u64)> {
+    let mut instance = AlkanesInstance::from_alkane(context, binary.clone(), start_fuel)?;
+    let response = instance.execute()?;
+    let fuel_used = overflow_error(start_fuel.checked_sub(instance.store.get_fuel().unwrap()))?;
+    Ok((response, fuel_used))
 }
 
 pub fn prepare_context(
@@ -203,7 +205,7 @@ pub fn run(
     cellpack: &Cellpack,
     start_fuel: u64,
     delegate: bool,
-) -> Result<ExtendedCallResponse> {
+) -> Result<(ExtendedCallResponse, u64)> {
     let (caller, myself, binary) = run_special_cellpacks(&mut context, cellpack)?;
     println!(
         "running special cellpack, caller: {:?}, myself: {:?}",

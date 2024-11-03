@@ -1,5 +1,5 @@
 use crate::rune_transfer::RuneTransfer;
-use anyhow::{Result};
+use anyhow::Result;
 #[allow(unused_imports)]
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
@@ -123,7 +123,7 @@ impl BalanceSheet {
         for (rune, balance) in &sheet.balances {
             let mut amount = *balance;
             if sheet.get(&rune) > self.get(&rune) {
-              amount = self.get(&rune);
+                amount = self.get(&rune);
             }
             self.decrease(rune, amount);
         }

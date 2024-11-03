@@ -73,7 +73,11 @@ impl AlkanesInstance {
             .atomic
             .rollback();
     }
-    pub fn from_alkane(context: AlkanesRuntimeContext, binary: Arc<Vec<u8>>, start_fuel: u64) -> Result<Self> {
+    pub fn from_alkane(
+        context: AlkanesRuntimeContext,
+        binary: Arc<Vec<u8>>,
+        start_fuel: u64,
+    ) -> Result<Self> {
         /*
         let binary = context
             .message
@@ -187,13 +191,13 @@ impl AlkanesInstance {
             },
         )?;
         linker.func_wrap(
-             "env",
-             "__height",
-             |mut caller: Caller<'_, AlkanesState>, output: i32| {
+            "env",
+            "__height",
+            |mut caller: Caller<'_, AlkanesState>, output: i32| {
                 if let Err(_e) = AlkanesHostFunctionsImpl::height(&mut caller, output) {
                     AlkanesHostFunctionsImpl::_abort(caller);
                 }
-             }
+            },
         )?;
 
         linker.func_wrap(

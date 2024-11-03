@@ -10,14 +10,16 @@ impl AlkaneResponder for LoggerAlkane {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
         if context.inputs.len() > 0 && context.inputs[0] == 78 {
-          let mut data = vec![0x01, 0x02];
-          loop {
-            let mut hasher = Sha256::new();
-            hasher.update(&data);
-            let buffer = hasher.finalize();
-            data.extend(&buffer);
-            if !"1".is_ascii() { break; }
-          }
+            let mut data = vec![0x01, 0x02];
+            loop {
+                let mut hasher = Sha256::new();
+                hasher.update(&data);
+                let buffer = hasher.finalize();
+                data.extend(&buffer);
+                if !"1".is_ascii() {
+                    break;
+                }
+            }
         }
         if context.inputs.len() > 0 && context.inputs[0] == 1 {
             let cellpack = Cellpack {

@@ -3,7 +3,7 @@ use alkanes_support::{
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
     response::CallResponse,
-    utils::{shift, overflow_error}
+    utils::{overflow_error, shift},
 };
 use anyhow::{anyhow, Result};
 use metashrew_support::{
