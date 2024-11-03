@@ -56,7 +56,11 @@ pub fn run_special_cellpacks(
             block: 2,
             tx: next_sequence,
         };
-        let mut pointer = context.message.atomic.keyword("/alkanes/").select(&payload.target.clone().into());
+        let mut pointer = context
+            .message
+            .atomic
+            .keyword("/alkanes/")
+            .select(&payload.target.clone().into());
         pointer.set(wasm_payload.clone());
         binary = wasm_payload.clone();
         next_sequence_pointer.set_value(next_sequence + 1);
@@ -108,7 +112,11 @@ pub fn run_special_cellpacks(
             .set(rc.clone());
         binary = rc.clone();
     }
-    Ok((context.myself.clone(), payload.target.clone(), binary.clone()))
+    Ok((
+        context.myself.clone(),
+        payload.target.clone(),
+        binary.clone(),
+    ))
 }
 
 #[derive(Clone, Default, Debug)]

@@ -4,11 +4,13 @@ mod tests {
     use alkanes_support::cellpack::Cellpack;
     use alkanes_support::id::AlkaneId;
     use anyhow::Result;
+    use metashrew_support::{index_pointer::KeyValuePointer, utils::format_key};
     use protorune::Protorune;
 
     use crate::tests::helpers as alkane_helpers;
     use crate::tests::std::alkanes_std_owned_token_build;
-    use metashrew::clear;
+    use metashrew::{clear, get_cache, index_pointer::IndexPointer, println, stdio::stdout};
+    use std::fmt::Write;
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::message::AlkaneMessageContext;
@@ -82,8 +84,10 @@ mod tests {
     #[wasm_bindgen_test]
     async fn test_base_std_functionality() -> Result<()> {
         clear();
+        let test_target = AlkaneId { block: 1, tx: 0 };
+        let test_stored_target = AlkaneId { block: 2, tx: 0 };
         let input_cellpack = Cellpack {
-            target: AlkaneId { block: 1, tx: 0 },
+            target: test_target,
             inputs: vec![
                 123456789123456789123456789u128,
                 987654321987654321987654321u128,
@@ -93,6 +97,12 @@ mod tests {
         let test_block = alkane_helpers::init_test_with_cellpack(input_cellpack);
 
         Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840000 as u64)?;
+        assert_eq!(
+            IndexPointer::from_keyword("/alkanes/")
+                .select(&test_stored_target.clone().into())
+                .get(),
+            alkanes_std_test_build::get_bytes().into()
+        );
 
         Ok(())
     }

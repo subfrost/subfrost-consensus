@@ -9,6 +9,7 @@ impl AlkaneResponder for LoggerAlkane {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
         if context.inputs.len() > 0 && context.inputs[0] == 1 {
+            println!("Trying to refund");
             let cellpack = Cellpack {
                 target: context.myself,
                 inputs: vec![],
