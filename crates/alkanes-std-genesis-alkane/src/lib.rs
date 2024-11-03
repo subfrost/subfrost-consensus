@@ -121,6 +121,6 @@ impl AlkaneResponder for GenesisAlkane {
 
 #[no_mangle]
 pub extern "C" fn __execute() -> i32 {
-    let mut response = to_arraybuffer_layout(&GenesisAlkane::default().run());
-    to_passback_ptr(&mut response)
+    let response: &'static mut Vec<u8> = Box::leak(Box::new(to_arraybuffer_layout(&GenesisAlkane::default().run())));
+    to_passback_ptr(response)
 }
