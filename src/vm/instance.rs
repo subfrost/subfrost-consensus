@@ -8,7 +8,6 @@ use metashrew::{
     println,
     stdio::{stdout, Write},
 };
-use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::{Arc, Mutex};
 use wasmi::*;
 

@@ -1,12 +1,10 @@
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
 use crate::vm::{
     fuel::start_fuel,
-    instance::AlkanesInstance,
     runtime::AlkanesRuntimeContext,
     utils::{prepare_context, run_after_special, run_special_cellpacks},
 };
 use alkanes_support::cellpack::Cellpack;
-use alkanes_support::id::AlkaneId;
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
 use metashrew::{println, stdio::stdout};

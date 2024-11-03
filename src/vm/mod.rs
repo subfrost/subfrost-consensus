@@ -11,7 +11,6 @@ pub mod utils;
 use self::constants::*;
 use self::exports::*;
 use self::extcall::*;
-use self::fuel::*;
 use self::host_functions::*;
 use self::instance::*;
 use self::runtime::*;

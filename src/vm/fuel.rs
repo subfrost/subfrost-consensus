@@ -1,5 +1,4 @@
 const TOTAL_FUEL: u64 = 100_000_000;
-use std::fmt::Write;
 
 static mut MESSAGE_COUNT: u64 = 0;
 
