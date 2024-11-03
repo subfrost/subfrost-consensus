@@ -15,6 +15,16 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::message::AlkaneMessageContext;
+    pub fn print_cache() {
+        let cache = get_cache();
+
+        for (key, value) in cache.iter() {
+            let formatted_key = format_key(key);
+            let formatted_value = format_key(value);
+
+            println!("{}: {}", formatted_key, formatted_value.len());
+        }
+    }
 
     #[wasm_bindgen_test]
     fn test_extcall() -> Result<()> {
@@ -95,7 +105,11 @@ mod tests {
 
         let test_cellpacks = [Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
-            inputs: vec![0, 1, 1000],
+            inputs: vec![
+                0,    /* opcode (to init new auth token) */
+                1,    /* auth_token units */
+                1000, /* owned_token token_units */
+            ],
         }];
 
         let mut test_block = alkane_helpers::init_with_multiple_cellpacks(
@@ -116,6 +130,33 @@ mod tests {
         test_block.txdata = vec![auth_block.txdata[1].clone(), test_block.txdata[1].clone()];
 
         index_block(&test_block, block_height)?;
+
+        let auth_token_id_factory = AlkaneId {
+            block: 4,
+            tx: 0xffee,
+        };
+
+        let auth_token_id_deployment = AlkaneId { block: 2, tx: 1 };
+        let owned_token_id = AlkaneId { block: 2, tx: 0 };
+
+        assert_eq!(
+            IndexPointer::from_keyword("/alkanes/")
+                .select(&owned_token_id.into())
+                .get(),
+            alkanes_std_owned_token_build::get_bytes().into()
+        );
+        assert_eq!(
+            IndexPointer::from_keyword("/alkanes/")
+                .select(&auth_token_id_factory.into())
+                .get(),
+            alkanes_std_auth_token_build::get_bytes().into()
+        );
+        assert_eq!(
+            IndexPointer::from_keyword("/alkanes/")
+                .select(&auth_token_id_deployment.into())
+                .get(),
+            alkanes_std_auth_token_build::get_bytes().into()
+        );
 
         Ok(())
     }
@@ -138,7 +179,7 @@ mod tests {
         index_block(&test_block, 840000 as u32)?;
         assert_eq!(
             IndexPointer::from_keyword("/alkanes/")
-                .select(&test_stored_target.clone().into())
+                .select(&test_stored_target.into())
                 .get(),
             alkanes_std_test_build::get_bytes().into()
         );

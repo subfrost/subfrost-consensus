@@ -130,4 +130,7 @@ impl AtomicPointer {
             pointer: pointer.clone(),
         }
     }
+    pub fn get_pointer(&self) -> IndexPointer {
+        return self.pointer.clone();
+    }
 }

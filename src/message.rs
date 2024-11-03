@@ -3,9 +3,10 @@ use crate::vm::{
     fuel::{start_fuel},
     instance::AlkanesInstance,
     runtime::AlkanesRuntimeContext,
-    utils::{prepare_context, run_special_cellpacks, run_after_special},
+    utils::{prepare_context, run_after_special, run_special_cellpacks},
 };
 use alkanes_support::cellpack::Cellpack;
+use alkanes_support::id::AlkaneId;
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
 use metashrew::{println, stdio::stdout};
@@ -50,7 +51,10 @@ impl MessageContext for AlkaneMessageContext {
     fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
-            Err(e) => Err(e),
+            Err(e) => {
+                println!("Error: {:?}", e); // Print the error
+                Err(e) // Return the error
+            }
         }
     }
 }
