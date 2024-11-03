@@ -1,5 +1,6 @@
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
 use crate::vm::{
+    fuel::{start_fuel},
     instance::AlkanesInstance,
     runtime::AlkanesRuntimeContext,
     utils::{prepare_context, run_special_cellpacks, run_after_special},
@@ -21,8 +22,6 @@ pub struct AlkaneMessageContext(());
 
 // TODO: import MessageContextParcel
 
-const FUEL_LIMIT: u64 = 0x100000;
-
 pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
     let cellpack: Cellpack =
         decode_varint_list(&mut Cursor::new(parcel.calldata.clone()))?.try_into()?;
@@ -31,7 +30,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself, &parcel.runes);
     prepare_context(&mut context, &caller, &myself, false);
-    let response = run_after_special(context, binary, FUEL_LIMIT)?;
+    let response = run_after_special(context, binary, start_fuel())?;
     pipe_storagemap_to(
         &response.storage,
         &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),

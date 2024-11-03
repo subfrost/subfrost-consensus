@@ -9,6 +9,7 @@ mod tests {
 
     use crate::tests::helpers as alkane_helpers;
     use crate::tests::std::alkanes_std_owned_token_build;
+    use crate::{index_block};
     use metashrew::{clear, get_cache, index_pointer::IndexPointer, println, stdio::stdout};
     use std::fmt::Write;
     use wasm_bindgen_test::wasm_bindgen_test;
@@ -45,9 +46,47 @@ mod tests {
             test_cellpacks.to_vec(),
         );
 
-        Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64)?;
+        index_block(&test_block, block_height as u32)?;
         Ok(())
     }
+
+    /*
+    #[wasm_bindgen_test]
+    fn test_benchmark() -> Result<()> {
+        clear();
+        let block_height = 840_000;
+
+        let test_cellpacks = [
+            //create alkane
+            Cellpack {
+                target: AlkaneId { block: 1, tx: 0 },
+                inputs: vec![78],
+            },
+            /*
+            //create second alkane
+            Cellpack {
+                target: AlkaneId { block: 1, tx: 0 },
+                inputs: vec![0],
+            },
+            //target second alkane to be called with custom opcode
+            Cellpack {
+                target: AlkaneId { block: 2, tx: 0 },
+                inputs: vec![1, 1],
+            },
+            */
+        ];
+
+        let start = metashrew::imports::__now();
+        let test_block = alkane_helpers::init_with_multiple_cellpacks(
+            alkanes_std_test_build::get_bytes(),
+            test_cellpacks.to_vec(),
+        );
+
+        index_block(&test_block, block_height as u32)?;
+        println!("time: {}ms", metashrew::imports::__now() - start);
+        Ok(())
+    }
+*/
 
     #[wasm_bindgen_test]
     fn test_auth_token() -> Result<()> {
@@ -76,7 +115,7 @@ mod tests {
         );
         test_block.txdata = vec![auth_block.txdata[1].clone(), test_block.txdata[1].clone()];
 
-        Protorune::index_block::<AlkaneMessageContext>(test_block, block_height as u64)?;
+        index_block(&test_block, block_height)?;
 
         Ok(())
     }
@@ -96,7 +135,7 @@ mod tests {
 
         let test_block = alkane_helpers::init_test_with_cellpack(input_cellpack);
 
-        Protorune::index_block::<AlkaneMessageContext>(test_block.clone(), 840000 as u64)?;
+        index_block(&test_block, 840000 as u32)?;
         assert_eq!(
             IndexPointer::from_keyword("/alkanes/")
                 .select(&test_stored_target.clone().into())

@@ -58,7 +58,7 @@ pub fn create_multiple_cellpack_with_witness(
         .unwrap(),
         vout: 0,
     };
-    let protocol_id = 122;
+    let protocol_id = 1;
     let input_script = ScriptBuf::new();
     let txin = TxIn {
         previous_output,

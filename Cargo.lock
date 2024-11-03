@@ -217,6 +217,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "metashrew-support",
+ "sha2",
 ]
 
 [[package]]

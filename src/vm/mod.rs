@@ -6,7 +6,9 @@ pub mod instance;
 pub mod runtime;
 pub mod state;
 pub mod utils;
+pub mod fuel;
 
+use self::fuel::*;
 use self::constants::*;
 use self::exports::*;
 use self::extcall::*;
