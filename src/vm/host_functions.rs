@@ -234,7 +234,7 @@ impl AlkanesHostFunctionsImpl {
         checkpoint_ptr: i32,
         start_fuel: u64,
     ) -> Result<i32> {
-        let (cellpack, incoming_alkanes, storage_map) = {
+        let (cellpack, incoming_alkanes, storage_map, storage_map_len) = {
           let mem = get_memory(caller)?;
           let data = mem.data(&caller);
           let buffer = read_arraybuffer(data, cellpack_ptr)?;
@@ -243,9 +243,11 @@ impl AlkanesHostFunctionsImpl {
           let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
           let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
           println!("got incoming alkanes");
+          let storage_map_buffer = read_arraybuffer(data, checkpoint_ptr)?;
+          let storage_map_len = storage_map_buffer.len();
           let storage_map =
-            StorageMap::parse(&mut Cursor::new(read_arraybuffer(data, checkpoint_ptr)?))?;
-          (cellpack, incoming_alkanes, storage_map)
+            StorageMap::parse(&mut Cursor::new(storage_map_buffer))?;
+          (cellpack, incoming_alkanes, storage_map, storage_map_len as u64)
         };
         let (subcontext, binary_rc) = {
             let mut context = caller.data_mut().context.lock().unwrap();
@@ -283,7 +285,7 @@ impl AlkanesHostFunctionsImpl {
             "about to enter subcontext: {:#?} with cellpack: {:#?}",
             subcontext, cellpack
         );
-        consume_fuel(caller, FUEL_EXTCALL)?;
+        consume_fuel(caller, overflow_error(FUEL_EXTCALL.checked_add(overflow_error(FUEL_PER_STORE_BYTE.checked_mul(storage_map_len))?))?)?;
         run_after_special(subcontext.clone(), binary_rc, start_fuel)
             .and_then(|(response, gas_used)| {
                 println!("gas used: {}", gas_used);
