@@ -20,21 +20,17 @@ use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::utils::consensus_encode;
 use std::io::Cursor;
 use wasmi::*;
-
-pub fn consume_fuel<'a>(caller: &mut Caller<'_, AlkanesState>, n: u64) -> Result<()> {
-  let start = caller.get_fuel().unwrap();
-  caller.set_fuel(overflow_error(start.checked_sub(n))?).unwrap();
-  Ok(())
-}
-
-pub const FUEL_PER_REQUEST_BYTE: u64 = 1;
-pub const FUEL_PER_LOAD_BYTE: u64 = 2;
-pub const FUEL_PER_STORE_BYTE: u64 = 8;
-pub const FUEL_SEQUENCE: u64 = 5;
-pub const FUEL_FUEL: u64 = 5;
-pub const FUEL_EXTCALL: u64 = 500;
-pub const FUEL_HEIGHT: u64 = 10;
-pub const FUEL_BALANCE: u64 = 10;
+use crate::vm::fuel::{
+  FUEL_PER_REQUEST_BYTE,
+  FUEL_PER_LOAD_BYTE,
+  FUEL_PER_STORE_BYTE,
+  FUEL_SEQUENCE,
+  FUEL_FUEL,
+  FUEL_EXTCALL,
+  FUEL_HEIGHT,
+  FUEL_BALANCE,
+  consume_fuel
+};
 
 pub struct AlkanesHostFunctionsImpl(());
 impl AlkanesHostFunctionsImpl {

@@ -1,5 +1,6 @@
 use super::{AlkanesInstance, AlkanesRuntimeContext, AlkanesState};
 use crate::utils::{pipe_storagemap_to, transfer_from};
+use crate::vm::fuel::{compute_extcall_fuel};
 use alkanes_support::{
     cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::ExtendedCallResponse,
     storage::StorageMap, utils::overflow_error, witness::find_witness_payload,
@@ -184,7 +185,10 @@ pub fn run_after_special(
 ) -> Result<(ExtendedCallResponse, u64)> {
     let mut instance = AlkanesInstance::from_alkane(context, binary.clone(), start_fuel)?;
     let response = instance.execute()?;
-    let fuel_used = overflow_error(start_fuel.checked_sub(instance.store.get_fuel().unwrap()))?;
+    let storage_len = response.storage.serialize().len() as u64;
+    let fuel_used = overflow_error(start_fuel.checked_sub(instance.store.get_fuel().unwrap()).and_then(|v: u64| -> Option<u64> {
+      v.checked_add(compute_extcall_fuel(storage_len).ok()?)
+    }))?;
     Ok((response, fuel_used))
 }
 

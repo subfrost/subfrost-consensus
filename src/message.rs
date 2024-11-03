@@ -21,6 +21,7 @@ pub struct AlkaneMessageContext(());
 
 // TODO: import MessageContextParcel
 
+
 pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
     let cellpack: Cellpack =
         decode_varint_list(&mut Cursor::new(parcel.calldata.clone()))?.try_into()?;
@@ -39,6 +40,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
     combined.debit(&sheet)?;
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
+
     Ok((response.alkanes.into(), combined))
 }
 
