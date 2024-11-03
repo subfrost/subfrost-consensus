@@ -17,10 +17,10 @@ pub struct GenesisAlkane(());
 
 impl Token for GenesisAlkane {
     fn name(&self) -> String {
-        String::from("HEXANE")
+        String::from("{TBD}")
     }
     fn symbol(&self) -> String {
-        String::from("HEX")
+        String::from("{TBD}")
     }
 }
 
