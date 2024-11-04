@@ -1,61 +1,73 @@
-use anyhow::{ Result, anyhow };
-use bitcoin::OutPoint;
-use metashrew_support::index_pointer::KeyValuePointer;
-use ::protorune::balance_sheet;
-use ::protorune::{ balance_sheet::load_sheet, tables, message::MessageContextParcel };
-use ::protorune::view::{ outpoint_to_bytes, core_outpoint_to_proto };
-use ::protorune::proto::protorune::{ self, OutpointResponse, Output };
-use protorune_support::balance_sheet::{ BalanceSheet };
-use protobuf::{ MessageField, SpecialFields, Message };
-use crate::proto::alkanes::{
-    AlkaneInventoryResponse,
-    AlkaneInventoryRequest,
-    AlkaneTransfer,
-    AlkaneId,
-};
+use crate::proto;
+use crate::proto::alkanes::{AlkaneInventoryRequest, AlkaneInventoryResponse};
 use crate::utils::{
-    alkane_inventory_pointer,
-    balance_pointer,
-    credit_balances,
-    debit_balances,
-    pipe_storagemap_to,
+    alkane_inventory_pointer, balance_pointer, credit_balances, debit_balances, pipe_storagemap_to,
+    u128_from_bytes,
 };
 use crate::vm::runtime::AlkanesRuntimeContext;
-use crate::vm::utils::{ prepare_context, run_after_special, run_special_cellpacks };
+use crate::vm::utils::{prepare_context, run_after_special, run_special_cellpacks};
 use alkanes_support::cellpack::Cellpack;
+use alkanes_support::id::AlkaneId;
+use alkanes_support::parcel::AlkaneTransfer;
 use alkanes_support::response::ExtendedCallResponse;
-use metashrew::index_pointer::{ AtomicPointer, IndexPointer };
+use anyhow::Result;
+use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+use metashrew_support::index_pointer::KeyValuePointer;
+use protobuf::MessageField;
+use protorune::message::MessageContextParcel;
+use protorune_support::balance_sheet::BalanceSheet;
 use protorune_support::rune_transfer::RuneTransfer;
 use protorune_support::utils::decode_varint_list;
-use std::io::{ Cursor, Read };
+use std::io::Cursor;
 
-fn alkane_inventory(req: &AlkaneInventoryRequest) -> Result<AlkaneInventoryResponse> {
-    let mut res: AlkaneInventoryResponse = AlkaneInventoryResponse::new();
-    let mut pointer: AtomicPointer = AtomicPointer::default().derive(&IndexPointer::default());
+impl Into<AlkaneId> for proto::alkanes::AlkaneId {
+    fn into(self) -> AlkaneId {
+        AlkaneId {
+            block: u128_from_bytes(self.block),
+            tx: u128_from_bytes(self.tx),
+        }
+    }
+}
 
-    let alkane_inventory = alkane_inventory_pointer(&req.id.unwrap().into());
-    let alkanes_held = alkane_inventory
+impl Into<proto::alkanes::AlkaneTransfer> for AlkaneTransfer {
+    fn into(self) -> proto::alkanes::AlkaneTransfer {
+        let mut result = proto::alkanes::AlkaneTransfer::new();
+        result.id = MessageField::some(self.id.into());
+        result.value = self.value.to_le_bytes().to_vec();
+        result
+    }
+}
+
+pub fn alkane_inventory(req: &AlkaneInventoryRequest) -> Result<AlkaneInventoryResponse> {
+    let mut result: AlkaneInventoryResponse = AlkaneInventoryResponse::new();
+    let alkane_inventory = alkane_inventory_pointer(&req.id.clone().unwrap().into());
+    result.alkanes = alkane_inventory
         .get_list()
-        .iter()
-        .map(|&alkane_held| {
-            let id = &alkanes_support::id::AlkaneId
-                ::parse(&mut Cursor::new((&alkane_held).to_vec()))
-                .unwrap();
-            let balance_pointer = balance_pointer(&mut pointer, req_id, id);
+        .into_iter()
+        .map(|alkane_held| -> proto::alkanes::AlkaneTransfer {
+            let id = alkanes_support::id::AlkaneId::parse(&mut Cursor::new(
+                alkane_held.as_ref().clone(),
+            ))
+            .unwrap();
+            let balance_pointer = balance_pointer(
+                &mut AtomicPointer::default(),
+                &req.id.clone().unwrap().into(),
+                &id,
+            );
             let balance = balance_pointer.get_value::<u128>();
-            res.alkanes.push(AlkaneTransfer {
-                id: id.into(),
+            (AlkaneTransfer {
+                id: id,
                 value: balance,
-                special_fields: SpecialFields::new(),
             })
-        });
-    Ok(res)
+            .into()
+        })
+        .collect::<Vec<proto::alkanes::AlkaneTransfer>>();
+    Ok(result)
 }
 
 pub fn simulate_parcel(parcel: &MessageContextParcel) -> Result<(ExtendedCallResponse, u64)> {
-    let cellpack: Cellpack = decode_varint_list(
-        &mut Cursor::new(parcel.calldata.clone())
-    )?.try_into()?;
+    let cellpack: Cellpack =
+        decode_varint_list(&mut Cursor::new(parcel.calldata.clone()))?.try_into()?;
     let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
     let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
@@ -64,7 +76,7 @@ pub fn simulate_parcel(parcel: &MessageContextParcel) -> Result<(ExtendedCallRes
     let (response, gas_used) = run_after_special(context, binary, u64::MAX)?;
     pipe_storagemap_to(
         &response.storage,
-        &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into()))
+        &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),
     );
     let mut combined = parcel.runtime_balances.as_ref().clone();
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);

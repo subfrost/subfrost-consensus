@@ -1,22 +1,22 @@
 use crate::message::AlkaneMessageContext;
 use crate::utils::u128_from_bytes;
 use crate::view::simulate_parcel;
+use alkanes_support::id::AlkaneId;
 use alkanes_support::response::ExtendedCallResponse;
 use anyhow::Result;
 use bitcoin::blockdata::block::Block;
 use bitcoin::blockdata::transaction::Transaction;
 use bitcoin::consensus::Decodable;
-use metashrew::{ flush, input };
-use metashrew_support::compat::{ to_arraybuffer_layout, to_passback_ptr };
-use ordinals::{ Artifact, Runestone };
-use protobuf::{ Message, MessageField, SpecialFields };
+use metashrew::{flush, input};
+use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
+use ordinals::{Artifact, Runestone};
+use protobuf::{Message, MessageField, SpecialFields};
 use protorune::message::MessageContextParcel;
-use protorune::{ message::MessageContext, Protorune };
+use protorune::{message::MessageContext, Protorune};
 use protorune_support::balance_sheet::ProtoruneRuneId;
 use protorune_support::protostone::Protostone;
 use protorune_support::rune_transfer::RuneTransfer;
 use protorune_support::utils::consensus_decode;
-use alkanes_support::id::{ AlkaneId };
 use std::io::Cursor;
 pub mod message;
 pub mod proto;
@@ -34,9 +34,8 @@ pub fn count_alkanes_protomessages(block: &Block) {
         if let Some(Artifact::Runestone(ref runestone)) = Runestone::decipher(tx) {
             if let Ok(protostones) = Protostone::from_runestone(runestone) {
                 for protostone in protostones {
-                    if
-                        protostone.protocol_tag == AlkaneMessageContext::protocol_tag() &&
-                        protostone.message.len() != 0
+                    if protostone.protocol_tag == AlkaneMessageContext::protocol_tag()
+                        && protostone.message.len() != 0
                     {
                         count = count + 1;
                     }
@@ -58,12 +57,12 @@ impl Into<MessageContextParcel> for proto::alkanes::MessageContextParcel {
         let mut result = MessageContextParcel::default();
         result.height = self.height;
         result.block = consensus_decode::<Block>(&mut Cursor::new(self.block)).unwrap();
-        result.transaction = consensus_decode::<Transaction>(
-            &mut Cursor::new(self.transaction)
-        ).unwrap();
+        result.transaction =
+            consensus_decode::<Transaction>(&mut Cursor::new(self.transaction)).unwrap();
         result.vout = self.vout;
         result.calldata = self.calldata;
-        result.runes = self.alkanes
+        result.runes = self
+            .alkanes
             .into_iter()
             .map(|v| RuneTransfer {
                 id: ProtoruneRuneId {
@@ -81,8 +80,11 @@ impl Into<MessageContextParcel> for proto::alkanes::MessageContextParcel {
 
 impl Into<proto::alkanes::ExtendedCallResponse> for ExtendedCallResponse {
     fn into(self) -> proto::alkanes::ExtendedCallResponse {
-        let mut result: proto::alkanes::ExtendedCallResponse = proto::alkanes::ExtendedCallResponse::new();
-        result.storage = self.storage.0
+        let mut result: proto::alkanes::ExtendedCallResponse =
+            proto::alkanes::ExtendedCallResponse::new();
+        result.storage = self
+            .storage
+            .0
             .into_iter()
             .map(|(key, value)| proto::alkanes::KeyValuePair {
                 key,
@@ -91,7 +93,9 @@ impl Into<proto::alkanes::ExtendedCallResponse> for ExtendedCallResponse {
             })
             .collect::<Vec<proto::alkanes::KeyValuePair>>();
         result.data = self.data;
-        result.alkanes = self.alkanes.0
+        result.alkanes = self
+            .alkanes
+            .0
             .into_iter()
             .map(|v| proto::alkanes::AlkaneTransfer {
                 id: MessageField::some(proto::alkanes::AlkaneId {
@@ -121,10 +125,11 @@ impl Into<proto::alkanes::AlkaneId> for AlkaneId {
 impl Into<proto::alkanes::AlkaneInventoryRequest> for AlkaneId {
     fn into(self) -> proto::alkanes::AlkaneInventoryRequest {
         proto::alkanes::AlkaneInventoryRequest {
-            id: {
-                self.block.to_le_bytes().to_vec();
-                self.tx.to_be_bytes().to_vec()
-            },
+            id: MessageField::some(proto::alkanes::AlkaneId {
+                block: self.block.to_le_bytes().to_vec(),
+                tx: self.tx.to_le_bytes().to_vec(),
+                special_fields: SpecialFields::new(),
+            }),
             special_fields: SpecialFields::new(),
         }
     }
@@ -137,11 +142,16 @@ pub fn simulate() -> i32 {
     let reader = &data[4..];
     let mut result: proto::alkanes::SimulateResponse = proto::alkanes::SimulateResponse::new();
     let (response, gas_used) = simulate_parcel(
-        &proto::alkanes::MessageContextParcel::parse_from_bytes(reader).unwrap().into()
-    ).unwrap();
+        &proto::alkanes::MessageContextParcel::parse_from_bytes(reader)
+            .unwrap()
+            .into(),
+    )
+    .unwrap();
     result.execution = MessageField::some(response.into());
     result.gas_used = gas_used;
-    to_passback_ptr(&mut to_arraybuffer_layout::<&[u8]>(result.write_to_bytes().unwrap().as_ref()))
+    to_passback_ptr(&mut to_arraybuffer_layout::<&[u8]>(
+        result.write_to_bytes().unwrap().as_ref(),
+    ))
 }
 
 // #[no_mangle]
