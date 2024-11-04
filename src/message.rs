@@ -1,6 +1,10 @@
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
-use crate::vm;
-use alkanes_support::{cellpack::Cellpack, utils::overflow_error};
+use crate::vm::{
+    fuel::start_fuel,
+    runtime::AlkanesRuntimeContext,
+    utils::{prepare_context, run_after_special, run_special_cellpacks},
+};
+use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
 use metashrew::{println, stdio::stdout};
@@ -17,24 +21,15 @@ pub struct AlkaneMessageContext(());
 
 // TODO: import MessageContextParcel
 
-const FUEL_LIMIT: u64 = 0x100000;
-
 pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
     let cellpack: Cellpack =
         decode_varint_list(&mut Cursor::new(parcel.calldata.clone()))?.try_into()?;
-    let mut context = vm::AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
+    let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
-    let (caller, myself) = vm::run_special_cellpacks(&mut context, &cellpack)?;
+    let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself, &parcel.runes);
-    vm::prepare_context(&mut context, &caller, &myself, false);
-    let response = vm::AlkanesInstance::from_alkane(context, FUEL_LIMIT)
-        .inspect_err(|e| {
-            println!("error in from_alkane {:?}", e);
-        })?
-        .execute()
-        .inspect_err(|e| {
-            println!("error in execute {:?}", e);
-        })?;
+    prepare_context(&mut context, &caller, &myself, false);
+    let (response, _gas_used) = run_after_special(context, binary, start_fuel())?;
     pipe_storagemap_to(
         &response.storage,
         &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),
@@ -44,6 +39,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
     combined.debit(&sheet)?;
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
+
     Ok((response.alkanes.into(), combined))
 }
 
@@ -54,7 +50,10 @@ impl MessageContext for AlkaneMessageContext {
     fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
-            Err(e) => Err(e),
+            Err(e) => {
+                println!("Error: {:?}", e); // Print the error
+                Err(e) // Return the error
+            }
         }
     }
 }

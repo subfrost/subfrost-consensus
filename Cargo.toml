@@ -17,6 +17,8 @@ members = [".", "crates/*"]
 test = []
 proxy = ["test"]
 owned_token = ["test"]
+auth_token = ["owned_token"]
+genesis = []
 
 [dependencies]
 anyhow = "1.0.90"
@@ -43,7 +45,7 @@ hex_lit = "0.1.1"
 [dev-dependencies]
 metashrew = { path = "crates/metashrew", features = ["mock"] }
 protorune = { path = "crates/protorune", features = ["test_utils"] }
-alkanes = { path = ".", features = ["owned_token"] }
+alkanes = { path = ".", features = ["auth_token"] }
 
 [build-dependencies]
 anyhow = "1.0.90"

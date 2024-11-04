@@ -5,17 +5,13 @@ use alkanes_support::{
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
     response::CallResponse,
-    witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
-use bitcoin::blockdata::transaction::Transaction;
-use hex;
 use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr},
     index_pointer::KeyValuePointer,
     utils::consume_sized_int,
 };
-use protorune_support::utils::consensus_decode;
 use std::sync::Arc;
 
 #[derive(Default)]
@@ -59,7 +55,7 @@ impl AMMFactory {
             .keyword("/")
             .select(&b.clone().into())
     }
-    pub fn pull_incoming(&self, context: &mut Context) -> Option<AlkaneTransfer> {
+    pub fn _pull_incoming(&self, context: &mut Context) -> Option<AlkaneTransfer> {
         let i = context
             .incoming_alkanes
             .0
@@ -67,7 +63,7 @@ impl AMMFactory {
             .position(|v| v.id == context.myself)?;
         Some(context.incoming_alkanes.0.remove(i))
     }
-    pub fn only_owner(&self, v: Option<AlkaneTransfer>) -> Result<()> {
+    pub fn _only_owner(&self, v: Option<AlkaneTransfer>) -> Result<()> {
         if let Some(auth) = v {
             if auth.value < 1 {
                 Err(anyhow!(
@@ -86,7 +82,7 @@ impl AMMFactory {
 
 impl AlkaneResponder for AMMFactory {
     fn execute(&self) -> CallResponse {
-        let mut context = self.context().unwrap();
+        let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
         match shift(&mut inputs).unwrap() {
             0 => {

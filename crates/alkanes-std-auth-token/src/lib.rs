@@ -1,4 +1,10 @@
-use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer, token::Token};
+use alkanes_runtime::{
+    println,
+    runtime::AlkaneResponder,
+    stdio::{stdout, Write},
+    storage::StoragePointer,
+    token::Token,
+};
 use alkanes_support::utils::shift;
 use alkanes_support::{parcel::AlkaneTransfer, response::CallResponse};
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
@@ -25,6 +31,7 @@ impl AlkaneResponder for AuthToken {
             0 => {
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() == 0 {
+                    println!("creating authtoken with context: {:#?}", context);
                     let amount = shift(&mut inputs).unwrap();
                     let mut response: CallResponse = CallResponse::default();
                     response.alkanes = context.incoming_alkanes.clone();

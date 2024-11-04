@@ -25,7 +25,7 @@ pub fn shift_as_long(v: &mut Vec<u128>) -> Result<u64> {
     Ok(shift_or_err(v)?.try_into()?)
 }
 
-pub fn overflow_error(v: Option<u128>) -> Result<u128> {
+pub fn overflow_error<T>(v: Option<T>) -> Result<T> {
     v.ok_or("").map_err(|_| anyhow!("overflow error"))
 }
 

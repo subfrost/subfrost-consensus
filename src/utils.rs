@@ -1,14 +1,16 @@
 use alkanes_support::id::AlkaneId;
 use alkanes_support::parcel::AlkaneTransferParcel;
 use alkanes_support::storage::StorageMap;
-use alkanes_support::utils::{ overflow_error };
+use alkanes_support::utils::overflow_error;
 use anyhow::{ anyhow, Result };
-use metashrew::index_pointer::{ AtomicPointer, IndexPointer };
+use metashrew::{
+    index_pointer::{ AtomicPointer, IndexPointer },
+    println,
+    stdio::{ stdout, Write },
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::rune_transfer::RuneTransfer;
 use std::sync::Arc;
-use metashrew::{ println, stdio::{ stdout } };
-use std::fmt::{ Write };
 
 pub fn balance_pointer(
     atomic: &mut AtomicPointer,
@@ -39,6 +41,11 @@ pub fn alkane_inventory_pointer(atomic: &mut AtomicPointer, who: &AlkaneId) -> A
     ptr
 }
 
+pub fn u128_from_bytes(v: Vec<u8>) -> u128 {
+    let untyped: &[u8] = &v;
+    let bytes: [u8; 16] = untyped.try_into().unwrap();
+    u128::from_le_bytes(bytes)
+}
 pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<RuneTransfer>) {
     for rune in runes.clone() {
         balance_pointer(atomic, to, &rune.id.clone().into()).set_value::<u128>(rune.value);
@@ -66,6 +73,7 @@ pub fn transfer_from(
     to: &AlkaneId
 ) -> Result<()> {
     for transfer in &parcel.0 {
+        println!("transferring {:?} from {:?} to {:?}", transfer, from, to);
         let mut from_pointer = balance_pointer(
             atomic,
             &from.clone().into(),

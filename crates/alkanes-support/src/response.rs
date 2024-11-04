@@ -58,12 +58,12 @@ impl Into<ExtendedCallResponse> for CallResponse {
 }
 
 impl Into<CallResponse> for ExtendedCallResponse {
-  fn into(self) -> CallResponse {
-    CallResponse {
-      alkanes: self.alkanes,
-      data: self.data
+    fn into(self) -> CallResponse {
+        CallResponse {
+            alkanes: self.alkanes,
+            data: self.data,
+        }
     }
-  }
 }
 
 impl ExtendedCallResponse {

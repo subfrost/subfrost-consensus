@@ -1,46 +1,73 @@
 use anyhow::{ Result, anyhow };
 use bitcoin::OutPoint;
 use metashrew_support::index_pointer::KeyValuePointer;
-use ::protorune::{ balance_sheet::load_sheet, tables };
+use ::protorune::balance_sheet;
+use ::protorune::{ balance_sheet::load_sheet, tables, message::MessageContextParcel };
 use ::protorune::view::{ outpoint_to_bytes, core_outpoint_to_proto };
-use ::protorune::proto::protorune::{ self, OutpointResponse, Output, Outpoint };
-use protorune_support::balance_sheet::{ self, BalanceSheet };
+use ::protorune::proto::protorune::{ self, OutpointResponse, Output };
+use protorune_support::balance_sheet::{ BalanceSheet };
 use protobuf::{ MessageField, SpecialFields, Message };
+use crate::proto::alkanes::{ AlkaneInventoryResponse, AlkaneInventoryRequest, AlkaneTransfer };
+use crate::utils::{
+    alkane_inventory_pointer,
+    balance_pointer,
+    credit_balances,
+    debit_balances,
+    pipe_storagemap_to,
+};
+use crate::vm::runtime::AlkanesRuntimeContext;
+use crate::vm::utils::{ prepare_context, run_after_special, run_special_cellpacks };
+use alkanes_support::cellpack::Cellpack;
+use alkanes_support::response::ExtendedCallResponse;
+use metashrew::index_pointer::{ AtomicPointer, IndexPointer };
+use protorune_support::rune_transfer::RuneTransfer;
+use protorune_support::utils::decode_varint_list;
+use std::io::{ Cursor, Read };
 
-pub fn alkane_inventory_response(
-    outpoint: &OutPoint,
-    protocol_id: u128
-) -> Result<OutpointResponse> {
-    let outpoint_bytes = outpoint_to_bytes(outpoint)?;
-    let balance_sheet: BalanceSheet = load_sheet(
-        &tables::RuneTable::for_protocol(protocol_id).OUTPOINT_TO_RUNES.select(&outpoint_bytes)
+// fn alkane_inventory(req: &AlkaneInventoryRequest) -> Result<AlkaneInventoryResponse> {
+//     let mut res: AlkaneInventoryResponse = AlkaneInventoryResponse::new();
+//     let pointer: AtomicPointer = AtomicPointer::default().derive(&IndexPointer::default());
+//     let req_id = req.id
+//         .as_ref()
+//         .ok_or_else(|| { anyhow::Error::msg("Missing Alkane ID in request") })?;
+
+//     let alkane_inventory = alkane_inventory_pointer(&mut pointer, req_id);
+//     let alkanes_held = alkane_inventory
+//         .get_list()
+//         .iter()
+//         .map(|&alkane_held| {
+//             let id = &alkanes_support::id::AlkaneId
+//                 ::parse(&mut Cursor::new((&alkane_held).to_vec()))
+//                 .unwrap();
+//             let balance_pointer = balance_pointer(&mut pointer, req_id, id);
+//             let balance = balance_pointer.get_value();
+//             res.alkanes.push(AlkaneTransfer {
+//                 id: alkane_held.into(),
+//                 value: balance,
+//                 special_fields: SpecialFields::new(),
+//             })
+//         });
+//     Ok(res)
+// }
+
+pub fn simulate_parcel(parcel: &MessageContextParcel) -> Result<(ExtendedCallResponse, u64)> {
+    let cellpack: Cellpack = decode_varint_list(
+        &mut Cursor::new(parcel.calldata.clone())
+    )?.try_into()?;
+    let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
+    let mut atomic = parcel.atomic.derive(&IndexPointer::default());
+    let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
+    credit_balances(&mut atomic, &myself, &parcel.runes);
+    prepare_context(&mut context, &caller, &myself, false);
+    let (response, gas_used) = run_after_special(context, binary, u64::MAX)?;
+    pipe_storagemap_to(
+        &response.storage,
+        &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into()))
     );
-
-    let mut height: u128 = tables::RUNES.OUTPOINT_TO_HEIGHT
-        .select(&outpoint_bytes)
-        .get_value::<u64>()
-        .into();
-    let mut txindex: u128 = tables::RUNES.HEIGHT_TO_TRANSACTION_IDS
-        .select_value::<u64>(height as u64)
-        .get_list()
-        .into_iter()
-        .position(|v| v.as_ref().to_vec() == outpoint.txid.as_byte_array().to_vec())
-        .ok_or("")
-        .map_err(|_| anyhow!("txid not indexed in table"))? as u128;
-
-    if let Some((rune_id, _)) = balance_sheet.clone().balances.iter().next() {
-        height = rune_id.block;
-        txindex = rune_id.tx;
-    }
-    let decoded_output: Output = Output::parse_from_bytes(
-        &tables::OUTPOINT_TO_OUTPUT.select(&outpoint_bytes).get().as_ref()
-    )?;
-    Ok(OutpointResponse {
-        balances: MessageField::some(balance_sheet.into()),
-        outpoint: MessageField::some(core_outpoint_to_proto(&outpoint)),
-        output: MessageField::some(decoded_output),
-        height: height as u32,
-        txindex: txindex as u32,
-        special_fields: SpecialFields::new(),
-    })
+    let mut combined = parcel.runtime_balances.as_ref().clone();
+    <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
+    let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
+    combined.debit(&sheet)?;
+    debit_balances(&mut atomic, &myself, &response.alkanes)?;
+    Ok((response, gas_used))
 }
