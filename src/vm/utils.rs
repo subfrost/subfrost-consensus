@@ -190,12 +190,13 @@ pub fn run_after_special(
         start_fuel
             .checked_sub(instance.store.get_fuel().unwrap())
             .and_then(|v: u64| -> Option<u64> {
-                v.checked_add(compute_extcall_fuel(storage_len).ok()?)
+                let computed_fuel = compute_extcall_fuel(storage_len).ok()?;
+                let opt = v.checked_add(computed_fuel);
+                opt
             }),
     )?;
     Ok((response, fuel_used))
 }
-
 pub fn prepare_context(
     context: &mut AlkanesRuntimeContext,
     caller: &AlkaneId,

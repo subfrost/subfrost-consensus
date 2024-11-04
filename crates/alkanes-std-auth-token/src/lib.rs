@@ -31,7 +31,6 @@ impl AlkaneResponder for AuthToken {
             0 => {
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() == 0 {
-                    println!("creating authtoken with context: {:#?}", context);
                     let amount = shift(&mut inputs).unwrap();
                     let mut response: CallResponse = CallResponse::default();
                     response.alkanes = context.incoming_alkanes.clone();

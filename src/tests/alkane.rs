@@ -103,19 +103,15 @@ mod tests {
         clear();
         let block_height = 840_000;
 
-        let test_cellpacks = [Cellpack {
+        let test_cellpack = Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
             inputs: vec![
                 0,    /* opcode (to init new auth token) */
                 1,    /* auth_token units */
                 1000, /* owned_token token_units */
             ],
-        }];
+        };
 
-        let mut test_block = alkane_helpers::init_with_multiple_cellpacks(
-            alkanes_std_owned_token_build::get_bytes(),
-            test_cellpacks.to_vec(),
-        );
         let auth_cellpack = Cellpack {
             target: AlkaneId {
                 block: 3,
@@ -123,14 +119,18 @@ mod tests {
             },
             inputs: vec![100],
         };
-        let auth_block = alkane_helpers::init_with_multiple_cellpacks(
-            alkanes_std_auth_token_build::get_bytes(),
-            vec![auth_cellpack],
+        let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
+            [
+                alkanes_std_auth_token_build::get_bytes(),
+                alkanes_std_owned_token_build::get_bytes(),
+            ]
+            .into(),
+            [auth_cellpack, test_cellpack].into(),
         );
-        test_block.txdata = vec![auth_block.txdata[1].clone(), test_block.txdata[1].clone()];
 
         index_block(&test_block, block_height)?;
 
+        println!("block indexed");
         let auth_token_id_factory = AlkaneId {
             block: 4,
             tx: 0xffee,

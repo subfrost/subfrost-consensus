@@ -30,6 +30,45 @@ pub fn init_test_with_cellpack(cellpack: Cellpack) -> Block {
     test_block
 }
 
+pub fn init_with_multiple_cellpacks_with_tx(
+    binaries: Vec<Vec<u8>>,
+    cellpacks: Vec<Cellpack>,
+) -> Block {
+    let block_height = 840000;
+    let mut test_block = create_block_with_coinbase_tx(block_height);
+    let mut previous_out: Option<OutPoint> = None;
+    let mut txs = binaries
+        .into_iter()
+        .zip(cellpacks.into_iter())
+        .map(|i| {
+            let (binary, cellpack) = i;
+            let raw_envelope = RawEnvelope::from(binary);
+            let witness = raw_envelope.to_witness();
+            if let Some(previous_output) = previous_out {
+                let tx = create_multiple_cellpack_with_witness_and_in(
+                    witness,
+                    [cellpack].into(),
+                    previous_output,
+                );
+                previous_out = Some(OutPoint {
+                    txid: tx.txid(),
+                    vout: 0,
+                });
+                tx
+            } else {
+                let tx = create_multiple_cellpack_with_witness(witness, [cellpack].into());
+                previous_out = Some(OutPoint {
+                    txid: tx.txid(),
+                    vout: 0,
+                });
+                tx
+            }
+        })
+        .collect::<Vec<Transaction>>();
+    test_block.txdata.append(&mut txs);
+    test_block
+}
+
 pub fn init_with_multiple_cellpacks(binary: Vec<u8>, cellpacks: Vec<Cellpack>) -> Block {
     let block_height = 840000;
 
@@ -43,21 +82,11 @@ pub fn init_with_multiple_cellpacks(binary: Vec<u8>, cellpacks: Vec<Cellpack>) -
     test_block
 }
 
-pub fn create_cellpack_with_witness(witness: Witness, cellpack: Cellpack) -> Transaction {
-    create_multiple_cellpack_with_witness(witness, [cellpack].into())
-}
-
-pub fn create_multiple_cellpack_with_witness(
+pub fn create_multiple_cellpack_with_witness_and_in(
     witness: Witness,
     cellpacks: Vec<Cellpack>,
+    previous_output: OutPoint,
 ) -> Transaction {
-    let previous_output = OutPoint {
-        txid: bitcoin::Txid::from_str(
-            "0000000000000000000000000000000000000000000000000000000000000000",
-        )
-        .unwrap(),
-        vout: 0,
-    };
     let protocol_id = 1;
     let input_script = ScriptBuf::new();
     let txin = TxIn {
@@ -131,4 +160,22 @@ pub fn create_multiple_cellpack_with_witness(
         input: vec![txin],
         output: vec![txout, op_return],
     }
+}
+
+pub fn create_cellpack_with_witness(witness: Witness, cellpack: Cellpack) -> Transaction {
+    create_multiple_cellpack_with_witness(witness, [cellpack].into())
+}
+
+pub fn create_multiple_cellpack_with_witness(
+    witness: Witness,
+    cellpacks: Vec<Cellpack>,
+) -> Transaction {
+    let previous_output = OutPoint {
+        txid: bitcoin::Txid::from_str(
+            "0000000000000000000000000000000000000000000000000000000000000000",
+        )
+        .unwrap(),
+        vout: 0,
+    };
+    create_multiple_cellpack_with_witness_and_in(witness, cellpacks, previous_output)
 }

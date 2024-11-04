@@ -50,7 +50,6 @@ pub trait Extcall {
             -1 => Err(anyhow!("call errored out")),
             _ => {
                 let call_result = _call_result as usize;
-                println!("call result size: {}", call_result);
                 let mut returndata = to_arraybuffer_layout(&vec![0; call_result]);
                 unsafe {
                     __returndatacopy(to_passback_ptr(&mut returndata));
