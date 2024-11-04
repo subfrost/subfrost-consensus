@@ -16,6 +16,7 @@ use protorune_support::balance_sheet::ProtoruneRuneId;
 use protorune_support::protostone::Protostone;
 use protorune_support::rune_transfer::RuneTransfer;
 use protorune_support::utils::consensus_decode;
+use alkanes_support::id::{AlkaneId};
 use std::io::Cursor;
 pub mod message;
 pub mod proto;
@@ -109,6 +110,16 @@ impl Into<proto::alkanes::ExtendedCallResponse> for ExtendedCallResponse {
 
         result
     }
+}
+
+impl Into<proto::alkanes::AlkaneId> for AlkaneId {
+  fn into(self) -> proto::alkanes::AlkaneId {
+    proto::alkanes::AlkaneId {
+      block: self.block.to_le_bytes().to_vec(),
+      tx: self.tx.to_le_bytes().to_vec(),
+      special_fields: SpecialFields::new()
+    }
+  }
 }
 
 #[no_mangle]
