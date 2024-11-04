@@ -28,6 +28,11 @@ pub fn balance_pointer(
     ptr
 }
 
+pub fn u128_from_bytes(v: Vec<u8>) -> u128 {
+    let untyped: &[u8] = &v;
+    let bytes: [u8; 16] = untyped.try_into().unwrap();
+    u128::from_le_bytes(bytes)
+}
 pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<RuneTransfer>) {
     for rune in runes.clone() {
         balance_pointer(atomic, to, &rune.id.clone().into()).set_value::<u128>(rune.value);
