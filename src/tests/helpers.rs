@@ -20,7 +20,7 @@ pub fn init_test_with_cellpack(cellpack: Cellpack) -> Block {
     let wasm_binary = alkanes_std_test_build::get_bytes();
     let raw_envelope = RawEnvelope::from(wasm_binary);
 
-    let witness = raw_envelope.to_witness();
+    let witness = raw_envelope.to_gzipped_witness();
 
     // Create a transaction input
 
@@ -36,7 +36,7 @@ pub fn init_with_multiple_cellpacks(binary: Vec<u8>, cellpacks: Vec<Cellpack>) -
     let mut test_block = create_block_with_coinbase_tx(block_height);
 
     let raw_envelope = RawEnvelope::from(binary);
-    let witness = raw_envelope.to_witness();
+    let witness = raw_envelope.to_gzipped_witness();
     test_block
         .txdata
         .push(create_multiple_cellpack_with_witness(witness, cellpacks));

@@ -16,3 +16,4 @@ protorune-support = { path = "../protorune-support" }
 metashrew-support = { path = "../metashrew-support" }
 bitcoin = { version = "0.30.1", features = ["rand"] }
 serde = "1.0.213"
+flate2 = "1.0.34"

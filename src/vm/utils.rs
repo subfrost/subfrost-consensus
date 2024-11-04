@@ -4,6 +4,7 @@ use crate::vm::fuel::compute_extcall_fuel;
 use alkanes_support::{
     cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::ExtendedCallResponse,
     storage::StorageMap, utils::overflow_error, witness::find_witness_payload,
+    gz::{decompress}
 };
 use anyhow::{anyhow, Result};
 use metashrew::{
@@ -63,7 +64,7 @@ pub fn run_special_cellpacks(
             .keyword("/alkanes/")
             .select(&payload.target.clone().into());
         pointer.set(wasm_payload.clone());
-        binary = wasm_payload.clone();
+        binary = Arc::new(decompress(wasm_payload.as_ref().clone())?);
         next_sequence_pointer.set_value(next_sequence + 1);
     } else if let Some(number) = cellpack.target.reserved() {
         let wasm_payload = Arc::new(
@@ -90,7 +91,7 @@ pub fn run_special_cellpacks(
                 number
             )));
         }
-        binary = wasm_payload.clone();
+        binary = Arc::new(decompress(wasm_payload.clone().as_ref().clone())?);
     } else if let Some(factory) = cellpack.target.factory() {
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
@@ -111,7 +112,7 @@ pub fn run_special_cellpacks(
             .keyword("/alkanes/")
             .select(&payload.target.clone().into())
             .set(rc.clone());
-        binary = rc.clone();
+        binary = Arc::new(decompress(rc.as_ref().clone())?);
     }
     Ok((
         context.myself.clone(),

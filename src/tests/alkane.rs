@@ -12,9 +12,17 @@ mod tests {
     use crate::tests::std::alkanes_std_owned_token_build;
     use metashrew::{clear, get_cache, index_pointer::IndexPointer, println, stdio::stdout};
     use std::fmt::Write;
+    use alkanes_support::gz::{decompress, compress};
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::message::AlkaneMessageContext;
+    #[wasm_bindgen_test]
+    pub fn test_compression() -> Result<()> {
+      let mut buffer = alkanes_std_test_build::get_bytes();
+      let compressed = compress(buffer.clone())?;
+      assert_eq!(decompress(compressed)?, buffer.clone());
+      Ok(())
+    }
     pub fn print_cache() {
         let cache = get_cache();
 
@@ -180,8 +188,8 @@ mod tests {
         assert_eq!(
             IndexPointer::from_keyword("/alkanes/")
                 .select(&test_stored_target.into())
-                .get(),
-            alkanes_std_test_build::get_bytes().into()
+                .get().as_ref().clone(),
+            compress(alkanes_std_test_build::get_bytes().into())?
         );
 
         Ok(())
