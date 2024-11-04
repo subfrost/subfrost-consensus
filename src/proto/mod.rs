@@ -1,3 +1,3 @@
 // @generated
 
-pub mod protorune;
+pub mod alkanes;

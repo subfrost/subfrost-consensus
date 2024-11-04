@@ -11,7 +11,7 @@ fn main() {
         .protoc()
         .protoc_path(&protoc_bin_vendored::protoc_bin_path().unwrap())
         .out_dir("src/proto")
-        .inputs(&["proto/protorune.proto"])
+        .inputs(&["proto/alkanes.proto"])
         .include("proto")
         .run()
         .expect("running protoc failed");

@@ -1,13 +1,12 @@
 use super::{
-    get_memory, read_arraybuffer, send_to_arraybuffer, sequence_pointer, AlkanesState,
-    Extcall, Saveable, SaveableExtendedCallResponse,
+    get_memory, read_arraybuffer, send_to_arraybuffer, sequence_pointer, AlkanesState, Extcall,
+    Saveable, SaveableExtendedCallResponse,
 };
 use crate::utils::{pipe_storagemap_to, transfer_from};
 use crate::vm::{run_after_special, run_special_cellpacks};
 use alkanes_support::{
     cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
-    storage::StorageMap,
-    utils::{overflow_error}
+    storage::StorageMap, utils::overflow_error,
 };
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
@@ -17,20 +16,13 @@ use metashrew::{
 };
 use metashrew_support::index_pointer::KeyValuePointer;
 
+use crate::vm::fuel::{
+    consume_fuel, FUEL_BALANCE, FUEL_EXTCALL, FUEL_FUEL, FUEL_HEIGHT, FUEL_PER_LOAD_BYTE,
+    FUEL_PER_REQUEST_BYTE, FUEL_PER_STORE_BYTE, FUEL_SEQUENCE,
+};
 use protorune_support::utils::consensus_encode;
 use std::io::Cursor;
 use wasmi::*;
-use crate::vm::fuel::{
-  FUEL_PER_REQUEST_BYTE,
-  FUEL_PER_LOAD_BYTE,
-  FUEL_PER_STORE_BYTE,
-  FUEL_SEQUENCE,
-  FUEL_FUEL,
-  FUEL_EXTCALL,
-  FUEL_HEIGHT,
-  FUEL_BALANCE,
-  consume_fuel
-};
 
 pub struct AlkanesHostFunctionsImpl(());
 impl AlkanesHostFunctionsImpl {
@@ -45,29 +37,32 @@ impl AlkanesHostFunctionsImpl {
         k: i32,
     ) -> Result<i32> {
         let (bytes_processed, result) = {
-          let mem = get_memory(caller)?;
-          let key = {
-              let data = mem.data(&caller);
-              read_arraybuffer(data, k)?
-          };
-          let myself = caller.data_mut().context.lock().unwrap().myself.clone();
-          let result: i32 = caller
-              .data_mut()
-              .context
-              .lock()
-              .unwrap()
-              .message
-              .atomic
-              .keyword("/alkanes/")
-              .select(&myself.into())
-              .keyword("/storage")
-              .select(&key)
-              .get()
-              .len()
-              .try_into()?;
-          ((result as u64) + (key.len() as u64), result)
+            let mem = get_memory(caller)?;
+            let key = {
+                let data = mem.data(&caller);
+                read_arraybuffer(data, k)?
+            };
+            let myself = caller.data_mut().context.lock().unwrap().myself.clone();
+            let result: i32 = caller
+                .data_mut()
+                .context
+                .lock()
+                .unwrap()
+                .message
+                .atomic
+                .keyword("/alkanes/")
+                .select(&myself.into())
+                .keyword("/storage")
+                .select(&key)
+                .get()
+                .len()
+                .try_into()?;
+            ((result as u64) + (key.len() as u64), result)
         };
-        consume_fuel(caller, overflow_error((bytes_processed as u64).checked_mul(FUEL_PER_REQUEST_BYTE))?)?;
+        consume_fuel(
+            caller,
+            overflow_error((bytes_processed as u64).checked_mul(FUEL_PER_REQUEST_BYTE))?,
+        )?;
         Ok(result)
     }
     pub(super) fn load_storage<'a>(
@@ -76,24 +71,27 @@ impl AlkanesHostFunctionsImpl {
         v: i32,
     ) -> Result<i32> {
         let (bytes_processed, value) = {
-          let mem = get_memory(caller)?;
-          let key = {
-              let data = mem.data(&caller);
-              read_arraybuffer(data, k)?
-          };
-          let value = {
-              let myself = caller.data_mut().context.lock().unwrap().myself.clone();
-              (&caller.data_mut().context.lock().unwrap().message)
-                  .atomic
-                  .keyword("/alkanes/")
-                  .select(&myself.into())
-                  .keyword("/storage")
-                  .select(&key)
-                  .get()
-           };
-           (key.len() + value.len(), value)
+            let mem = get_memory(caller)?;
+            let key = {
+                let data = mem.data(&caller);
+                read_arraybuffer(data, k)?
+            };
+            let value = {
+                let myself = caller.data_mut().context.lock().unwrap().myself.clone();
+                (&caller.data_mut().context.lock().unwrap().message)
+                    .atomic
+                    .keyword("/alkanes/")
+                    .select(&myself.into())
+                    .keyword("/storage")
+                    .select(&key)
+                    .get()
+            };
+            (key.len() + value.len(), value)
         };
-        consume_fuel(caller, overflow_error((bytes_processed as u64).checked_mul(FUEL_PER_LOAD_BYTE))?)?;
+        consume_fuel(
+            caller,
+            overflow_error((bytes_processed as u64).checked_mul(FUEL_PER_LOAD_BYTE))?,
+        )?;
         send_to_arraybuffer(caller, v.try_into()?, value.as_ref())
     }
     pub(super) fn request_context(caller: &mut Caller<'_, AlkanesState>) -> Result<i32> {
@@ -105,12 +103,18 @@ impl AlkanesHostFunctionsImpl {
             .serialize()
             .len()
             .try_into()?;
-        consume_fuel(caller, overflow_error((result as u64).checked_mul(FUEL_PER_REQUEST_BYTE))?)?;
+        consume_fuel(
+            caller,
+            overflow_error((result as u64).checked_mul(FUEL_PER_REQUEST_BYTE))?,
+        )?;
         Ok(result)
     }
     pub(super) fn load_context(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<i32> {
         let result: Vec<u8> = caller.data_mut().context.lock().unwrap().serialize();
-        consume_fuel(caller, overflow_error((result.len() as u64).checked_mul(FUEL_PER_LOAD_BYTE))?)?;
+        consume_fuel(
+            caller,
+            overflow_error((result.len() as u64).checked_mul(FUEL_PER_LOAD_BYTE))?,
+        )?;
         send_to_arraybuffer(caller, v.try_into()?, &result)
     }
     pub(super) fn request_transaction(caller: &mut Caller<'_, AlkanesState>) -> Result<i32> {
@@ -125,12 +129,18 @@ impl AlkanesHostFunctionsImpl {
         )?
         .len()
         .try_into()?;
-        consume_fuel(caller, overflow_error((result as u64).checked_mul(FUEL_PER_REQUEST_BYTE))?)?;
+        consume_fuel(
+            caller,
+            overflow_error((result as u64).checked_mul(FUEL_PER_REQUEST_BYTE))?,
+        )?;
         Ok(result)
     }
     pub(super) fn returndatacopy(caller: &mut Caller<'_, AlkanesState>, output: i32) -> Result<()> {
         let returndata: Vec<u8> = caller.data_mut().context.lock().unwrap().returndata.clone();
-        consume_fuel(caller, overflow_error((returndata.len() as u64).checked_mul(FUEL_PER_LOAD_BYTE))?)?;
+        consume_fuel(
+            caller,
+            overflow_error((returndata.len() as u64).checked_mul(FUEL_PER_LOAD_BYTE))?,
+        )?;
         send_to_arraybuffer(caller, output.try_into()?, &returndata)?;
         Ok(())
     }
@@ -144,20 +154,30 @@ impl AlkanesHostFunctionsImpl {
                 .message
                 .transaction,
         )?;
-        consume_fuel(caller, overflow_error((transaction.len() as u64).checked_mul(FUEL_PER_LOAD_BYTE))?)?;
+        consume_fuel(
+            caller,
+            overflow_error((transaction.len() as u64).checked_mul(FUEL_PER_LOAD_BYTE))?,
+        )?;
         send_to_arraybuffer(caller, v.try_into()?, &transaction)?;
         Ok(())
     }
     pub(super) fn request_block(caller: &mut Caller<'_, AlkanesState>) -> Result<i32> {
         let len: i32 = consensus_encode(&caller.data_mut().context.lock().unwrap().message.block)?
-                .len()
-                .try_into()?;
-        consume_fuel(caller, overflow_error((len as u64).checked_mul(FUEL_PER_REQUEST_BYTE))?)?;
+            .len()
+            .try_into()?;
+        consume_fuel(
+            caller,
+            overflow_error((len as u64).checked_mul(FUEL_PER_REQUEST_BYTE))?,
+        )?;
         Ok(len)
     }
     pub(super) fn load_block(caller: &mut Caller<'_, AlkanesState>, v: i32) -> Result<()> {
-        let block: Vec<u8> = consensus_encode(&caller.data_mut().context.lock().unwrap().message.block)?;
-        consume_fuel(caller, overflow_error((block.len() as u64).checked_mul(FUEL_PER_LOAD_BYTE))?)?;
+        let block: Vec<u8> =
+            consensus_encode(&caller.data_mut().context.lock().unwrap().message.block)?;
+        consume_fuel(
+            caller,
+            overflow_error((block.len() as u64).checked_mul(FUEL_PER_LOAD_BYTE))?,
+        )?;
         send_to_arraybuffer(caller, v.try_into()?, &block)?;
         Ok(())
     }
@@ -231,19 +251,23 @@ impl AlkanesHostFunctionsImpl {
         start_fuel: u64,
     ) -> Result<i32> {
         let (cellpack, incoming_alkanes, storage_map, storage_map_len) = {
-          let mem = get_memory(caller)?;
-          let data = mem.data(&caller);
-          let buffer = read_arraybuffer(data, cellpack_ptr)?;
-          let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
-          println!("got cellpack inside host call: {:?}", cellpack);
-          let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
-          let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
-          println!("got incoming alkanes");
-          let storage_map_buffer = read_arraybuffer(data, checkpoint_ptr)?;
-          let storage_map_len = storage_map_buffer.len();
-          let storage_map =
-            StorageMap::parse(&mut Cursor::new(storage_map_buffer))?;
-          (cellpack, incoming_alkanes, storage_map, storage_map_len as u64)
+            let mem = get_memory(caller)?;
+            let data = mem.data(&caller);
+            let buffer = read_arraybuffer(data, cellpack_ptr)?;
+            let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
+            println!("got cellpack inside host call: {:?}", cellpack);
+            let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
+            let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
+            println!("got incoming alkanes");
+            let storage_map_buffer = read_arraybuffer(data, checkpoint_ptr)?;
+            let storage_map_len = storage_map_buffer.len();
+            let storage_map = StorageMap::parse(&mut Cursor::new(storage_map_buffer))?;
+            (
+                cellpack,
+                incoming_alkanes,
+                storage_map,
+                storage_map_len as u64,
+            )
         };
         let (subcontext, binary_rc) = {
             let mut context = caller.data_mut().context.lock().unwrap();
@@ -281,7 +305,12 @@ impl AlkanesHostFunctionsImpl {
             "about to enter subcontext: {:#?} with cellpack: {:#?}",
             subcontext, cellpack
         );
-        consume_fuel(caller, overflow_error(FUEL_EXTCALL.checked_add(overflow_error(FUEL_PER_STORE_BYTE.checked_mul(storage_map_len))?))?)?;
+        consume_fuel(
+            caller,
+            overflow_error(FUEL_EXTCALL.checked_add(overflow_error(
+                FUEL_PER_STORE_BYTE.checked_mul(storage_map_len),
+            )?))?,
+        )?;
         run_after_special(subcontext.clone(), binary_rc, start_fuel)
             .and_then(|(response, gas_used)| {
                 println!("gas used: {}", gas_used);
