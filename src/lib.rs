@@ -1,7 +1,7 @@
 use crate::message::AlkaneMessageContext;
 use crate::utils::u128_from_bytes;
 use crate::view::simulate_parcel;
-use alkanes_support::{ id::AlkaneId, response::ExtendedCallResponse };
+use alkanes_support::response::ExtendedCallResponse;
 use anyhow::Result;
 use bitcoin::blockdata::block::Block;
 use bitcoin::blockdata::transaction::Transaction;
@@ -12,9 +12,11 @@ use ordinals::{ Artifact, Runestone };
 use protobuf::{ Message, MessageField, SpecialFields };
 use protorune::message::MessageContextParcel;
 use protorune::{ message::MessageContext, Protorune };
+use protorune_support::balance_sheet::ProtoruneRuneId;
 use protorune_support::protostone::Protostone;
 use protorune_support::rune_transfer::RuneTransfer;
 use protorune_support::utils::consensus_decode;
+use alkanes_support::id::{ AlkaneId };
 use std::io::Cursor;
 pub mod message;
 pub mod proto;
@@ -64,10 +66,10 @@ impl Into<MessageContextParcel> for proto::alkanes::MessageContextParcel {
         result.runes = self.alkanes
             .into_iter()
             .map(|v| RuneTransfer {
-                id: (AlkaneId {
+                id: ProtoruneRuneId {
                     block: u128_from_bytes(v.id.block.clone()),
                     tx: u128_from_bytes(v.id.tx.clone()),
-                }).into(),
+                },
                 value: u128_from_bytes(v.value.clone()),
             })
             .collect::<Vec<RuneTransfer>>();
@@ -103,6 +105,16 @@ impl Into<proto::alkanes::ExtendedCallResponse> for ExtendedCallResponse {
             .collect::<Vec<proto::alkanes::AlkaneTransfer>>();
 
         result
+    }
+}
+
+impl Into<proto::alkanes::AlkaneId> for AlkaneId {
+    fn into(self) -> proto::alkanes::AlkaneId {
+        proto::alkanes::AlkaneId {
+            block: self.block.to_le_bytes().to_vec(),
+            tx: self.tx.to_le_bytes().to_vec(),
+            special_fields: SpecialFields::new(),
+        }
     }
 }
 

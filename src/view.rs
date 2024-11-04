@@ -7,7 +7,12 @@ use ::protorune::view::{ outpoint_to_bytes, core_outpoint_to_proto };
 use ::protorune::proto::protorune::{ self, OutpointResponse, Output };
 use protorune_support::balance_sheet::{ BalanceSheet };
 use protobuf::{ MessageField, SpecialFields, Message };
-use crate::proto::alkanes::{ AlkaneInventoryResponse, AlkaneInventoryRequest, AlkaneTransfer };
+use crate::proto::alkanes::{
+    AlkaneInventoryResponse,
+    AlkaneInventoryRequest,
+    AlkaneTransfer,
+    AlkaneId,
+};
 use crate::utils::{
     alkane_inventory_pointer,
     balance_pointer,
@@ -24,31 +29,28 @@ use protorune_support::rune_transfer::RuneTransfer;
 use protorune_support::utils::decode_varint_list;
 use std::io::{ Cursor, Read };
 
-// fn alkane_inventory(req: &AlkaneInventoryRequest) -> Result<AlkaneInventoryResponse> {
-//     let mut res: AlkaneInventoryResponse = AlkaneInventoryResponse::new();
-//     let pointer: AtomicPointer = AtomicPointer::default().derive(&IndexPointer::default());
-//     let req_id = req.id
-//         .as_ref()
-//         .ok_or_else(|| { anyhow::Error::msg("Missing Alkane ID in request") })?;
+fn alkane_inventory(req: &AlkaneInventoryRequest) -> Result<AlkaneInventoryResponse> {
+    let mut res: AlkaneInventoryResponse = AlkaneInventoryResponse::new();
+    let mut pointer: AtomicPointer = AtomicPointer::default().derive(&IndexPointer::default());
 
-//     let alkane_inventory = alkane_inventory_pointer(&mut pointer, req_id);
-//     let alkanes_held = alkane_inventory
-//         .get_list()
-//         .iter()
-//         .map(|&alkane_held| {
-//             let id = &alkanes_support::id::AlkaneId
-//                 ::parse(&mut Cursor::new((&alkane_held).to_vec()))
-//                 .unwrap();
-//             let balance_pointer = balance_pointer(&mut pointer, req_id, id);
-//             let balance = balance_pointer.get_value();
-//             res.alkanes.push(AlkaneTransfer {
-//                 id: alkane_held.into(),
-//                 value: balance,
-//                 special_fields: SpecialFields::new(),
-//             })
-//         });
-//     Ok(res)
-// }
+    let alkane_inventory = alkane_inventory_pointer(&mut pointer, &req.id.into());
+    let alkanes_held = alkane_inventory
+        .get_list()
+        .iter()
+        .map(|&alkane_held| {
+            let id = &alkanes_support::id::AlkaneId
+                ::parse(&mut Cursor::new((&alkane_held).to_vec()))
+                .unwrap();
+            let balance_pointer = balance_pointer(&mut pointer, req_id, id);
+            let balance = balance_pointer.get_value::<u128>();
+            res.alkanes.push(AlkaneTransfer {
+                id: id.into(),
+                value: balance,
+                special_fields: SpecialFields::new(),
+            })
+        });
+    Ok(res)
+}
 
 pub fn simulate_parcel(parcel: &MessageContextParcel) -> Result<(ExtendedCallResponse, u64)> {
     let cellpack: Cellpack = decode_varint_list(

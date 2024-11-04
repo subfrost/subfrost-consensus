@@ -69,6 +69,8 @@ cargo test
 
 This will provide a stub environment to test a METASHREW indexer program, and it will test the alkanes standard library smart contracts in simulated blocks.
 
+Features are provided within the Cargo.toml at the root of the monorepo to declare alkanes which should be built with `cargo build` or `cargo test`.
+
 ### Authors
 
 - flex
