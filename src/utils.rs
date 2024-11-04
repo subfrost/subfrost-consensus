@@ -4,9 +4,7 @@ use alkanes_support::storage::StorageMap;
 use alkanes_support::utils::overflow_error;
 use anyhow::{anyhow, Result};
 use metashrew::{
-    index_pointer::{AtomicPointer, IndexPointer},
-    println,
-    stdio::{stdout, Write},
+    index_pointer::{AtomicPointer, IndexPointer}
 };
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::rune_transfer::RuneTransfer;

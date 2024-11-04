@@ -6,6 +6,16 @@ use std::env;
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
+use std::io::prelude::*;
+use flate2::write::{GzEncoder};
+use flate2::Compression;
+
+fn compress(binary: Vec<u8>) -> Result<Vec<u8>> {
+  let mut writer = GzEncoder::new(Vec::<u8>::with_capacity(binary.len()), Compression::best());
+  writer.write_all(&binary)?;
+  Ok(writer.finish()?)
+}
+
 fn main() {
     protobuf_codegen::Codegen::new()
         .protoc()
@@ -90,12 +100,13 @@ fn main() {
                 .expect("failed to wait on build job");
             std::env::set_current_dir(&crates_dir)?;
             let subbed = v.clone().replace("-", "_");
-            let data: String = hex::encode(&fs::read(
+            let f: Vec<u8> = fs::read(
                 &Path::new(&wasm_str)
                     .join("wasm32-unknown-unknown")
                     .join("release")
                     .join(subbed.clone() + ".wasm"),
-            )?);
+            )?;
+            let data: String = hex::encode(&f);
             eprintln!(
                 "write: {}",
                 write_dir
@@ -105,6 +116,7 @@ fn main() {
                     .to_str()
                     .unwrap()
             );
+            fs::write(&Path::new(&wasm_str).join("wasm32-unknown-unknown").join("release").join(subbed.clone() + ".wasm.gz"), &compress(f.clone())?)?;
             fs::write(
                 &write_dir.join("std").join(subbed.clone() + "_build.rs"),
                 String::from("use hex_lit::hex;\n#[allow(long_running_const_eval)]\npub fn get_bytes() -> Vec<u8> { (&hex!(\"")
