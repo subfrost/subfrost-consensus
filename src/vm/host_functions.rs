@@ -255,10 +255,8 @@ impl AlkanesHostFunctionsImpl {
             let data = mem.data(&caller);
             let buffer = read_arraybuffer(data, cellpack_ptr)?;
             let cellpack = Cellpack::parse(&mut Cursor::new(buffer))?;
-            println!("got cellpack inside host call: {:?}", cellpack);
             let buf = read_arraybuffer(data, incoming_alkanes_ptr)?;
             let incoming_alkanes = AlkaneTransferParcel::parse(&mut Cursor::new(buf))?;
-            println!("got incoming alkanes");
             let storage_map_buffer = read_arraybuffer(data, checkpoint_ptr)?;
             let storage_map_len = storage_map_buffer.len();
             let storage_map = StorageMap::parse(&mut Cursor::new(storage_map_buffer))?;
@@ -301,10 +299,6 @@ impl AlkanesHostFunctionsImpl {
             subbed.inputs = cellpack.inputs.clone();
             (subbed, binary)
         };
-        println!(
-            "about to enter subcontext: {:#?} with cellpack: {:#?}",
-            subcontext, cellpack
-        );
         consume_fuel(
             caller,
             overflow_error(FUEL_EXTCALL.checked_add(overflow_error(
@@ -324,7 +318,6 @@ impl AlkanesHostFunctionsImpl {
                 let plain_response: CallResponse = response.into();
                 let serialized = plain_response.serialize();
                 context.returndata = serialized;
-                println!("returndata length: {}", context.returndata.len());
                 Ok(context.returndata.len().try_into()?)
             })
             .and_then(|len| {

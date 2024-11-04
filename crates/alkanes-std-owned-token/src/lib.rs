@@ -42,22 +42,18 @@ impl AlkaneResponder for OwnedToken {
             0 => {
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() == 0 {
-                    println!("initializing");
                     let auth_token_units = shift(&mut inputs).unwrap();
                     let token_units = shift(&mut inputs).unwrap();
                     let mut response: CallResponse = CallResponse::default();
-                    println!("created response");
                     response
                         .alkanes
                         .0
                         .push(self.deploy_auth_token(auth_token_units).unwrap());
-                    println!("pushed deploy response back");
                     response.alkanes.0.push(AlkaneTransfer {
                         id: context.myself.clone(),
                         value: token_units,
                     });
                     pointer.set(Arc::new(vec![0x01]));
-                    println!("response: {:?}", response);
                     response
                 } else {
                     panic!("already initialized");

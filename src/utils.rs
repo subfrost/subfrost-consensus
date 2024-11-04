@@ -57,9 +57,15 @@ pub fn debit_balances(
 ) -> Result<()> {
     for rune in runes.0.clone() {
         let mut pointer = balance_pointer(atomic, to, &rune.id.clone().into());
-        pointer.set_value::<u128>(overflow_error(
-            pointer.get_value::<u128>().checked_sub(rune.value),
-        )?);
+        let pointer_value = pointer.get_value::<u128>();
+        let v = {
+            if *to == rune.id {
+                pointer_value
+            } else {
+                overflow_error(pointer_value.checked_sub(rune.value))?
+            }
+        };
+        pointer.set_value::<u128>(v);
     }
     Ok(())
 }
@@ -71,7 +77,6 @@ pub fn transfer_from(
     to: &AlkaneId,
 ) -> Result<()> {
     for transfer in &parcel.0 {
-        println!("transferring {:?} from {:?} to {:?}", transfer, from, to);
         let mut from_pointer =
             balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
         let mut balance = from_pointer.get_value::<u128>();
