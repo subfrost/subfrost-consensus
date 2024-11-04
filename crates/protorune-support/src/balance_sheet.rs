@@ -1,6 +1,5 @@
 use crate::rune_transfer::RuneTransfer;
 use anyhow::Result;
-#[allow(unused_imports)]
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
