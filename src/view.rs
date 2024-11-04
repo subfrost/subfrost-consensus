@@ -33,7 +33,7 @@ fn alkane_inventory(req: &AlkaneInventoryRequest) -> Result<AlkaneInventoryRespo
     let mut res: AlkaneInventoryResponse = AlkaneInventoryResponse::new();
     let mut pointer: AtomicPointer = AtomicPointer::default().derive(&IndexPointer::default());
 
-    let alkane_inventory = alkane_inventory_pointer(&mut pointer, &req.id.into());
+    let alkane_inventory = alkane_inventory_pointer(&req.id.unwrap().into());
     let alkanes_held = alkane_inventory
         .get_list()
         .iter()

@@ -118,6 +118,18 @@ impl Into<proto::alkanes::AlkaneId> for AlkaneId {
     }
 }
 
+impl Into<proto::alkanes::AlkaneInventoryRequest> for AlkaneId {
+    fn into(self) -> proto::alkanes::AlkaneInventoryRequest {
+        proto::alkanes::AlkaneInventoryRequest {
+            id: {
+                self.block.to_le_bytes().to_vec();
+                self.tx.to_be_bytes().to_vec()
+            },
+            special_fields: SpecialFields::new(),
+        }
+    }
+}
+
 #[no_mangle]
 pub fn simulate() -> i32 {
     let data = input();

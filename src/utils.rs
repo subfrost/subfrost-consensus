@@ -26,18 +26,14 @@ pub fn balance_pointer(
         .keyword("/balances/")
         .select(&who_bytes);
     if ptr.get().len() != 0 {
-        alkane_inventory_pointer(atomic, who).append(Arc::new(what_bytes));
+        alkane_inventory_pointer(who).append(Arc::new(what_bytes));
     }
     ptr
 }
 
-pub fn alkane_inventory_pointer(atomic: &mut AtomicPointer, who: &AlkaneId) -> AtomicPointer {
+pub fn alkane_inventory_pointer(who: &AlkaneId) -> IndexPointer {
     let who_bytes: Vec<u8> = who.clone().into();
-    let ptr = atomic
-        .derive(&IndexPointer::default())
-        .keyword("/alkanes/")
-        .select(&who_bytes)
-        .keyword("/inventory/");
+    let ptr = IndexPointer::from_keyword("/alkanes").select(&who_bytes).keyword("/inventory/");
     ptr
 }
 
