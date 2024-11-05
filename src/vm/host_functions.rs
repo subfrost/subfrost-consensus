@@ -17,14 +17,16 @@ use metashrew::{
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use crate::vm::fuel::{
+    Fuelable,
     consume_fuel, FUEL_BALANCE, FUEL_EXTCALL, FUEL_FUEL, FUEL_HEIGHT, FUEL_PER_LOAD_BYTE,
-    FUEL_PER_REQUEST_BYTE, FUEL_PER_STORE_BYTE, FUEL_SEQUENCE,
+    FUEL_PER_REQUEST_BYTE, FUEL_PER_STORE_BYTE, FUEL_SEQUENCE, FUEL_EXTCALL_DEPLOY
 };
 use protorune_support::utils::consensus_encode;
 use std::io::Cursor;
 use wasmi::*;
 
 pub struct AlkanesHostFunctionsImpl(());
+
 impl AlkanesHostFunctionsImpl {
     pub(super) fn _abort<'a>(caller: Caller<'_, AlkanesState>) {
         AlkanesHostFunctionsImpl::abort(caller, 0, 0, 0, 0);
@@ -268,6 +270,9 @@ impl AlkanesHostFunctionsImpl {
             )
         };
         let (subcontext, binary_rc) = {
+            if cellpack.target.is_deployment() {
+              caller.consume_fuel(FUEL_EXTCALL_DEPLOY)?;
+            }
             let mut context = caller.data_mut().context.lock().unwrap();
             context.message.atomic.checkpoint();
             let (_subcaller, submyself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
