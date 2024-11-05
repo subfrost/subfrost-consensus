@@ -15,7 +15,7 @@ pub const FUEL_FUEL: u64 = 5;
 pub const FUEL_EXTCALL: u64 = 500;
 pub const FUEL_HEIGHT: u64 = 10;
 pub const FUEL_BALANCE: u64 = 10;
-pub const FUEL_EXTCALL_DEPLOY: u64 = 100_000;
+pub const FUEL_EXTCALL_DEPLOY: u64 = 10_000;
 
 pub trait Fuelable {
     fn consume_fuel(&mut self, n: u64) -> Result<()>;
