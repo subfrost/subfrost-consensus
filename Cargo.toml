@@ -18,7 +18,7 @@ test = []
 proxy = ["test"]
 owned_token = ["test"]
 auth_token = ["owned_token"]
-genesis = []
+genesis_alkane = []
 
 [dependencies]
 anyhow = "1.0.90"
