@@ -11,10 +11,6 @@ use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr, to_ptr};
 use std::io::Cursor;
 
 use crate::compat::panic_hook;
-use crate::{
-    println,
-    stdio::{stdout, Write},
-};
 #[allow(unused_imports)]
 use alkanes_support::{
     cellpack::Cellpack,

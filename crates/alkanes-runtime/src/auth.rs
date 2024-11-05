@@ -1,7 +1,3 @@
-use crate::{
-    println,
-    stdio::{stdout, Write},
-};
 use crate::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     cellpack::Cellpack,
