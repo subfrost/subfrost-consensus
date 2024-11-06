@@ -11,7 +11,7 @@ resolver = "2"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-bitcoin = { version = "0.30.1", features = ["rand"] }
+bitcoin = { version = "0.32.4", features = ["rand"] }
 serde = "1.0.210"
 ordinals = { version = "0.0.10", path = "../ordinals" }
 anyhow = "1.0.90"

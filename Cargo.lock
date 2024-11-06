@@ -36,7 +36,7 @@ dependencies = [
  "alkanes",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "byteorder",
  "flate2",
  "hex",
@@ -76,7 +76,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "hex",
  "metashrew-support",
  "protorune-support",
@@ -89,7 +89,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "num",
  "protorune-support",
@@ -103,7 +103,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "protorune-support",
 ]
@@ -115,7 +115,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "protorune-support",
 ]
@@ -127,7 +127,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "hex",
  "metashrew-support",
  "protorune-support",
@@ -140,7 +140,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "hex",
  "metashrew-support",
  "protorune-support",
@@ -153,7 +153,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "num",
  "ordinals 0.0.10",
@@ -169,7 +169,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "protorune-support",
 ]
@@ -181,7 +181,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "hex",
  "hex_lit",
  "metashrew-support",
@@ -195,7 +195,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "protorune-support",
 ]
@@ -207,7 +207,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "protorune-support",
 ]
@@ -219,7 +219,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "protorune-support",
 ]
@@ -241,7 +241,7 @@ dependencies = [
  "alkanes-runtime",
  "alkanes-support",
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew-support",
  "protorune-support",
 ]
@@ -251,7 +251,7 @@ name = "alkanes-support"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "flate2",
  "metashrew-support",
  "protorune-support",
@@ -1611,7 +1611,7 @@ dependencies = [
 name = "ordinals"
 version = "0.0.10"
 dependencies = [
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "derive_more 1.0.0",
  "pretty_assertions",
  "serde",
@@ -1889,7 +1889,7 @@ name = "protorune"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "byteorder",
  "getrandom",
  "hex",
@@ -1916,7 +1916,7 @@ name = "protorune-support"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bitcoin 0.30.2",
+ "bitcoin 0.32.4",
  "metashrew",
  "metashrew-support",
  "ordinals 0.0.10",
@@ -2257,6 +2257,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9465315bc9d4566e1724f0fffcbcc446268cb522e60f9a27bcded6b19c108113"
 dependencies = [
  "bitcoin_hashes 0.13.0",
+ "rand",
  "secp256k1-sys 0.10.1",
 ]
 

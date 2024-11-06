@@ -556,7 +556,7 @@ impl Protorune {
                     .set(Arc::new(
                         (Output {
                             script: tx.output[i].clone().script_pubkey.into_bytes(),
-                            value: tx.output[i].clone().value,
+                            value: tx.output[i].clone().value.to_sat(),
                             special_fields: SpecialFields::new(),
                         })
                         .write_to_bytes()

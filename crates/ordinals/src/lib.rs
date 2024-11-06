@@ -4,8 +4,9 @@
 use {
     bitcoin::{
         consensus::{Decodable, Encodable},
+        Amount,
         constants::{
-            COIN_VALUE, DIFFCHANGE_INTERVAL, MAX_SCRIPT_ELEMENT_SIZE, SUBSIDY_HALVING_INTERVAL,
+            DIFFCHANGE_INTERVAL, MAX_SCRIPT_ELEMENT_SIZE, SUBSIDY_HALVING_INTERVAL,
         },
         opcodes,
         script::{self, Instruction},
@@ -24,6 +25,8 @@ use {
     },
     thiserror::Error,
 };
+
+pub const COIN_VALUE: u64 = 100_000_000;
 
 pub use {
     artifact::Artifact, cenotaph::Cenotaph, charm::Charm, decimal_sat::DecimalSat, degree::Degree,

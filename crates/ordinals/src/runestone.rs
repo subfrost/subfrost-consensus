@@ -21,7 +21,7 @@ enum Payload {
 }
 
 impl Runestone {
-    pub const MAGIC_NUMBER: opcodes::All = opcodes::all::OP_PUSHNUM_13;
+    pub const MAGIC_NUMBER: opcodes::Opcode = opcodes::all::OP_PUSHNUM_13;
     pub const COMMIT_CONFIRMATIONS: u16 = 6;
 
     pub fn decipher(transaction: &Transaction) -> Option<Artifact> {

@@ -98,6 +98,12 @@ pub struct AuxpowBlock {
 }
 
 impl AuxpowBlock {
+  pub fn to_consensus(&self) -> Block {
+    Block {
+      header: self.header.clone().into(),
+      txdata: self.txdata.clone()
+    }
+  }
   pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AuxpowBlock> {
     let header = AuxpowHeader::parse(cursor)?;
     let mut txdata: Vec<Transaction> = vec![];
@@ -147,4 +153,3 @@ impl AuxpowHeader {
     Ok(result)
   }
 }
-

@@ -4,6 +4,7 @@ use bitcoin::{
     address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut, Witness,
 };
 use bitcoin::{Block, Transaction};
+use bitcoin::blockdata::transaction::{Version};
 use protorune::protostone::Protostones;
 use protorune::test_helpers::{create_block_with_coinbase_tx, get_address, ADDRESS1};
 use protorune_support::protostone::Protostone;
@@ -144,18 +145,18 @@ pub fn create_multiple_cellpack_with_witness_and_in(
 
     //     // op return is at output 1
     let op_return = TxOut {
-        value: Amount::from_sat(0).to_sat(),
+        value: Amount::from_sat(0),
         script_pubkey: runestone,
     };
     let address: Address<NetworkChecked> = get_address(&ADDRESS1);
 
     let script_pubkey = address.script_pubkey();
     let txout = TxOut {
-        value: Amount::from_sat(100_000_000).to_sat(),
+        value: Amount::from_sat(100_000_000),
         script_pubkey,
     };
     Transaction {
-        version: 1,
+        version: Version::ONE,
         lock_time: bitcoin::absolute::LockTime::ZERO,
         input: vec![txin],
         output: vec![txout, op_return],

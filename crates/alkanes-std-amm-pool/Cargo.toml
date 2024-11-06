@@ -11,7 +11,7 @@ alkanes-runtime = { path = "../alkanes-runtime" }
 alkanes-support = { path = "../alkanes-support" }
 metashrew-support = { path = "../metashrew-support" }
 anyhow = "1.0.91"
-bitcoin = { version = "0.30.1", features = ["rand"] }
+bitcoin = { version = "0.32.4", features = ["rand"] }
 num = "0.4.3"
 protorune-support = { path = "../protorune-support" }
 ruint = "1.12.3"

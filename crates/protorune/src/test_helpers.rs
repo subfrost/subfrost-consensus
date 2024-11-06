@@ -1,9 +1,9 @@
 use bitcoin::address::NetworkChecked;
-use bitcoin::blockdata::block::{Block, Header, Version};
+use bitcoin::blockdata::block::{Block, Header};
+use bitcoin::blockdata::transaction::{Version};
 use bitcoin::blockdata::script::ScriptBuf;
 use bitcoin::blockdata::transaction::{Transaction, TxIn, TxOut};
 use bitcoin::hashes::Hash;
-use bitcoin::string::FromHexStr;
 use bitcoin::{Address, Amount, BlockHash, OutPoint, Sequence, Witness};
 use byteorder::{ByteOrder, LittleEndian};
 use core::str::FromStr;
@@ -73,7 +73,7 @@ pub fn create_coinbase_transaction(height: u32) -> Transaction {
 
     // Create the coinbase transaction output
     let coinbase_output = TxOut {
-        value: 50_000_000, // 50 BTC in satoshis
+        value: Amount::from_sat(50_000_000), // 50 BTC in satoshis
         script_pubkey,
     };
 
@@ -81,7 +81,7 @@ pub fn create_coinbase_transaction(height: u32) -> Transaction {
 
     // Create the coinbase transaction
     Transaction {
-        version: 2,
+        version: Version::TWO,
         lock_time: locktime,
         input: vec![coinbase_input],
         output: vec![coinbase_output],
@@ -127,12 +127,12 @@ pub fn create_test_transaction_with_witness(script: Vec<u8>) -> Transaction {
     let script_pubkey = address.script_pubkey();
 
     let txout = TxOut {
-        value: Amount::from_sat(100_000_000).to_sat(),
+        value: Amount::from_sat(100_000_000),
         script_pubkey,
     };
 
     Transaction {
-        version: 1,
+        version: Version::ONE,
         lock_time: bitcoin::absolute::LockTime::ZERO, // no locktime
         input: vec![txin],
         output: vec![txout],
@@ -218,7 +218,7 @@ pub fn create_rune_etching_transaction(config: &RunesTestingConfig) -> Transacti
 
     // tx vout 0 will hold all 1000 of the runes
     let txout = TxOut {
-        value: Amount::from_sat(100_000_000).to_sat(),
+        value: Amount::from_sat(100_000_000),
         script_pubkey,
     };
 
@@ -240,12 +240,12 @@ pub fn create_rune_etching_transaction(config: &RunesTestingConfig) -> Transacti
     .encipher();
 
     let op_return = TxOut {
-        value: Amount::from_sat(0).to_sat(),
+        value: Amount::from_sat(0),
         script_pubkey: runestone,
     };
 
     Transaction {
-        version: 1,
+        version: Version::ONE,
         lock_time: bitcoin::absolute::LockTime::ZERO,
         input: vec![txin],
         output: vec![txout, op_return],
@@ -279,13 +279,13 @@ pub fn create_rune_transfer_transaction(
 
     // tx vout 0 corresponds to address2 will hold all 200 of the runes
     let txout0 = TxOut {
-        value: Amount::from_sat(1).to_sat(),
+        value: Amount::from_sat(1),
         script_pubkey: script_pubkey2,
     };
 
     // tx vout 1 corresponds to address1 and will hold 800 of the runes
     let txout1 = TxOut {
-        value: Amount::from_sat(99_999_999).to_sat(),
+        value: Amount::from_sat(99_999_999),
         script_pubkey: script_pubkey1,
     };
 
@@ -305,12 +305,12 @@ pub fn create_rune_transfer_transaction(
     .encipher();
 
     let op_return = TxOut {
-        value: Amount::from_sat(0).to_sat(),
+        value: Amount::from_sat(0),
         script_pubkey: runestone,
     };
 
     Transaction {
-        version: 1,
+        version: Version::ONE,
         lock_time: bitcoin::absolute::LockTime::ZERO,
         input: vec![txin],
         output: vec![txout0, txout1, op_return],
@@ -319,7 +319,7 @@ pub fn create_rune_transfer_transaction(
 
 pub fn create_block_with_txs(txdata: Vec<Transaction>) -> Block {
     // Define block header fields
-    let version = Version::from_consensus(1);
+    let version = Version::ONE;
     let previous_blockhash =
         BlockHash::from_str("00000000000000000005c3b409b4f17f9b3a97ed46d1a63d3f660d24168b2b3e")
             .unwrap();
@@ -330,12 +330,12 @@ pub fn create_block_with_txs(txdata: Vec<Transaction>) -> Block {
     )
     .unwrap();
     let time = 1231006505; // Example timestamp (January 3, 2009)
-    let bits = bitcoin::CompactTarget::from_hex_str("0x1234").unwrap(); // Example bits (difficulty)
+    let bits = bitcoin::CompactTarget::from_consensus(0x1234); // Example bits (difficulty)
     let nonce = 2083236893; // Example nonce
 
     // Create the block header
     let header = Header {
-        version,
+        version: bitcoin::blockdata::block::Version::from_consensus(1),
         prev_blockhash: previous_blockhash,
         merkle_root,
         time,
@@ -432,7 +432,7 @@ pub fn create_protostone_encoded_tx(
     let script_pubkey = address.script_pubkey();
 
     let txout = TxOut {
-        value: Amount::from_sat(100_000_000).to_sat(),
+        value: Amount::from_sat(100_000_000),
         script_pubkey,
     };
 
@@ -457,12 +457,12 @@ pub fn create_protostone_encoded_tx(
 
     // op return is at output 1
     let op_return = TxOut {
-        value: Amount::from_sat(0).to_sat(),
+        value: Amount::from_sat(0),
         script_pubkey: runestone,
     };
 
     Transaction {
-        version: 1,
+        version: Version::ONE,
         lock_time: bitcoin::absolute::LockTime::ZERO,
         input: vec![txin],
         output: vec![txout, op_return],
@@ -488,7 +488,7 @@ pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128
     let script_pubkey = address.script_pubkey();
 
     let txout = TxOut {
-        value: Amount::from_sat(100_000_000).to_sat(),
+        value: Amount::from_sat(100_000_000),
         script_pubkey,
     };
 
@@ -525,12 +525,12 @@ pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128
 
     // op return is at output 1
     let op_return = TxOut {
-        value: Amount::from_sat(0).to_sat(),
+        value: Amount::from_sat(0),
         script_pubkey: runestone,
     };
 
     Transaction {
-        version: 1,
+        version: Version::ONE,
         lock_time: bitcoin::absolute::LockTime::ZERO,
         input: vec![txin],
         output: vec![txout, op_return],
@@ -553,11 +553,11 @@ pub fn create_protomessage_from_edict_tx(
     let address: Address<NetworkChecked> = get_address(&ADDRESS1);
 
     let txout0 = TxOut {
-        value: Amount::from_sat(1).to_sat(),
+        value: Amount::from_sat(1),
         script_pubkey: address.script_pubkey(),
     };
     let txout1 = TxOut {
-        value: Amount::from_sat(2).to_sat(),
+        value: Amount::from_sat(2),
         script_pubkey: address.script_pubkey(),
     };
 
@@ -590,12 +590,12 @@ pub fn create_protomessage_from_edict_tx(
 
     //     // op return is at output 1
     let op_return = TxOut {
-        value: Amount::from_sat(0).to_sat(),
+        value: Amount::from_sat(0),
         script_pubkey: runestone,
     };
 
     Transaction {
-        version: 1,
+        version: Version::ONE,
         lock_time: bitcoin::absolute::LockTime::ZERO,
         input: vec![txin],
         output: vec![txout0, txout1, op_return],

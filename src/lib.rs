@@ -9,6 +9,7 @@ use bitcoin::blockdata::transaction::Transaction;
 use bitcoin::consensus::Decodable;
 use metashrew::{flush, input};
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
+use metashrew_support::block::{AuxpowBlock};
 use ordinals::{Artifact, Runestone};
 use protobuf::{Message, MessageField, SpecialFields};
 use protorune::message::MessageContextParcel;
@@ -173,7 +174,7 @@ pub fn _start() {
     let data = input();
     let height = u32::from_le_bytes((&data[0..4]).try_into().unwrap());
     let mut reader = &data[4..];
-    let block = Block::consensus_decode(&mut reader).unwrap();
+    let block: Block = AuxpowBlock::parse(&mut Cursor::<Vec<u8>>::new(reader.to_vec())).unwrap().to_consensus();
     index_block(&block, height).unwrap();
     flush();
 }
