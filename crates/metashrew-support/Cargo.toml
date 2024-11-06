@@ -13,4 +13,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 anyhow = "1.0.90"
+bitcoin = "0.32.4"
 hex = "0.4.3"

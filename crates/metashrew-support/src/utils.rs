@@ -2,6 +2,24 @@ use crate::byte_view::ByteView;
 use anyhow::Result;
 use std::io::Read;
 use std::mem::size_of;
+use bitcoin::consensus::{
+    deserialize_partial,
+    encode::{Decodable, Encodable},
+};
+use std::io::{BufRead};
+
+pub fn consensus_encode<T: Encodable>(v: &T) -> Result<Vec<u8>> {
+    let mut result = Vec::<u8>::new();
+    <T as Encodable>::consensus_encode::<Vec<u8>>(v, &mut result)?;
+    Ok(result)
+}
+
+pub fn consensus_decode<T: Decodable>(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<T> {
+    let slice = &cursor.get_ref()[cursor.position() as usize..cursor.get_ref().len() as usize];
+    let deserialized: (T, usize) = deserialize_partial(slice)?;
+    cursor.consume(deserialized.1);
+    Ok(deserialized.0)
+}
 
 pub fn consume_sized_int<T: ByteView>(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<T> {
     let buffer = consume_exact(cursor, size_of::<T>())?;
@@ -21,6 +39,15 @@ pub fn consume_exact(cursor: &mut std::io::Cursor<Vec<u8>>, n: usize) -> Result<
     let mut buffer: Vec<u8> = vec![0u8; n];
     cursor.read_exact(&mut buffer[0..n])?;
     Ok(buffer)
+}
+
+pub fn consume_varint(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<u64> {
+  Ok(match consume_sized_int::<u8>(cursor)? {
+    0xff => consume_sized_int::<u64>(cursor)?,
+    0xfe => consume_sized_int::<u32>(cursor)? as u64,
+    0xfd => consume_sized_int::<u16>(cursor)? as u64,
+    v => v as u64
+  })
 }
 
 pub fn consume_u128(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<u128> {
