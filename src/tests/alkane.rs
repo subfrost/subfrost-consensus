@@ -10,18 +10,18 @@ mod tests {
     use crate::index_block;
     use crate::tests::helpers as alkane_helpers;
     use crate::tests::std::alkanes_std_owned_token_build;
+    use alkanes_support::gz::{compress, decompress};
     use metashrew::{clear, get_cache, index_pointer::IndexPointer, println, stdio::stdout};
     use std::fmt::Write;
-    use alkanes_support::gz::{decompress, compress};
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use crate::message::AlkaneMessageContext;
     #[wasm_bindgen_test]
     pub fn test_compression() -> Result<()> {
-      let mut buffer = alkanes_std_test_build::get_bytes();
-      let compressed = compress(buffer.clone())?;
-      assert_eq!(decompress(compressed)?, buffer.clone());
-      Ok(())
+        let mut buffer = alkanes_std_test_build::get_bytes();
+        let compressed = compress(buffer.clone())?;
+        assert_eq!(decompress(compressed)?, buffer.clone());
+        Ok(())
     }
     pub fn print_cache() {
         let cache = get_cache();
@@ -147,24 +147,30 @@ mod tests {
         let auth_token_id_deployment = AlkaneId { block: 2, tx: 1 };
         let owned_token_id = AlkaneId { block: 2, tx: 0 };
 
-        // assert_eq!(
-        //     IndexPointer::from_keyword("/alkanes/")
-        //         .select(&owned_token_id.into())
-        //         .get(),
-        //     alkanes_std_owned_token_build::get_bytes().into()
-        // );
+        assert_eq!(
+            IndexPointer::from_keyword("/alkanes/")
+                .select(&owned_token_id.into())
+                .get()
+                .as_ref()
+                .clone(),
+            compress(alkanes_std_owned_token_build::get_bytes().into())?
+        );
         assert_eq!(
             IndexPointer::from_keyword("/alkanes/")
                 .select(&auth_token_id_factory.into())
-                .get(),
-            alkanes_std_auth_token_build::get_bytes().into()
+                .get()
+                .as_ref()
+                .clone(),
+            compress(alkanes_std_auth_token_build::get_bytes().into())?
         );
-        // assert_eq!(
-        //     IndexPointer::from_keyword("/alkanes/")
-        //         .select(&auth_token_id_deployment.into())
-        //         .get(),
-        //     alkanes_std_auth_token_build::get_bytes().into()
-        // );
+        assert_eq!(
+            IndexPointer::from_keyword("/alkanes/")
+                .select(&auth_token_id_deployment.into())
+                .get()
+                .as_ref()
+                .clone(),
+            compress(alkanes_std_auth_token_build::get_bytes().into())?
+        );
 
         Ok(())
     }
@@ -188,7 +194,9 @@ mod tests {
         assert_eq!(
             IndexPointer::from_keyword("/alkanes/")
                 .select(&test_stored_target.into())
-                .get().as_ref().clone(),
+                .get()
+                .as_ref()
+                .clone(),
             compress(alkanes_std_test_build::get_bytes().into())?
         );
 
