@@ -1,7 +1,7 @@
 use bitcoin::address::NetworkChecked;
 use bitcoin::blockdata::block::{Block, Header};
-use bitcoin::blockdata::transaction::{Version};
 use bitcoin::blockdata::script::ScriptBuf;
+use bitcoin::blockdata::transaction::Version;
 use bitcoin::blockdata::transaction::{Transaction, TxIn, TxOut};
 use bitcoin::hashes::Hash;
 use bitcoin::{Address, Amount, BlockHash, OutPoint, Sequence, Witness};

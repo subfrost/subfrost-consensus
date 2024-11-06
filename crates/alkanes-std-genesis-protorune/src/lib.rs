@@ -1,8 +1,8 @@
 use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer, token::Token};
 use alkanes_support::{
-    context::Context, parcel::AlkaneTransfer, response::CallResponse, utils::shift, id::{AlkaneId}
+    context::Context, id::AlkaneId, parcel::AlkaneTransfer, response::CallResponse, utils::shift,
 };
-use anyhow::{Result};
+use anyhow::Result;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
 
@@ -29,8 +29,14 @@ impl GenesisProtorune {
         self.total_supply_pointer().set_value::<u128>(v);
     }
     pub fn mint(&self, context: &Context) -> Result<AlkaneTransfer> {
-        if context.incoming_alkanes.0.len() != 1 || &context.incoming_alkanes.0[0].id != &(AlkaneId { block: 849236, tx: 298 }) {
-          panic!("can only mint in response to incoming QUORUM•GENESIS•PROTORUNE");
+        if context.incoming_alkanes.0.len() != 1
+            || &context.incoming_alkanes.0[0].id
+                != &(AlkaneId {
+                    block: 849236,
+                    tx: 298,
+                })
+        {
+            panic!("can only mint in response to incoming QUORUM•GENESIS•PROTORUNE");
         }
         let value = context.incoming_alkanes.0[0].value;
         let mut total_supply_pointer = self.total_supply_pointer();

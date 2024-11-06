@@ -2,9 +2,9 @@ use super::{AlkanesInstance, AlkanesRuntimeContext, AlkanesState};
 use crate::utils::{pipe_storagemap_to, transfer_from};
 use crate::vm::fuel::compute_extcall_fuel;
 use alkanes_support::{
-    cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::ExtendedCallResponse,
-    storage::StorageMap, utils::overflow_error, witness::find_witness_payload,
-    gz::{decompress}
+    cellpack::Cellpack, gz::decompress, id::AlkaneId, parcel::AlkaneTransferParcel,
+    response::ExtendedCallResponse, storage::StorageMap, utils::overflow_error,
+    witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
 use metashrew::{

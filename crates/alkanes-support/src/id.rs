@@ -57,11 +57,11 @@ impl AlkaneId {
         self.block == 1 && self.tx == 0
     }
     pub fn is_deployment(&self) -> bool {
-      if self.block == 1 || self.block == 3 || self.block == 5 || self.block == 6 {
-        true
-      } else {
-        false
-      }
+        if self.block == 1 || self.block == 3 || self.block == 5 || self.block == 6 {
+            true
+        } else {
+            false
+        }
     }
     pub fn reserved(&self) -> Option<u128> {
         if self.block == 3 {

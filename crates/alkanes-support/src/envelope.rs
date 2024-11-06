@@ -1,3 +1,4 @@
+use crate::gz::compress;
 use {
     bitcoin::blockdata::{
         constants::MAX_SCRIPT_ELEMENT_SIZE,
@@ -14,7 +15,6 @@ use {
     serde::{Deserialize, Serialize},
     std::iter::Peekable,
 };
-use crate::gz::{compress};
 
 pub(crate) const PROTOCOL_ID: [u8; 3] = *b"BIN";
 pub(crate) const BODY_TAG: [u8; 0] = [];
@@ -98,13 +98,15 @@ impl RawEnvelope {
             .push_slice(PROTOCOL_ID);
 
         builder = builder.push_slice(BODY_TAG);
-        for chunk in compress(self
-            .payload
-            .clone()
-            .into_iter()
-            .flatten()
-            .collect::<Vec<u8>>()).unwrap()
-            .chunks(MAX_SCRIPT_ELEMENT_SIZE)
+        for chunk in compress(
+            self.payload
+                .clone()
+                .into_iter()
+                .flatten()
+                .collect::<Vec<u8>>(),
+        )
+        .unwrap()
+        .chunks(MAX_SCRIPT_ELEMENT_SIZE)
         {
             builder = builder.push_slice::<&script::PushBytes>(chunk.try_into().unwrap());
         }

@@ -1,19 +1,19 @@
 use anyhow::Result;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use hex;
 use protobuf_codegen;
 use protoc_bin_vendored;
 use std::env;
 use std::fs;
+use std::io::prelude::*;
 use std::path::Path;
 use std::process::{Command, Stdio};
-use std::io::prelude::*;
-use flate2::write::{GzEncoder};
-use flate2::Compression;
 
 fn compress(binary: Vec<u8>) -> Result<Vec<u8>> {
-  let mut writer = GzEncoder::new(Vec::<u8>::with_capacity(binary.len()), Compression::best());
-  writer.write_all(&binary)?;
-  Ok(writer.finish()?)
+    let mut writer = GzEncoder::new(Vec::<u8>::with_capacity(binary.len()), Compression::best());
+    writer.write_all(&binary)?;
+    Ok(writer.finish()?)
 }
 
 fn main() {

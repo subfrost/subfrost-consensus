@@ -26,13 +26,13 @@ impl Token for GenesisAlkane {
 
 impl ChainConfiguration for GenesisAlkane {
     fn block_reward(&self, n: u64) -> u128 {
-        return ((50e8 as u128) / (1u128 << ((n as u128) / 210000u128)))*16;
+        return ((50e8 as u128) / (1u128 << ((n as u128) / 210000u128))) * 16;
     }
     fn genesis_block(&self) -> u64 {
         840000
     }
     fn average_payout_from_genesis(&self) -> u128 {
-        312500000*16
+        312500000 * 16
     }
 }
 

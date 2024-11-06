@@ -1,10 +1,10 @@
 use alkanes_support::cellpack::Cellpack;
 use alkanes_support::envelope::RawEnvelope;
+use bitcoin::blockdata::transaction::Version;
 use bitcoin::{
     address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut, Witness,
 };
 use bitcoin::{Block, Transaction};
-use bitcoin::blockdata::transaction::{Version};
 use protorune::protostone::Protostones;
 use protorune::test_helpers::{create_block_with_coinbase_tx, get_address, ADDRESS1};
 use protorune_support::protostone::Protostone;
