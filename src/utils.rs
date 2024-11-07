@@ -56,7 +56,10 @@ pub fn debit_balances(
         let pointer_value = pointer.get_value::<u128>();
         let v = {
             if *to == rune.id {
-                pointer_value
+                match pointer_value.checked_sub(rune.value) {
+                    Some(value) => value,
+                    None => pointer_value,
+                }
             } else {
                 overflow_error(pointer_value.checked_sub(rune.value))?
             }
