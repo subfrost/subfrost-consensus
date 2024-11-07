@@ -62,20 +62,22 @@ fn main() {
     let mods = fs::read_dir(&crates_dir)
         .unwrap()
         .filter_map(|v| {
-             // let name = v.ok()?.file_name().into_string().ok()?;
-             // if name.starts_with("alkanes-std-") {
-             //   Some(name)
-             // } else {
-             //   None
-             // }
+            // let name = v.ok()?.file_name().into_string().ok()?;
+            // if name.starts_with("alkanes-std-") {
+            //   Some(name)
+            // } else {
+            //   None
+            // }
 
             let name = v.ok()?.file_name().into_string().ok()?;
             if name.starts_with("alkanes-std-") {
                 Some(name.to_lowercase().replace("-", "_"))
-            } else { None }
+            } else {
+                None
+            }
         })
         .collect::<Vec<String>>();
-    let files = fs::read_dir(&crates_dir)
+    let _files = fs::read_dir(&crates_dir)
         .unwrap()
         .filter_map(|v| {
              // let name = v.ok()?.file_name().into_string().ok()?;

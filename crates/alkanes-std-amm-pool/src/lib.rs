@@ -31,6 +31,7 @@ pub fn sub_fees(v: u128) -> Result<u128> {
 
 impl AMMPool {
     pub fn alkanes_for_self(&self) -> Result<(AlkaneId, AlkaneId)> {
+        println!("fetching alkanes_for_self");
         Ok((
             StoragePointer::from_keyword("/alkanes/0")
                 .get()
@@ -57,7 +58,9 @@ impl AMMPool {
                 n
             )))
         } else {
+            println!("inside else block in check_inputs");
             let (a, b) = self.alkanes_for_self()?;
+            println!("self alkanes: a: {:?}, b: {:?}", a, b);
             if let Some(_) = parcel
                 .0
                 .iter()
@@ -110,6 +113,7 @@ impl AMMPool {
         )
     }
     pub fn mint(&self, myself: AlkaneId, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
+        println!("before check_inputs");
         self.check_inputs(&myself, &parcel, 2)?;
         println!("checked inputs");
         let total_supply = self.total_supply();

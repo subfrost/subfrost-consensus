@@ -120,7 +120,7 @@ fn to_ref(v: &Vec<u8>) -> &[u8] {
     v.as_ref()
 }
 
-fn to_bytes32(v: &[u8]) -> [u8; 32] {
+fn _to_bytes32(v: &[u8]) -> [u8; 32] {
     v.try_into().unwrap()
 }
 

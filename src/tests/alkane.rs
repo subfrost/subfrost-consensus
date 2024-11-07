@@ -17,15 +17,14 @@ mod tests {
     use std::fmt::Write;
     use wasm_bindgen_test::wasm_bindgen_test;
 
-    use crate::message::AlkaneMessageContext;
     #[wasm_bindgen_test]
     pub fn test_compression() -> Result<()> {
-        let mut buffer = alkanes_std_test_build::get_bytes();
+        let buffer = alkanes_std_test_build::get_bytes();
         let compressed = compress(buffer.clone())?;
         assert_eq!(decompress(compressed)?, buffer.clone());
         Ok(())
     }
-    pub fn print_cache() {
+    pub fn _print_cache() {
         let cache = get_cache();
 
         for (key, value) in cache.iter() {

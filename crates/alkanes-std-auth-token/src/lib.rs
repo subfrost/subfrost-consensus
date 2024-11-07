@@ -29,6 +29,7 @@ impl AlkaneResponder for AuthToken {
         let mut inputs = context.inputs.clone();
         match shift(&mut inputs).unwrap() {
             0 => {
+                println!("initializing auth token");
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() == 0 {
                     let amount = shift(&mut inputs).unwrap();

@@ -271,7 +271,7 @@ mod tests {
         super::*,
         bitcoin::{
             blockdata::locktime::absolute::LockTime, script::PushBytes, transaction::Version,
-            Sequence, TxIn, TxOut, Witness,
+            Amount, Sequence, TxIn, TxOut, Witness,
         },
         pretty_assertions::assert_eq,
     };

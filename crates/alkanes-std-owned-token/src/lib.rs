@@ -40,6 +40,7 @@ impl AlkaneResponder for OwnedToken {
         let mut inputs = context.inputs.clone();
         match shift(&mut inputs).unwrap() {
             0 => {
+                println!("initializing std token");
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() == 0 {
                     let auth_token_units = shift(&mut inputs).unwrap();

@@ -21,6 +21,7 @@ auth_token = ["owned_token"]
 genesis_alkane = []
 genesis_protorune = []
 amm_pool = ["auth_token"]
+orbital = []
 all = []
 
 
@@ -53,6 +54,7 @@ alkanes = { path = ".", features = [
     "genesis_alkane",
     "genesis_protorune",
     "amm_pool",
+    "orbital",
 ] }
 metashrew = { path = "crates/metashrew", features = ["test-utils"] }
 protorune = { path = "crates/protorune", features = ["test-utils"] }
