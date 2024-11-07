@@ -1,4 +1,9 @@
-use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
+use alkanes_runtime::{
+    println,
+    runtime::AlkaneResponder,
+    stdio::{stdout, Write},
+    storage::StoragePointer,
+};
 use alkanes_support::{
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
@@ -106,11 +111,13 @@ impl AMMPool {
     }
     pub fn mint(&self, myself: AlkaneId, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
         self.check_inputs(&myself, &parcel, 2)?;
+        println!("checked inputs");
         let total_supply = self.total_supply();
         let (reserve_a, reserve_b) = self.reserves();
         let (previous_a, previous_b) = self.previous_reserves(&parcel);
         let root_k_last = overflow_error(previous_a.value.checked_mul(previous_b.value))?.sqrt();
         let root_k = overflow_error(reserve_a.value.checked_mul(reserve_b.value))?.sqrt();
+        println!("before root_k > root_k_last");
         if root_k > root_k_last {
             let numerator = overflow_error(
                 total_supply.checked_mul(overflow_error(root_k.checked_sub(root_k_last))?),
@@ -120,6 +127,7 @@ impl AMMPool {
             let liquidity = numerator / denominator;
             self.set_total_supply(overflow_error(total_supply.checked_add(liquidity))?);
             let mut response = CallResponse::default();
+            println!("before response generated for mint");
             response.alkanes = AlkaneTransferParcel(vec![AlkaneTransfer {
                 id: myself,
                 value: liquidity,
@@ -224,8 +232,10 @@ impl AlkaneResponder for AMMPool {
                 if pointer.get().len() == 0 {
                     pointer.set(Arc::new(vec![0x01]));
                     let (a, b) = self.pull_ids(&mut inputs).unwrap();
+                    println!("alkane id a: {:?}, b: {:?}", a, b);
                     StoragePointer::from_keyword("/alkane/0").set(Arc::new(a.into()));
                     StoragePointer::from_keyword("/alkane/1").set(Arc::new(b.into()));
+                    println!("before mint");
                     self.mint(context.myself, context.incoming_alkanes).unwrap()
                 } else {
                     panic!("already initialized");
