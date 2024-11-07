@@ -59,6 +59,22 @@ fn main() {
         .unwrap()
         .join("crates");
     std::env::set_current_dir(&crates_dir).unwrap();
+    let mods = fs::read_dir(&crates_dir)
+        .unwrap()
+        .filter_map(|v| {
+             // let name = v.ok()?.file_name().into_string().ok()?;
+             // if name.starts_with("alkanes-std-") {
+             //   Some(name)
+             // } else {
+             //   None
+             // }
+
+            let name = v.ok()?.file_name().into_string().ok()?;
+            if name.starts_with("alkanes-std-") {
+                Some(name.to_lowercase().replace("-", "_"))
+            } else { None }
+        })
+        .collect::<Vec<String>>();
     let files = fs::read_dir(&crates_dir)
         .unwrap()
         .filter_map(|v| {
@@ -74,6 +90,8 @@ fn main() {
                 if let Some(feature_name) = name.strip_prefix("alkanes-std-") {
                     let final_name = feature_name.to_uppercase().replace("-", "_");
                     if let Some(_) = env::var(format!("CARGO_FEATURE_{}", final_name.as_str())).ok() {
+                        Some(name)
+                    } else if let Some(_) = env::var(format!("CARGO_FEATURE_{}", "ALL")).ok() {
                         Some(name)
                     } else {
                         None
@@ -147,7 +165,7 @@ fn main() {
     );
     fs::write(
         &write_dir.join("std").join("mod.rs"),
-        files.into_iter().fold(String::default(), |r, v| {
+        mods.into_iter().fold(String::default(), |r, v| {
             r + "pub mod " + v.as_str() + "_build;\n"
         }),
     )

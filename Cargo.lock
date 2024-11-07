@@ -33,7 +33,6 @@ dependencies = [
 name = "alkanes"
 version = "0.1.0"
 dependencies = [
- "alkanes",
  "alkanes-support",
  "anyhow",
  "bitcoin 0.32.4",
@@ -1410,7 +1409,6 @@ dependencies = [
  "bytes",
  "cfg-if",
  "hex",
- "metashrew",
  "metashrew-support",
  "ordinals 0.0.8",
  "protobuf 3.7.1",
@@ -1901,7 +1899,6 @@ dependencies = [
  "protobuf-codegen 3.7.1",
  "protoc-bin-vendored",
  "protoc-rust",
- "protorune",
  "protorune-support",
  "ruint",
  "serde",
