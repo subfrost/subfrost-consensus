@@ -39,7 +39,7 @@ pub mod proto;
 pub mod protoburn;
 pub mod protostone;
 pub mod tables;
-#[cfg(feature = "test_utils")]
+#[cfg(feature = "test-utils")]
 pub mod test_helpers;
 #[cfg(test)]
 pub mod tests;

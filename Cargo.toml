@@ -21,11 +21,13 @@ auth_token = ["owned_token"]
 genesis_alkane = []
 genesis_protorune = []
 amm_pool = ["auth_token"]
+all = []
+
 
 [dependencies]
 anyhow = "1.0.90"
 bitcoin = { version = "0.32.4", features = ["rand"] }
-metashrew = { path = "crates/metashrew", features = ["mock"] }
+metashrew = { path = "crates/metashrew" }
 metashrew-support = { path = "crates/metashrew-support" }
 ordinals = { path = "crates/ordinals" }
 protorune = { path = "crates/protorune" }
@@ -45,14 +47,16 @@ js-sys = "0.3.72"
 hex_lit = "0.1.1"
 
 [dev-dependencies]
-metashrew = { path = "crates/metashrew", features = ["mock"] }
-protorune = { path = "crates/protorune", features = ["test_utils"] }
+
 alkanes = { path = ".", features = [
     "auth_token",
     "genesis_alkane",
     "genesis_protorune",
     "amm_pool",
 ] }
+metashrew = { path = "crates/metashrew", features = ["test-utils"] }
+protorune = { path = "crates/protorune", features = ["test-utils"] }
+
 
 [build-dependencies]
 anyhow = "1.0.90"

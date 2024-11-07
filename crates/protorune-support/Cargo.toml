@@ -20,4 +20,4 @@ metashrew-support = { path = "../metashrew-support" }
 
 
 [dev-dependencies]
-metashrew = { path = "../metashrew", features = ["mock"] }
+metashrew = { path = "../metashrew", features = ["test-utils"] }
