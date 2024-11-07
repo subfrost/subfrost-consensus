@@ -11,7 +11,7 @@ use std::u128;
 pub trait MessageContext {
     fn handle(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)>;
     fn protocol_tag() -> u128;
-    fn asset_exists_in_protocol(id: ProtoruneRuneId) -> bool {
+    fn asset_protoburned_in_protocol(id: ProtoruneRuneId) -> bool {
         let table = RuneTable::for_protocol(Self::protocol_tag());
         if table
             .RUNE_ID_TO_ETCHING
