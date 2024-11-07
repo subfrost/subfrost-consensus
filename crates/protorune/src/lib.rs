@@ -3,7 +3,6 @@ use crate::message::MessageContext;
 use crate::protostone::{
     add_to_indexable_protocols, initialized_protocol_index, MessageProcessor, Protostones,
 };
-use crate::tables::RuneTable;
 use anyhow::{anyhow, Ok, Result};
 use bitcoin::blockdata::block::Block;
 use bitcoin::hashes::Hash;
@@ -21,6 +20,7 @@ use ordinals::{Artifact, Runestone};
 use proto::protorune::{Output, RunesResponse, WalletResponse};
 use protobuf::{Message, SpecialFields};
 use protorune_support::constants;
+use protorune_support::tables::RuneTable;
 use protorune_support::{
     balance_sheet::{BalanceSheet, ProtoruneRuneId},
     protostone::{into_protostone_edicts, Protostone, ProtostoneEdict},

@@ -1,5 +1,7 @@
 use crate::rune_transfer::RuneTransfer;
 use anyhow::Result;
+use metashrew::index_pointer::IndexPointer;
+use metashrew_support::index_pointer::KeyValuePointer;
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -32,6 +34,13 @@ impl ProtoruneRuneId {
         };
 
         Some((block.into(), tx.into()))
+    }
+    pub fn mintable_in_protocol(&self) -> bool {
+        let ptr = IndexPointer::from_keyword("/etching/byruneid/");
+        if ptr.select(&(self.clone().into())).get().len() > 0 {
+            return false;
+        }
+        return true;
     }
 }
 
