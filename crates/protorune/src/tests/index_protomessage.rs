@@ -192,7 +192,7 @@ mod tests {
         let script_pubkey = address.script_pubkey();
 
         let txout = TxOut {
-            value: Amount::from_sat(100_000_000).to_sat(),
+            value: Amount::from_sat(100_000_000),
             script_pubkey,
         };
 
@@ -240,12 +240,12 @@ mod tests {
 
         // op return is at output 1
         let op_return = TxOut {
-            value: Amount::from_sat(0).to_sat(),
+            value: Amount::from_sat(0),
             script_pubkey: runestone,
         };
 
         helpers::create_block_with_txs(vec![Transaction {
-            version: 1,
+            version: bitcoin::transaction::Version(2),
             lock_time: bitcoin::absolute::LockTime::ZERO,
             input: vec![txin],
             output: vec![txout, op_return],
