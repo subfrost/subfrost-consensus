@@ -167,7 +167,7 @@ fn main() {
     );
     fs::write(
         &write_dir.join("std").join("mod.rs"),
-        mods.into_iter().fold(String::default(), |r, v| {
+        _files.into_iter().fold(String::default(), |r, v| {
             r + "pub mod " + v.as_str() + "_build;\n"
         }),
     )
