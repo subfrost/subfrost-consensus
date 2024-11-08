@@ -2,7 +2,6 @@ use crate::rune_transfer::RuneTransfer;
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::IndexPointer;
 use metashrew_support::index_pointer::KeyValuePointer;
-use metashrew_support::utils::format_key;
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

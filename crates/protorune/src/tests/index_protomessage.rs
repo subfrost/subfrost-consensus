@@ -6,7 +6,6 @@ mod tests {
     use crate::test_helpers::{self as helpers, get_address, ADDRESS1};
     use crate::{tables, Protorune};
     use anyhow::{anyhow, Result};
-    use bitcoin::transaction::Version;
     use bitcoin::Transaction;
     use bitcoin::{
         address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut,
@@ -196,7 +195,7 @@ mod tests {
         }
     }
 
-    pub fn print_cache() {
+    pub fn _print_cache() {
         let cache = get_cache();
 
         for (key, value) in cache.iter() {

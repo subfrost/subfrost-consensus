@@ -50,7 +50,6 @@ hex_lit = "0.1.1"
 [dev-dependencies]
 
 alkanes = { path = ".", features = [
-    "auth_token",
     "genesis_alkane",
     "genesis_protorune",
     "amm_pool",
