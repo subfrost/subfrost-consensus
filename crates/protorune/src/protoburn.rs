@@ -31,8 +31,8 @@ impl Protoburn {
     ) -> Result<()> {
         let table = RuneTable::for_protocol(self.tag.ok_or(anyhow!("no tag found"))?);
         for (rune, _balance) in balance_sheet.clone().balances.into_iter() {
-            let name = RUNES.RUNE_ID_TO_ETCHING.select(&rune.into()).get();
             let runeid: Arc<Vec<u8>> = rune.into();
+            let name = RUNES.RUNE_ID_TO_ETCHING.select(&runeid).get();
             atomic
                 .derive(&table.RUNE_ID_TO_ETCHING.select(&runeid))
                 .set(name.clone());
