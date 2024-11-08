@@ -6,8 +6,8 @@ use alkanes_support::response::ExtendedCallResponse;
 use anyhow::Result;
 use bitcoin::blockdata::block::Block;
 use bitcoin::blockdata::transaction::Transaction;
-use bitcoin::consensus::Decodable;
-use metashrew::{println, stdio::{stdout}, flush, input};
+#[allow(unused_imports)]
+use metashrew::{flush, input, println, stdio::stdout};
 use metashrew_support::block::AuxpowBlock;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
 use ordinals::{Artifact, Runestone};
@@ -18,7 +18,6 @@ use protorune_support::balance_sheet::ProtoruneRuneId;
 use protorune_support::protostone::Protostone;
 use protorune_support::rune_transfer::RuneTransfer;
 use protorune_support::utils::consensus_decode;
-use std::fmt::{Write};
 use std::io::Cursor;
 pub mod message;
 pub mod proto;
@@ -174,7 +173,7 @@ pub fn simulate() -> i32 {
 pub fn _start() {
     let data = input();
     let height = u32::from_le_bytes((&data[0..4]).try_into().unwrap());
-    let mut reader = &data[4..];
+    let reader = &data[4..];
     let block: Block = AuxpowBlock::parse(&mut Cursor::<Vec<u8>>::new(reader.to_vec()))
         .unwrap()
         .to_consensus();

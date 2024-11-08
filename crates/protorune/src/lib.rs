@@ -153,7 +153,7 @@ impl Protorune {
         )?;
         Self::handle_leftover_runes(&mut balance_sheet, &mut balances_by_output, unallocated_to)?;
         for (vout, sheet) in balances_by_output.clone() {
-            let outpoint = OutPoint::new(tx.txid(), vout);
+            let outpoint = OutPoint::new(tx.compute_txid(), vout);
             sheet.save(
                 &mut atomic.derive(
                     &tables::RUNES
@@ -501,7 +501,7 @@ impl Protorune {
     }
     pub fn index_spendables(txdata: &Vec<Transaction>) -> Result<()> {
         for (_txindex, transaction) in txdata.iter().enumerate() {
-            let tx_id = transaction.txid();
+            let tx_id = transaction.compute_txid();
 
             for (index, output) in transaction.output.iter().enumerate() {
                 let outpoint = OutPoint {
@@ -529,7 +529,7 @@ impl Protorune {
             .HEIGHT_TO_TRANSACTION_IDS
             .select_value::<u64>(height);
         for tx in &block.txdata {
-            ptr.append(Arc::new(tx.txid().as_byte_array().to_vec()));
+            ptr.append(Arc::new(tx.compute_txid().as_byte_array().to_vec()));
         }
         Ok(())
     }
@@ -539,7 +539,7 @@ impl Protorune {
             let ptr = atomic.derive(
                 &tables::RUNES
                     .OUTPOINT_TO_HEIGHT
-                    .select(&tx.txid().as_byte_array().to_vec()),
+                    .select(&tx.compute_txid().as_byte_array().to_vec()),
             );
             for i in 0..tx.output.len() {
                 ptr.select_value(i as u32).set_value(height);
@@ -548,7 +548,7 @@ impl Protorune {
                         &tables::OUTPOINT_TO_OUTPUT.select(
                             &consensus_encode(
                                 &(OutPoint {
-                                    txid: tx.txid(),
+                                    txid: tx.compute_txid(),
                                     vout: i as u32,
                                 }),
                             )
@@ -584,7 +584,7 @@ impl Protorune {
             sheet.save(
                 &mut atomic.derive(&table.OUTPOINT_TO_RUNES.select(&consensus_encode(
                     &OutPoint {
-                        txid: tx.txid(),
+                        txid: tx.compute_txid(),
                         vout: i as u32,
                     },
                 )?)),
@@ -644,7 +644,7 @@ impl Protorune {
                 balances_by_output,
                 &mut proto_balances_by_output,
                 unallocated_to,
-                tx.txid(),
+                tx.compute_txid(),
             )?;
             protostones
                 .into_iter()
@@ -664,7 +664,7 @@ impl Protorune {
                             unallocated_to,
                         )?;
                         for (vout, sheet) in balances_by_output.clone() {
-                            let outpoint = OutPoint::new(tx.txid(), vout);
+                            let outpoint = OutPoint::new(tx.compute_txid(), vout);
                             sheet.save(
                                 &mut atomic.derive(
                                     &table

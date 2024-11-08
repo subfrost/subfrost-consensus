@@ -42,6 +42,10 @@ pub fn u128_from_bytes(v: Vec<u8>) -> u128 {
 }
 pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<RuneTransfer>) {
     for rune in runes.clone() {
+        println!(
+            "crediting {:?} with token {:?} and amount {}",
+            to, rune.id, rune.value
+        );
         balance_pointer(atomic, to, &rune.id.clone().into()).set_value::<u128>(rune.value);
     }
 }

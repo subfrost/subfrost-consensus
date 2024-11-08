@@ -7,7 +7,6 @@ mod tests {
     use alkanes_support::id::AlkaneId;
     use anyhow::Result;
     use metashrew_support::{index_pointer::KeyValuePointer, utils::format_key};
-    use protorune::Protorune;
 
     use crate::index_block;
     use crate::tests::helpers as alkane_helpers;
@@ -186,7 +185,7 @@ mod tests {
         index_block(&test_block, block_height)?;
 
         println!("block indexed");
-        let auth_token_id_factory = AlkaneId {
+        let _auth_token_id_factory = AlkaneId {
             block: 4,
             tx: 0xffee,
         };

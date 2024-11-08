@@ -66,7 +66,7 @@ mod tests {
 
         // tx 0 is coinbase, tx 1 is runestone
         let outpoint_address: OutPoint = OutPoint {
-            txid: test_block.txdata[1].txid(),
+            txid: test_block.txdata[1].compute_txid(),
             vout: 0,
         };
         // check runes balance

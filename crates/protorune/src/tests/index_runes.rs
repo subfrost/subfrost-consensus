@@ -213,7 +213,7 @@ mod tests {
         let _ =
             Protorune::index_block::<MyMessageContext>(test_block.clone(), config.rune_etch_height);
         let outpoint: OutPoint = OutPoint {
-            txid: test_block.txdata[0].txid(),
+            txid: test_block.txdata[0].compute_txid(),
             vout: 0,
         };
         let protorune_id = ProtoruneRuneId {
@@ -247,11 +247,11 @@ mod tests {
         let _ =
             Protorune::index_block::<MyMessageContext>(test_block.clone(), config.rune_etch_height);
         let outpoint_address2: OutPoint = OutPoint {
-            txid: test_block.txdata[1].txid(),
+            txid: test_block.txdata[1].compute_txid(),
             vout: 0,
         };
         let outpoint_address1: OutPoint = OutPoint {
-            txid: test_block.txdata[1].txid(),
+            txid: test_block.txdata[1].compute_txid(),
             vout: 1,
         };
         let protorune_id = ProtoruneRuneId {

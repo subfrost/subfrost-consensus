@@ -52,14 +52,14 @@ pub fn init_with_multiple_cellpacks_with_tx(
                     previous_output,
                 );
                 previous_out = Some(OutPoint {
-                    txid: tx.txid(),
+                    txid: tx.compute_txid(),
                     vout: 0,
                 });
                 tx
             } else {
                 let tx = create_multiple_cellpack_with_witness(witness, [cellpack].into());
                 previous_out = Some(OutPoint {
-                    txid: tx.txid(),
+                    txid: tx.compute_txid(),
                     vout: 0,
                 });
                 tx
