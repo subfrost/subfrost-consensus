@@ -19,6 +19,14 @@ fn test_auth_token() -> Result<()> {
     clear();
     let block_height = 840_000;
 
+    let auth_cellpack = Cellpack {
+        target: AlkaneId {
+            block: 3,
+            tx: 0xffee,
+        },
+        inputs: vec![100],
+    };
+
     let test_cellpack = Cellpack {
         target: AlkaneId { block: 1, tx: 0 },
         inputs: vec![
@@ -26,14 +34,6 @@ fn test_auth_token() -> Result<()> {
             1,    /* auth_token units */
             1000, /* owned_token token_units */
         ],
-    };
-
-    let auth_cellpack = Cellpack {
-        target: AlkaneId {
-            block: 3,
-            tx: 0xffee,
-        },
-        inputs: vec![100],
     };
     let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
         [
