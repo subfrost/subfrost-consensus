@@ -270,8 +270,8 @@ mod tests {
     use {
         super::*,
         bitcoin::{
-            blockdata::locktime::absolute::LockTime, script::PushBytes, Sequence, TxIn, TxOut,
-            Witness,
+            blockdata::locktime::absolute::LockTime, script::PushBytes, transaction::Version,
+            Amount, Sequence, TxIn, TxOut, Witness,
         },
         pretty_assertions::assert_eq,
     };
@@ -293,10 +293,10 @@ mod tests {
                     .push_opcode(Runestone::MAGIC_NUMBER)
                     .push_slice(payload)
                     .into_script(),
-                value: 0,
+                value: Amount::from_sat(0),
             }],
             lock_time: LockTime::ZERO,
-            version: 2,
+            version: Version(2),
         })
         .unwrap()
     }
@@ -320,10 +320,10 @@ mod tests {
                     script_pubkey: ScriptBuf::from_bytes(
                         vec![opcodes::all::OP_PUSHBYTES_4.to_u8()]
                     ),
-                    value: 0,
+                    value: Amount::from_sat(0),
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             }),
             None,
         );
@@ -336,7 +336,7 @@ mod tests {
                 input: Vec::new(),
                 output: Vec::new(),
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             }),
             None,
         );
@@ -349,10 +349,10 @@ mod tests {
                 input: Vec::new(),
                 output: vec![TxOut {
                     script_pubkey: script::Builder::new().push_slice([]).into_script(),
-                    value: 0
+                    value: Amount::from_sat(0)
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             }),
             None,
         );
@@ -367,10 +367,10 @@ mod tests {
                     script_pubkey: script::Builder::new()
                         .push_opcode(opcodes::all::OP_RETURN)
                         .into_script(),
-                    value: 0
+                    value: Amount::from_sat(2)
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             }),
             None,
         );
@@ -386,10 +386,10 @@ mod tests {
                         .push_opcode(opcodes::all::OP_RETURN)
                         .push_slice(b"FOOO")
                         .into_script(),
-                    value: 0
+                    value: Amount::from_sat(0)
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             }),
             None,
         );
@@ -410,10 +410,10 @@ mod tests {
                 input: Vec::new(),
                 output: vec![TxOut {
                     script_pubkey: ScriptBuf::from_bytes(script_pubkey),
-                    value: 0,
+                    value: Amount::from_sat(2),
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             }),
             Some(Payload::Invalid(Flaw::InvalidScript))
         );
@@ -429,10 +429,10 @@ mod tests {
                     .push_opcode(Runestone::MAGIC_NUMBER)
                     .push_slice([128])
                     .into_script(),
-                value: 0,
+                value: Amount::from_sat(2),
             }],
             lock_time: LockTime::ZERO,
-            version: 2,
+            version: Version(2),
         })
         .unwrap();
     }
@@ -457,7 +457,7 @@ mod tests {
                             )
                             .push_slice([2, 0])
                             .into_script(),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },
                     TxOut {
                         script_pubkey: script::Builder::new()
@@ -472,11 +472,11 @@ mod tests {
                             )
                             .push_slice([3, 0])
                             .into_script(),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },
                 ],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             })
             .unwrap(),
             Artifact::Cenotaph(Cenotaph {
@@ -497,10 +497,10 @@ mod tests {
                         .push_opcode(Runestone::MAGIC_NUMBER)
                         .push_opcode(opcodes::all::OP_PUSHNUM_1)
                         .into_script(),
-                    value: 0,
+                    value: Amount::from_sat(0),
                 },],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             })
             .unwrap(),
             Artifact::Cenotaph(Cenotaph {
@@ -520,10 +520,10 @@ mod tests {
                         .push_opcode(opcodes::all::OP_RETURN)
                         .push_opcode(Runestone::MAGIC_NUMBER)
                         .into_script(),
-                    value: 0
+                    value: Amount::from_sat(0)
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             })
             .unwrap(),
             Artifact::Runestone(Runestone::default()),
@@ -549,7 +549,7 @@ mod tests {
                 output: vec![
                     TxOut {
                         script_pubkey: ScriptBuf::from_bytes(script_pubkey),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },
                     TxOut {
                         script_pubkey: script::Builder::new()
@@ -557,11 +557,11 @@ mod tests {
                             .push_opcode(Runestone::MAGIC_NUMBER)
                             .push_slice(payload)
                             .into_script(),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },
                 ],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             })
             .unwrap(),
             Artifact::Runestone(Runestone {
@@ -788,10 +788,10 @@ mod tests {
                         .push_opcode(Runestone::MAGIC_NUMBER)
                         .push_slice([128])
                         .into_script(),
-                    value: 0,
+                    value: Amount::from_sat(0),
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             })
             .unwrap(),
             Artifact::Cenotaph(Cenotaph {
@@ -1322,10 +1322,10 @@ mod tests {
                         .push_slice::<&PushBytes>(varint::encode(2).as_slice().try_into().unwrap())
                         .push_slice::<&PushBytes>(varint::encode(0).as_slice().try_into().unwrap())
                         .into_script(),
-                    value: 0
+                    value: Amount::from_sat(0)
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             })
             .unwrap(),
             Artifact::Runestone(Runestone {
@@ -1355,7 +1355,7 @@ mod tests {
                 output: vec![
                     TxOut {
                         script_pubkey: ScriptBuf::new(),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },
                     TxOut {
                         script_pubkey: script::Builder::new()
@@ -1363,11 +1363,11 @@ mod tests {
                             .push_opcode(Runestone::MAGIC_NUMBER)
                             .push_slice(payload)
                             .into_script(),
-                        value: 0
+                        value: Amount::from_sat(0)
                     }
                 ],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             })
             .unwrap(),
             Artifact::Runestone(Runestone {
@@ -1396,7 +1396,7 @@ mod tests {
                             .push_opcode(opcodes::all::OP_RETURN)
                             .push_slice(b"FOO")
                             .into_script(),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },
                     TxOut {
                         script_pubkey: script::Builder::new()
@@ -1404,11 +1404,11 @@ mod tests {
                             .push_opcode(Runestone::MAGIC_NUMBER)
                             .push_slice(payload)
                             .into_script(),
-                        value: 0
+                        value: Amount::from_sat(0)
                     }
                 ],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             })
             .unwrap(),
             Artifact::Runestone(Runestone {
@@ -1686,10 +1686,10 @@ mod tests {
                 input: Vec::new(),
                 output: vec![TxOut {
                     script_pubkey,
-                    value: 0,
+                    value: Amount::from_sat(0),
                 }],
                 lock_time: LockTime::ZERO,
-                version: 2,
+                version: Version(2),
             };
 
             let Payload::Valid(payload) = Runestone::payload(&transaction).unwrap() else {
@@ -2059,7 +2059,7 @@ mod tests {
     fn invalid_scripts_in_op_returns_without_magic_number_are_ignored() {
         assert_eq!(
             Runestone::decipher(&Transaction {
-                version: 2,
+                version: Version(2),
                 lock_time: LockTime::ZERO,
                 input: vec![TxIn {
                     previous_output: OutPoint::null(),
@@ -2072,7 +2072,7 @@ mod tests {
                         opcodes::all::OP_RETURN.to_u8(),
                         opcodes::all::OP_PUSHBYTES_4.to_u8(),
                     ]),
-                    value: 0,
+                    value: Amount::from_sat(0),
                 }],
             }),
             None
@@ -2080,7 +2080,7 @@ mod tests {
 
         assert_eq!(
             Runestone::decipher(&Transaction {
-                version: 2,
+                version: Version(2),
                 lock_time: LockTime::ZERO,
                 input: vec![TxIn {
                     previous_output: OutPoint::null(),
@@ -2094,11 +2094,11 @@ mod tests {
                             opcodes::all::OP_RETURN.to_u8(),
                             opcodes::all::OP_PUSHBYTES_4.to_u8(),
                         ]),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },
                     TxOut {
                         script_pubkey: Runestone::default().encipher(),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     }
                 ],
             })
@@ -2111,7 +2111,7 @@ mod tests {
     fn invalid_scripts_in_op_returns_with_magic_number_produce_cenotaph() {
         assert_eq!(
             Runestone::decipher(&Transaction {
-                version: 2,
+                version: Version(2),
                 lock_time: LockTime::ZERO,
                 input: vec![TxIn {
                     previous_output: OutPoint::null(),
@@ -2125,7 +2125,7 @@ mod tests {
                         Runestone::MAGIC_NUMBER.to_u8(),
                         opcodes::all::OP_PUSHBYTES_4.to_u8(),
                     ]),
-                    value: 0,
+                    value: Amount::from_sat(0),
                 }],
             })
             .unwrap(),
@@ -2174,12 +2174,12 @@ mod tests {
 
             assert_eq!(
                 Runestone::decipher(&Transaction {
-                    version: 2,
+                    version: Version(2),
                     lock_time: LockTime::ZERO,
                     input: default(),
                     output: vec![TxOut {
                         script_pubkey: script_pubkey.into(),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },],
                 })
                 .unwrap(),
@@ -2193,7 +2193,7 @@ mod tests {
         for i in 79..=u8::MAX {
             assert_eq!(
                 Runestone::decipher(&Transaction {
-                    version: 2,
+                    version: Version(2),
                     lock_time: LockTime::ZERO,
                     input: default(),
                     output: vec![TxOut {
@@ -2203,7 +2203,7 @@ mod tests {
                             i
                         ]
                         .into(),
-                        value: 0,
+                        value: Amount::from_sat(0),
                     },],
                 })
                 .unwrap(),

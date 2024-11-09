@@ -282,7 +282,7 @@ mod tests {
         };
 
         helpers::create_block_with_txs(vec![Transaction {
-            version: Version::ONE,
+            version: bitcoin::transaction::Version(2),
             lock_time: bitcoin::absolute::LockTime::ZERO,
             input: vec![txin],
             output: vec![txout, op_return],
