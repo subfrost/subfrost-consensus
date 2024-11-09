@@ -27,18 +27,19 @@ impl AlkaneResponder for AuthToken {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
+        let mut response: CallResponse = CallResponse::forward(&context.incoming_alkanes.clone());
         match shift(&mut inputs).unwrap() {
             0 => {
                 println!("initializing auth token");
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() == 0 {
                     let amount = shift(&mut inputs).unwrap();
-                    let mut response: CallResponse = CallResponse::default();
                     response.alkanes = context.incoming_alkanes.clone();
                     response.alkanes.0.push(AlkaneTransfer {
                         id: context.myself.clone(),
                         value: amount,
                     });
+                    println!("intialize response: {:?}", response);
                     pointer.set(Arc::new(vec![0x01]));
                     response
                 } else {
@@ -46,7 +47,6 @@ impl AlkaneResponder for AuthToken {
                 }
             }
             1 => {
-                let mut response = CallResponse::default();
                 if context.incoming_alkanes.0.len() != 1 {
                     panic!("did not authenticate with only the authentication token");
                 }
@@ -62,12 +62,10 @@ impl AlkaneResponder for AuthToken {
                 response
             }
             99 => {
-                let mut response = CallResponse::default();
                 response.data = self.name().into_bytes().to_vec();
                 response
             }
             100 => {
-                let mut response = CallResponse::default();
                 response.data = self.symbol().into_bytes().to_vec();
                 response
             }

@@ -9,7 +9,11 @@ use bitcoin::hashes::Hash;
 use bitcoin::script::Instruction;
 use bitcoin::{opcodes, Address, OutPoint, ScriptBuf, Transaction, TxOut};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew::{flush, input};
+#[allow(unused_imports)]
+use metashrew::{
+    flush, input, println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr},
@@ -31,8 +35,6 @@ use std::io::Cursor;
 use std::ops::Sub;
 use std::sync::Arc;
 
-// use metashrew_support::utils::format_key;
-// use metashrew::{println, stdio::stdout};
 // use std::fmt::Write;
 
 pub mod balance_sheet;
@@ -153,7 +155,7 @@ impl Protorune {
         )?;
         Self::handle_leftover_runes(&mut balance_sheet, &mut balances_by_output, unallocated_to)?;
         for (vout, sheet) in balances_by_output.clone() {
-            let outpoint = OutPoint::new(tx.txid(), vout);
+            let outpoint = OutPoint::new(tx.compute_txid(), vout);
             sheet.save(
                 &mut atomic.derive(
                     &tables::RUNES
@@ -296,7 +298,7 @@ impl Protorune {
     ) -> Result<()> {
         let name = tables::RUNES
             .RUNE_ID_TO_ETCHING
-            .select(&mint.clone().into())
+            .select(&mint.to_string().into_bytes())
             .get();
         let remaining: u128 = tables::RUNES.MINTS_REMAINING.select(&name).get_value();
         let amount: u128 = tables::RUNES.AMOUNT.select(&name).get_value();
@@ -339,9 +341,9 @@ impl Protorune {
         if let Some(name) = etching.rune {
             let _name = field_to_name(&name.0);
             //Self::get_reserved_name(height, index, name);
-            let rune_id = ProtoruneRuneId::new(height.into(), index.into());
+            let rune_id = Self::build_rune_id(height, index);
             atomic
-                .derive(&tables::RUNES.RUNE_ID_TO_ETCHING.select(&rune_id.into()))
+                .derive(&tables::RUNES.RUNE_ID_TO_ETCHING.select(&rune_id.clone()))
                 .set(Arc::new(name.0.to_string().into_bytes()));
             atomic
                 .derive(
@@ -349,9 +351,9 @@ impl Protorune {
                         .ETCHING_TO_RUNE_ID
                         .select(&_name.as_bytes().to_vec()),
                 )
-                .set(rune_id.into());
+                .set(rune_id.clone());
             atomic
-                .derive(&tables::RUNES.RUNE_ID_TO_HEIGHT.select(&rune_id.into()))
+                .derive(&tables::RUNES.RUNE_ID_TO_HEIGHT.select(&rune_id.clone()))
                 .set_value(height);
 
             if let Some(divisibility) = etching.divisibility {
@@ -501,7 +503,7 @@ impl Protorune {
     }
     pub fn index_spendables(txdata: &Vec<Transaction>) -> Result<()> {
         for (_txindex, transaction) in txdata.iter().enumerate() {
-            let tx_id = transaction.txid();
+            let tx_id = transaction.compute_txid();
 
             for (index, output) in transaction.output.iter().enumerate() {
                 let outpoint = OutPoint {
@@ -529,7 +531,7 @@ impl Protorune {
             .HEIGHT_TO_TRANSACTION_IDS
             .select_value::<u64>(height);
         for tx in &block.txdata {
-            ptr.append(Arc::new(tx.txid().as_byte_array().to_vec()));
+            ptr.append(Arc::new(tx.compute_txid().as_byte_array().to_vec()));
         }
         Ok(())
     }
@@ -539,7 +541,7 @@ impl Protorune {
             let ptr = atomic.derive(
                 &tables::RUNES
                     .OUTPOINT_TO_HEIGHT
-                    .select(&tx.txid().as_byte_array().to_vec()),
+                    .select(&tx.compute_txid().as_byte_array().to_vec()),
             );
             for i in 0..tx.output.len() {
                 ptr.select_value(i as u32).set_value(height);
@@ -548,7 +550,7 @@ impl Protorune {
                         &tables::OUTPOINT_TO_OUTPUT.select(
                             &consensus_encode(
                                 &(OutPoint {
-                                    txid: tx.txid(),
+                                    txid: tx.compute_txid(),
                                     vout: i as u32,
                                 }),
                             )
@@ -581,13 +583,20 @@ impl Protorune {
                 .get(&(i as u32))
                 .map(|v| v.clone())
                 .unwrap_or_else(|| BalanceSheet::default());
+            let outpoint = OutPoint {
+                txid: tx.compute_txid(),
+                vout: i as u32,
+            };
+            // println!(
+            //     "saving balancesheet: {:#?} to outpoint: {:#?}",
+            //     sheet, outpoint
+            // );
             sheet.save(
-                &mut atomic.derive(&table.OUTPOINT_TO_RUNES.select(&consensus_encode(
-                    &OutPoint {
-                        txid: tx.txid(),
-                        vout: i as u32,
-                    },
-                )?)),
+                &mut atomic.derive(
+                    &table
+                        .OUTPOINT_TO_RUNES
+                        .select(&consensus_encode(&outpoint)?),
+                ),
                 false,
             );
         }
@@ -644,7 +653,7 @@ impl Protorune {
                 balances_by_output,
                 &mut proto_balances_by_output,
                 unallocated_to,
-                tx.txid(),
+                tx.compute_txid(),
             )?;
             protostones
                 .into_iter()
@@ -664,7 +673,7 @@ impl Protorune {
                             unallocated_to,
                         )?;
                         for (vout, sheet) in balances_by_output.clone() {
-                            let outpoint = OutPoint::new(tx.txid(), vout);
+                            let outpoint = OutPoint::new(tx.compute_txid(), vout);
                             sheet.save(
                                 &mut atomic.derive(
                                     &table

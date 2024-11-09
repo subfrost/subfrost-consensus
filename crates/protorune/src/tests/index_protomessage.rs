@@ -6,26 +6,21 @@ mod tests {
     use crate::test_helpers::{self as helpers, get_address, ADDRESS1};
     use crate::{tables, Protorune};
     use anyhow::{anyhow, Result};
-    use bitcoin::transaction::Version;
     use bitcoin::Transaction;
     use bitcoin::{
         address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut,
         Witness,
     };
-    use metashrew_support::utils::format_key;
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
     use protorune_support::protostone::Protostone;
     use protorune_support::rune_transfer::RuneTransfer;
     use protorune_support::utils::consensus_encode;
 
-    use metashrew::{clear, get_cache};
+    use metashrew::clear;
     use metashrew_support::index_pointer::KeyValuePointer;
     use ordinals::{Etching, Rune, Runestone};
     use std::str::FromStr;
     use wasm_bindgen_test::*;
-
-    use metashrew::{println, stdio::stdout};
-    use std::fmt::Write;
 
     struct ForwardAll(());
     struct MixedForwarding(());
@@ -193,17 +188,6 @@ mod tests {
             <BalanceSheet as TryFrom<Vec<RuneTransfer>>>::try_from(vec![transfer_to_runtime])?
                 .pipe(&mut new_runtime_balances);
             Ok((vec![transfer], new_runtime_balances))
-        }
-    }
-
-    pub fn print_cache() {
-        let cache = get_cache();
-
-        for (key, value) in cache.iter() {
-            let formatted_key = format_key(key);
-            let formatted_value = format_key(value);
-
-            println!("{}: {}", formatted_key, formatted_value);
         }
     }
 

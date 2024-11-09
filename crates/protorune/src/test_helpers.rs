@@ -319,7 +319,7 @@ pub fn create_rune_transfer_transaction(
 
 pub fn create_block_with_txs(txdata: Vec<Transaction>) -> Block {
     // Define block header fields
-    let version = Version::ONE;
+    let _version = Version::ONE;
     let previous_blockhash =
         BlockHash::from_str("00000000000000000005c3b409b4f17f9b3a97ed46d1a63d3f660d24168b2b3e")
             .unwrap();
@@ -398,7 +398,7 @@ pub fn create_block_with_rune_transfer(
     );
     let tx0 = create_rune_etching_transaction(&config);
     let outpoint_with_runes = OutPoint {
-        txid: tx0.txid(),
+        txid: tx0.compute_txid(),
         vout: 0,
     };
     let rune_id = RuneId::new(config.rune_etch_height, config.rune_etch_vout).unwrap();

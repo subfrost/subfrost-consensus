@@ -42,6 +42,10 @@ pub fn u128_from_bytes(v: Vec<u8>) -> u128 {
 }
 pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<RuneTransfer>) {
     for rune in runes.clone() {
+        println!(
+            "crediting {:?} with token {:?} and amount {}",
+            to, rune.id, rune.value
+        );
         balance_pointer(atomic, to, &rune.id.clone().into()).set_value::<u128>(rune.value);
     }
 }
@@ -54,6 +58,7 @@ pub fn debit_balances(
     for rune in runes.0.clone() {
         let mut pointer = balance_pointer(atomic, to, &rune.id.clone().into());
         let pointer_value = pointer.get_value::<u128>();
+        println!("debiting to {:?} rune {:?}", to, rune);
         let v = {
             if *to == rune.id {
                 match pointer_value.checked_sub(rune.value) {
@@ -79,6 +84,7 @@ pub fn transfer_from(
         let mut from_pointer =
             balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
         let mut balance = from_pointer.get_value::<u128>();
+        println!("transferring details: {:?}", transfer);
         if balance < transfer.value {
             if &transfer.id == from {
                 balance = transfer.value;

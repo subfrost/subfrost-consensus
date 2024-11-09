@@ -27,6 +27,10 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
     let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
+    println!(
+        "calling credit balances with context caller {:?}, myself {:?}",
+        caller, myself
+    );
     credit_balances(&mut atomic, &myself, &parcel.runes);
     prepare_context(&mut context, &caller, &myself, false);
     let (response, _gas_used) = run_after_special(context, binary, start_fuel())?;
@@ -39,7 +43,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
     combined.debit(&sheet)?;
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
-
+    println!("response.alkanes are: {:?}", response.alkanes.0);
     Ok((response.alkanes.into(), combined))
 }
 
@@ -51,8 +55,7 @@ impl MessageContext for AlkaneMessageContext {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
             Err(e) => {
-                println!("Error: {:?}", e); // Print the error
-                Err(e) // Return the error
+                panic!("Error: {:?}", e); // Print the error
             }
         }
     }

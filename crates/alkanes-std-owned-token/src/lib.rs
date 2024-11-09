@@ -38,6 +38,7 @@ impl AlkaneResponder for OwnedToken {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
+        let mut response: CallResponse = CallResponse::forward(&context.incoming_alkanes.clone());
         match shift(&mut inputs).unwrap() {
             0 => {
                 println!("initializing std token");
@@ -45,7 +46,6 @@ impl AlkaneResponder for OwnedToken {
                 if pointer.get().len() == 0 {
                     let auth_token_units = shift(&mut inputs).unwrap();
                     let token_units = shift(&mut inputs).unwrap();
-                    let mut response: CallResponse = CallResponse::default();
                     response
                         .alkanes
                         .0
@@ -61,19 +61,16 @@ impl AlkaneResponder for OwnedToken {
                 }
             }
             1 => {
-                let mut response = CallResponse::default();
                 let token_units = shift(&mut inputs).unwrap();
                 let transfer = self.mint(&context, token_units);
                 response.alkanes.0.push(transfer);
                 response
             }
             99 => {
-                let mut response = CallResponse::default();
                 response.data = self.name().into_bytes().to_vec();
                 response
             }
             100 => {
-                let mut response = CallResponse::default();
                 response.data = self.symbol().into_bytes().to_vec();
                 response
             }
