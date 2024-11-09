@@ -188,8 +188,14 @@ mod tests {
             .set(Arc::new(Vec::new()));
         let _ =
             Protorune::index_block::<MyMessageContext>(test_block.clone(), config.rune_etch_height);
-        let rune_id = Protorune::build_rune_id(config.rune_etch_height, config.rune_etch_vout);
-        let test_val = tables::RUNES.RUNE_ID_TO_ETCHING.select(&rune_id).get();
+        let rune_id = ProtoruneRuneId::new(
+            config.rune_etch_height as u128,
+            config.rune_etch_vout as u128,
+        );
+        let test_val = tables::RUNES
+            .RUNE_ID_TO_ETCHING
+            .select(&rune_id.into())
+            .get();
         let cache_hex: String = display_vec_as_hex(test_val.to_vec());
         let rune = Rune::from_str(&config.rune_name)
             .unwrap()

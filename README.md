@@ -61,10 +61,28 @@ A sample command may look like:
 
 ### Testing
 
-To test the indexer end-to-end, it is only required to run:
+To run all tests in the monorepo
+
+```
+cargo test --all
+```
+
+To test the alkanes indexer end-to-end, it is only required to run:
 
 ```
 cargo test
+```
+
+To run tests for a specific crate
+
+```
+cargo test -p [CRATE]
+```
+
+example:
+
+```
+cargo test --features test-utils -p protorune
 ```
 
 This will provide a stub environment to test a METASHREW indexer program, and it will test the alkanes standard library smart contracts in simulated blocks.

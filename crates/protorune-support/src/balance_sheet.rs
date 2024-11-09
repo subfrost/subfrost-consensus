@@ -1,12 +1,16 @@
 use crate::rune_transfer::RuneTransfer;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use metashrew::index_pointer::IndexPointer;
 use metashrew_support::index_pointer::KeyValuePointer;
+use metashrew_support::utils::format_key;
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::{fmt, u128};
+
+// use metashrew::{println, stdio::stdout};
+// use std::fmt::Write;
 
 #[derive(
     Eq, PartialOrd, Ord, PartialEq, Hash, Clone, Copy, Debug, Default, Serialize, Deserialize,
@@ -35,6 +39,9 @@ impl ProtoruneRuneId {
 
         Some((block.into(), tx.into()))
     }
+
+    /// A protorune is mintable if there is no corresponding rune.
+    /// We check the index of all etchings to see if the rune exists.
     pub fn mintable_in_protocol(&self) -> bool {
         let ptr = IndexPointer::from_keyword("/etching/byruneid/");
         if ptr.select(&(self.clone().into())).get().len() > 0 {
@@ -127,11 +134,33 @@ impl BalanceSheet {
             sheet.increase(rune, *balance);
         }
     }
+
     pub fn debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
+        for (rune, balance) in &sheet.balances {
+            if sheet.get(&rune) > self.get(&rune) {
+                return Err(anyhow!("balance underflow"));
+            }
+            self.decrease(rune, *balance);
+        }
+        Ok(())
+    }
+
+    /// When processing the return value for MessageContext.handle()
+    /// we want to be able to mint arbituary amounts of mintable tokens.
+    ///
+    /// This function allows us to debit more than the existing amount
+    /// of a mintable token without returning an Err so that MessageContext
+    /// can mint more than what the initial balance sheet has.
+    pub fn mintable_debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
         for (rune, balance) in &sheet.balances {
             let mut amount = *balance;
             if sheet.get(&rune) > self.get(&rune) {
-                amount = self.get(&rune);
+                if rune.mintable_in_protocol() {
+                    // minatable tokens first debit from existing amounts
+                    amount = self.get(&rune);
+                } else {
+                    return Err(anyhow!("balance underflow"));
+                }
             }
             self.decrease(rune, amount);
         }

@@ -57,8 +57,8 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
 
         // we want to subtract outgoing and the outgoing runtime balance
         // amount from the initial amount
-        initial.debit(&outgoing)?;
-        initial.debit(&outgoing_runtime)?;
+        initial.mintable_debit(&outgoing)?;
+        initial.mintable_debit(&outgoing_runtime)?;
 
         // increase the pointer by the outgoing runes balancesheet
         increase_balances_using_sheet(balances_by_output, &outgoing, pointer);
