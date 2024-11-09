@@ -134,27 +134,11 @@ impl BalanceSheet {
         }
     }
 
-    pub fn debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
-        for (rune, balance) in &sheet.balances {
-            if sheet.get(&rune) > self.get(&rune) {
-                return Err(anyhow!("balance underflow"));
-            }
-            self.decrease(rune, *balance);
-        }
-        Ok(())
-    }
-
-    /// When processing the return value for MessageContext.handle()
-    /// we want to be able to mint arbituary amounts of mintable tokens.
-    ///
-    /// This function allows us to debit more than the existing amount
-    /// of a mintable token without returning an Err so that MessageContext
-    /// can mint more than what the initial balance sheet has.
-    pub fn mintable_debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
+    fn debit_underlying(&mut self, sheet: &BalanceSheet, mintable: bool) -> Result<()> {
         for (rune, balance) in &sheet.balances {
             let mut amount = *balance;
             if sheet.get(&rune) > self.get(&rune) {
-                if rune.mintable_in_protocol() {
+                if mintable && rune.mintable_in_protocol() {
                     // minatable tokens first debit from existing amounts
                     amount = self.get(&rune);
                 } else {
@@ -164,6 +148,19 @@ impl BalanceSheet {
             self.decrease(rune, amount);
         }
         Ok(())
+    }
+    /// When processing the return value for MessageContext.handle()
+    /// we want to be able to mint arbituary amounts of mintable tokens.
+    ///
+    /// This function allows us to debit more than the existing amount
+    /// of a mintable token without returning an Err so that MessageContext
+    /// can mint more than what the initial balance sheet has.
+    pub fn debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
+        self.debit_underlying(sheet, true)
+    }
+
+    pub fn rune_debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
+        self.debit_underlying(sheet, false)
     }
 
     pub fn inspect(&self) -> String {

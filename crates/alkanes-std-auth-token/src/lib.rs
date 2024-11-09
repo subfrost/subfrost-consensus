@@ -39,6 +39,7 @@ impl AlkaneResponder for AuthToken {
                         id: context.myself.clone(),
                         value: amount,
                     });
+                    println!("intialize response: {:?}", response);
                     pointer.set(Arc::new(vec![0x01]));
                     response
                 } else {

@@ -83,6 +83,7 @@ pub fn transfer_from(
         let mut from_pointer =
             balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
         let mut balance = from_pointer.get_value::<u128>();
+        println!("transferring details: {:?}", transfer);
         if balance < transfer.value {
             if &transfer.id == from {
                 balance = transfer.value;
