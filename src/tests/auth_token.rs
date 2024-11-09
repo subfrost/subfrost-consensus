@@ -78,6 +78,14 @@ fn test_auth_token() -> Result<()> {
     );
     assert_eq!(
         IndexPointer::from_keyword("/alkanes/")
+            .select(&_auth_token_id_factory.into())
+            .get()
+            .as_ref()
+            .clone(),
+        compress(alkanes_std_auth_token_build::get_bytes().into())?
+    );
+    assert_eq!(
+        IndexPointer::from_keyword("/alkanes/")
             .select(&auth_token_id_deployment.into())
             .get()
             .as_ref()
