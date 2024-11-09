@@ -112,17 +112,14 @@ pub fn create_multiple_cellpack_with_witness_and_in(
         }],
         cellpacks
             .into_iter()
-            .map(|cellpack| {
-                Protostone {
-                    // protomessage with nonsensical inforamtion, which should all be refunded
-                    message: cellpack.encipher(),
-                    pointer: Some(0),
-                    refund: Some(0),
-                    edicts: vec![],
-                    from: None,
-                    burn: None,
-                    protocol_tag: protocol_id as u128,
-                }
+            .map(|cellpack| Protostone {
+                message: cellpack.encipher(),
+                pointer: Some(0),
+                refund: Some(0),
+                edicts: vec![],
+                from: None,
+                burn: None,
+                protocol_tag: protocol_id as u128,
             })
             .collect(),
     ]

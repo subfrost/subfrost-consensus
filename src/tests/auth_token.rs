@@ -66,8 +66,8 @@ fn test_auth_token() -> Result<()> {
             .select(&consensus_encode(&outpoint)?),
     );
     println!("balances at end {:?}", sheet);
-    assert_eq!(sheet.get(&AlkaneId { block: 2, tx: 0 }.into()), 1000);
-    assert_eq!(sheet.get(&AlkaneId { block: 2, tx: 1 }.into()), 1);
+    assert_eq!(sheet.get(&owned_token_id.into()), 1000);
+    assert_eq!(sheet.get(&auth_token_id_deployment.into()), 1);
     assert_eq!(
         IndexPointer::from_keyword("/alkanes/")
             .select(&owned_token_id.into())
