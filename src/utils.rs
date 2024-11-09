@@ -58,6 +58,7 @@ pub fn debit_balances(
     for rune in runes.0.clone() {
         let mut pointer = balance_pointer(atomic, to, &rune.id.clone().into());
         let pointer_value = pointer.get_value::<u128>();
+        println!("debiting to {:?} rune {:?}", to, rune);
         let v = {
             if *to == rune.id {
                 match pointer_value.checked_sub(rune.value) {

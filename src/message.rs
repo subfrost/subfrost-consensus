@@ -43,7 +43,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
     combined.debit(&sheet)?;
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
-
+    println!("response.alkanes are: {:?}", response.alkanes.0);
     Ok((response.alkanes.into(), combined))
 }
 

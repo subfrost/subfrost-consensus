@@ -202,6 +202,16 @@ pub trait AlkaneResponder {
     ) -> Result<CallResponse> {
         self.extcall::<Staticcall>(cellpack, outgoing_alkanes, fuel)
     }
+    fn run_and_forward(&self) -> Vec<u8> {
+        let context = self.context().unwrap();
+        let mut extended: ExtendedCallResponse = self.initialize().execute().into();
+        extended
+            .alkanes
+            .0
+            .append(&mut context.incoming_alkanes.0.clone());
+        extended.storage = unsafe { _CACHE.as_ref().unwrap().clone() };
+        extended.serialize()
+    }
     fn run(&self) -> Vec<u8> {
         let mut extended: ExtendedCallResponse = self.initialize().execute().into();
         extended.storage = unsafe { _CACHE.as_ref().unwrap().clone() };

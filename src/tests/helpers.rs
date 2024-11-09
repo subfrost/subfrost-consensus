@@ -50,6 +50,7 @@ pub fn init_with_multiple_cellpacks_with_tx(
                     witness,
                     [cellpack].into(),
                     previous_output,
+                    false,
                 );
                 previous_out = Some(OutPoint {
                     txid: tx.compute_txid(),
@@ -57,7 +58,7 @@ pub fn init_with_multiple_cellpacks_with_tx(
                 });
                 tx
             } else {
-                let tx = create_multiple_cellpack_with_witness(witness, [cellpack].into());
+                let tx = create_multiple_cellpack_with_witness(witness, [cellpack].into(), true);
                 previous_out = Some(OutPoint {
                     txid: tx.compute_txid(),
                     vout: 0,
@@ -79,7 +80,9 @@ pub fn init_with_multiple_cellpacks(binary: Vec<u8>, cellpacks: Vec<Cellpack>) -
     let witness = raw_envelope.to_gzipped_witness();
     test_block
         .txdata
-        .push(create_multiple_cellpack_with_witness(witness, cellpacks));
+        .push(create_multiple_cellpack_with_witness(
+            witness, cellpacks, true,
+        ));
     test_block
 }
 
@@ -87,6 +90,7 @@ pub fn create_multiple_cellpack_with_witness_and_in(
     witness: Witness,
     cellpacks: Vec<Cellpack>,
     previous_output: OutPoint,
+    etch: bool,
 ) -> Transaction {
     let protocol_id = 1;
     let input_script = ScriptBuf::new();
@@ -123,8 +127,8 @@ pub fn create_multiple_cellpack_with_witness_and_in(
             .collect(),
     ]
     .concat();
-    let runestone: ScriptBuf = (Runestone {
-        etching: Some(Etching {
+    let etching = if etch {
+        Some(Etching {
             divisibility: Some(2),
             premine: Some(1000),
             rune: Some(Rune::from_str("TESTTESTTEST").unwrap()),
@@ -132,7 +136,12 @@ pub fn create_multiple_cellpack_with_witness_and_in(
             symbol: Some(char::from_str("A").unwrap()),
             turbo: true,
             terms: None,
-        }),
+        })
+    } else {
+        None
+    };
+    let runestone: ScriptBuf = (Runestone {
+        etching,
         pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
         edicts: Vec::new(),
         mint: None,
@@ -164,12 +173,13 @@ pub fn create_multiple_cellpack_with_witness_and_in(
 }
 
 pub fn create_cellpack_with_witness(witness: Witness, cellpack: Cellpack) -> Transaction {
-    create_multiple_cellpack_with_witness(witness, [cellpack].into())
+    create_multiple_cellpack_with_witness(witness, [cellpack].into(), true)
 }
 
 pub fn create_multiple_cellpack_with_witness(
     witness: Witness,
     cellpacks: Vec<Cellpack>,
+    etch: bool,
 ) -> Transaction {
     let previous_output = OutPoint {
         txid: bitcoin::Txid::from_str(
@@ -178,5 +188,5 @@ pub fn create_multiple_cellpack_with_witness(
         .unwrap(),
         vout: 0,
     };
-    create_multiple_cellpack_with_witness_and_in(witness, cellpacks, previous_output)
+    create_multiple_cellpack_with_witness_and_in(witness, cellpacks, previous_output, etch)
 }

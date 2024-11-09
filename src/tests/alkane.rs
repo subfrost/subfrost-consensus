@@ -6,14 +6,19 @@ mod tests {
     use alkanes_support::cellpack::Cellpack;
     use alkanes_support::id::AlkaneId;
     use anyhow::Result;
-    use metashrew_support::{index_pointer::KeyValuePointer, utils::format_key};
+    use metashrew_support::index_pointer::KeyValuePointer;
 
     use crate::index_block;
     use crate::tests::helpers as alkane_helpers;
     use crate::tests::std::alkanes_std_owned_token_build;
     use alkanes_support::gz::{compress, decompress};
-    use metashrew::{clear, get_cache, index_pointer::IndexPointer, println, stdio::stdout};
-    use std::fmt::Write;
+    #[allow(unused_imports)]
+    use metashrew::{
+        clear,
+        index_pointer::IndexPointer,
+        println,
+        stdio::{stdout, Write},
+    };
     use wasm_bindgen_test::wasm_bindgen_test;
 
     #[wasm_bindgen_test]
@@ -22,16 +27,6 @@ mod tests {
         let compressed = compress(buffer.clone())?;
         assert_eq!(decompress(compressed)?, buffer.clone());
         Ok(())
-    }
-    pub fn _print_cache() {
-        let cache = get_cache();
-
-        for (key, value) in cache.iter() {
-            let formatted_key = format_key(key);
-            let formatted_value = format_key(value);
-
-            println!("{}: {}", formatted_key, formatted_value.len());
-        }
     }
 
     // test if the alkane is capable of holding balances correctly

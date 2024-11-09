@@ -1,8 +1,10 @@
-use crate::tests::std::alkanes_std_auth_token_build;
+use crate::{message::AlkaneMessageContext, tests::std::alkanes_std_auth_token_build};
 use alkanes_support::cellpack::Cellpack;
 use alkanes_support::id::AlkaneId;
-use anyhow::Result;
-use metashrew_support::index_pointer::KeyValuePointer;
+use anyhow::{anyhow, Result};
+use bitcoin::OutPoint;
+use metashrew_support::{index_pointer::KeyValuePointer, utils::consensus_encode};
+use protorune::{balance_sheet::load_sheet, message::MessageContext, tables::RuneTable};
 
 use crate::index_block;
 use crate::tests::helpers as alkane_helpers;
@@ -53,15 +55,19 @@ fn test_auth_token() -> Result<()> {
     let auth_token_id_deployment = AlkaneId { block: 2, tx: 1 };
     let owned_token_id = AlkaneId { block: 2, tx: 0 };
 
-    println!(
-        "balance {:?}",
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&auth_token_id_deployment.clone().into())
-            .keyword("/balances/")
-            .select(&owned_token_id.clone().into())
-            .get_value::<u128>()
+    let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
+    let outpoint = OutPoint {
+        txid: tx.compute_txid(),
+        vout: 0,
+    };
+    let sheet = load_sheet(
+        &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
+            .OUTPOINT_TO_RUNES
+            .select(&consensus_encode(&outpoint)?),
     );
-
+    println!("balances at end {:?}", sheet);
+    assert_eq!(sheet.get(&AlkaneId { block: 2, tx: 0 }.into()), 1000);
+    assert_eq!(sheet.get(&AlkaneId { block: 2, tx: 1 }.into()), 1);
     assert_eq!(
         IndexPointer::from_keyword("/alkanes/")
             .select(&owned_token_id.into())
