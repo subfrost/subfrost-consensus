@@ -40,25 +40,26 @@ impl AuxpowVersion {
 
 #[derive(Clone, Debug)]
 pub struct Auxpow {
-    pub chain_merkle_branch: Vec<TxMerkleNode>,
-    pub chain_merkle_branch_side_mask: u32,
-    pub parent_branch_header: AuxpowHeader,
+    pub coinbase_txn: Transaction,
+    pub block_hash: BlockHash,
+    pub coinbase_branch: AuxpowMerkleBranch,
+    pub blockchain_branch: AuxpowMerkleBranch,
+    pub parent_block: AuxpowHeader
 }
 
 impl Auxpow {
     pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<Auxpow> {
-        let mut chain_merkle_branch: Vec<TxMerkleNode> = vec![];
-        for _ in 0..consume_varint(cursor)? {
-            chain_merkle_branch.push(TxMerkleNode::from_byte_array(
-                to_ref(&consume_exact(cursor, 0x20)?).try_into().unwrap(),
-            ));
-        }
-        let chain_merkle_branch_side_mask = consume_sized_int::<u32>(cursor)?;
-        let parent_branch_header = AuxpowHeader::parse_without_auxpow(cursor)?;
+        let coinbase_txn: Transaction = consensus_decode::<Transaction>(cursor)?;
+        let block_hash: BlockHash = BlockHash::from_byte_array(to_ref(&consume_exact(cursor, 0x20)?).try_into().unwrap());
+        let coinbase_branch: AuxpowMerkleBranch = AuxpowMerkleBranch::parse(cursor)?;
+        let blockchain_branch: AuxpowMerkleBranch = AuxpowMerkleBranch::parse(cursor)?;
+        let parent_block = AuxpowHeader::parse_without_auxpow(cursor)?;
         Ok(Auxpow {
-            chain_merkle_branch,
-            chain_merkle_branch_side_mask,
-            parent_branch_header,
+            coinbase_txn,
+            block_hash,
+            coinbase_branch,
+            blockchain_branch,
+            parent_block
         })
     }
 }
@@ -99,6 +100,30 @@ pub struct AuxpowBlock {
     pub txdata: Vec<Transaction>,
 }
 
+#[derive(Clone, Debug)]
+pub struct AuxpowMerkleBranch {
+  pub branch_length: u64,
+  pub branch_hash: Vec<BlockHash>,
+  pub branch_side_mask: i32
+}
+
+impl AuxpowMerkleBranch {
+  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AuxpowMerkleBranch> {
+    let branch_length = consume_varint(cursor)?;
+    let mut branch_hash: Vec<BlockHash> = vec![];
+    for _ in 0..branch_length {
+      branch_hash.push(BlockHash::from_byte_array(to_ref(&consume_exact(cursor, 0x20)?).try_into()?));
+    }
+    let branch_side_mask = consume_sized_int::<u32>(cursor)? as i32;
+    Ok(AuxpowMerkleBranch {
+      branch_length,
+      branch_hash,
+      branch_side_mask
+    })
+  }
+}
+
+
 impl AuxpowBlock {
     pub fn to_consensus(&self) -> Block {
         Block {
@@ -109,8 +134,10 @@ impl AuxpowBlock {
     pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AuxpowBlock> {
         let header = AuxpowHeader::parse(cursor)?;
         let mut txdata: Vec<Transaction> = vec![];
-        for _ in 0..consume_varint(cursor)? {
-            txdata.push(consensus_decode::<Transaction>(cursor)?);
+        let len = consume_varint(cursor)?;
+        for _ in 0..len {
+            let tx = consensus_decode::<Transaction>(cursor)?;
+            txdata.push(tx);
         }
         Ok(AuxpowBlock { header, txdata })
     }
@@ -120,18 +147,12 @@ fn to_ref(v: &Vec<u8>) -> &[u8] {
     v.as_ref()
 }
 
-fn _to_bytes32(v: &[u8]) -> [u8; 32] {
-    v.try_into().unwrap()
-}
-
 impl AuxpowHeader {
     pub fn parse_without_auxpow(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AuxpowHeader> {
         let version = AuxpowVersion(consume_sized_int::<u32>(cursor)?.into());
         let prev_blockhash: BlockHash =
             BlockHash::from_byte_array(to_ref(&consume_exact(cursor, 0x20)?).try_into().unwrap());
-        let merkle_root: TxMerkleNode = TxMerkleNode::from_byte_array(
-            to_ref(&consume_exact(cursor, 0x20)?).try_into().unwrap(),
-        );
+        let merkle_root: TxMerkleNode = consensus_decode::<TxMerkleNode>(cursor)?;
         let time: u32 = consume_sized_int::<u32>(cursor)?;
         let bits: CompactTarget = CompactTarget::from_consensus(consume_sized_int::<u32>(cursor)?);
         let nonce: u32 = consume_sized_int::<u32>(cursor)?;
