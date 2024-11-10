@@ -469,10 +469,35 @@ pub fn create_protostone_encoded_tx(
     }
 }
 
+pub fn create_default_protoburn_transaction(
+    previous_output: OutPoint,
+    burn_protocol_id: u128,
+) -> Transaction {
+    // output rune pointer points to the OP_RETURN, so therefore targets the protoburn
+    return create_protostone_transaction(
+        previous_output,
+        Some(burn_protocol_id),
+        true,
+        1,
+        // protoburn and give protorunes to output 0
+        0,
+        13, // this value must be 13 if protoburn
+        vec![],
+    );
+}
+
 /// Create a protoburn given an input that holds runes
 /// Outpoint with protorunes is the txid and vout 0
 /// This outpoint holds 1000 protorunes
-pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128) -> Transaction {
+pub fn create_protostone_transaction(
+    previous_output: OutPoint,
+    burn_protocol_id: Option<u128>,
+    etch: bool,
+    output_rune_pointer: u32,
+    output_protostone_pointer: u32,
+    protocol_tag: u128,
+    protostone_edicts: Vec<ProtostoneEdict>,
+) -> Transaction {
     let input_script = ScriptBuf::new();
 
     // Create a transaction input
@@ -492,8 +517,8 @@ pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128
         script_pubkey,
     };
 
-    let runestone: ScriptBuf = (Runestone {
-        etching: Some(Etching {
+    let etching = if etch {
+        Some(Etching {
             divisibility: Some(2),
             premine: Some(1000),
             rune: Some(Rune::from_str("TESTTESTTEST").unwrap()),
@@ -501,18 +526,23 @@ pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128
             symbol: Some(char::from_str("A").unwrap()),
             turbo: true,
             terms: None,
-        }),
-        pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
+        })
+    } else {
+        None
+    };
+
+    let runestone: ScriptBuf = (Runestone {
+        etching,
+        pointer: Some(output_rune_pointer),
         edicts: Vec::new(),
         mint: None,
         protocol: match vec![Protostone {
-            // protoburn and give protorunes to output 0
-            burn: Some(protocol_id),
-            edicts: vec![],
-            pointer: Some(0),
+            burn: burn_protocol_id,
+            edicts: protostone_edicts,
+            pointer: Some(output_protostone_pointer),
             refund: None,
             from: None,
-            protocol_tag: 13, // this value must be 13 if protoburn
+            protocol_tag: protocol_tag,
             message: vec![],
         }]
         .encipher()

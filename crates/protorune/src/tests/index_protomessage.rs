@@ -282,7 +282,8 @@ mod tests {
             vout: 0,
         };
 
-        let protoburn_tx = helpers::create_protoburn_transaction(first_mock_output, protocol_id);
+        let protoburn_tx =
+            helpers::create_default_protoburn_transaction(first_mock_output, protocol_id);
         let protorune_id = ProtoruneRuneId {
             block: block_height as u128,
             tx: 0,

@@ -39,6 +39,7 @@ impl AlkaneResponder for OwnedToken {
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
         let mut response: CallResponse = CallResponse::forward(&context.incoming_alkanes.clone());
+        println!("incoming alkanes in owned token: {:?}", response);
         match shift(&mut inputs).unwrap() {
             0 => {
                 println!("initializing std token");

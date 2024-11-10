@@ -284,6 +284,10 @@ impl Protorune {
         match balances_by_output.get_mut(&unallocated_to) {
             Some(v) => balances.pipe(v),
             None => {
+                println!(
+                    "Adding new entry in balances by output at key {}",
+                    unallocated_to
+                );
                 balances_by_output.insert(unallocated_to, balances.clone());
             }
         }
@@ -657,30 +661,43 @@ impl Protorune {
                 .into_iter()
                 .enumerate()
                 .map(|(i, stone)| {
-                    if !stone.edicts.is_empty() {
-                        Self::process_edicts(
-                            tx,
-                            &stone.edicts.clone().into(),
-                            &mut proto_balances_by_output,
-                            &mut balance_sheet,
-                            &tx.output,
-                        )?;
-                        Self::handle_leftover_runes(
-                            &mut balance_sheet,
-                            &mut proto_balances_by_output.clone(),
-                            unallocated_to,
-                        )?;
-                        for (vout, sheet) in balances_by_output.clone() {
-                            let outpoint = OutPoint::new(tx.compute_txid(), vout);
-                            sheet.save(
-                                &mut atomic.derive(
-                                    &table
-                                        .OUTPOINT_TO_RUNES
-                                        .select(&consensus_encode(&outpoint)?),
-                                ),
-                                false,
-                            );
-                        }
+                    Self::process_edicts(
+                        tx,
+                        &stone.edicts.clone().into(),
+                        &mut proto_balances_by_output,
+                        &mut balance_sheet,
+                        &tx.output,
+                    )?;
+                    let protostone_unallocated_to = match stone.pointer {
+                        Some(v) => v,
+                        None => default_output(tx),
+                    };
+                    println!(
+                        "handling leftover runes going to otuput {}",
+                        protostone_unallocated_to
+                    );
+                    println!("balances leftover: {:?}", balance_sheet);
+                    println!("current balances by output: {:?}", proto_balances_by_output);
+                    Self::handle_leftover_runes(
+                        &mut balance_sheet,
+                        &mut proto_balances_by_output,
+                        protostone_unallocated_to,
+                    )?;
+                    println!(
+                        "after handle leftover balances by output: {:?}",
+                        proto_balances_by_output
+                    );
+
+                    for (vout, sheet) in balances_by_output.clone() {
+                        let outpoint = OutPoint::new(tx.compute_txid(), vout);
+                        sheet.save(
+                            &mut atomic.derive(
+                                &table
+                                    .OUTPOINT_TO_RUNES
+                                    .select(&consensus_encode(&outpoint)?),
+                            ),
+                            false,
+                        );
                     }
                     if stone.is_message() {
                         stone.process_message::<T>(
@@ -692,7 +709,7 @@ impl Protorune {
                             runestone_output_index,
                             (tx.output.len() as u32) + 1 + (i as u32),
                             &mut proto_balances_by_output,
-                            unallocated_to,
+                            protostone_unallocated_to,
                         )?;
                     }
                     Ok(())

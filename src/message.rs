@@ -6,10 +6,12 @@ use crate::vm::{
 };
 use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
+use bitcoin::OutPoint;
 use metashrew::index_pointer::IndexPointer;
 use metashrew::{println, stdio::stdout};
-use metashrew_support::index_pointer::KeyValuePointer;
+use metashrew_support::{index_pointer::KeyValuePointer, utils::consensus_encode};
 use protorune::message::{MessageContext, MessageContextParcel};
+use protorune::{balance_sheet::load_sheet, tables::RuneTable};
 use protorune_support::{
     balance_sheet::BalanceSheet, rune_transfer::RuneTransfer, utils::decode_varint_list,
 };

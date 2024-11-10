@@ -50,7 +50,8 @@ mod tests {
             vout: 0,
         };
 
-        let protoburn_tx = helpers::create_protoburn_transaction(previous_output, protocol_id);
+        let protoburn_tx =
+            helpers::create_default_protoburn_transaction(previous_output, protocol_id);
 
         test_block.txdata.push(protoburn_tx);
         assert!(Protorune::index_block::<TestMessageContext>(
@@ -58,11 +59,6 @@ mod tests {
             block_height as u64
         )
         .is_ok());
-        /*
-        get_cache().iter().for_each(|(k, v)| {
-          println!("{}: {}", format_key(k.as_ref()), hex::encode(v.as_ref()));
-        });
-        */
 
         // tx 0 is coinbase, tx 1 is runestone
         let outpoint_address: OutPoint = OutPoint {
@@ -82,7 +78,105 @@ mod tests {
                 .select(&consensus_encode(&outpoint_address).unwrap()),
         );
 
-        // print_cache();
+        let protorune_id = ProtoruneRuneId {
+            block: block_height as u128,
+            tx: 1,
+        };
+        // let v: Vec<u8> = protorune_id.into();
+        let stored_balance_address = sheet.get(&protorune_id);
+        assert_eq!(stored_balance_address, 0);
+        let stored_protorune_balance = protorunes_sheet.get(&protorune_id);
+        assert_eq!(stored_protorune_balance, 1000);
+    }
+
+    /// In one runestone, etches a rune, then protoburns it, then transfers it
+    #[wasm_bindgen_test]
+    fn protoburn_transfer_test() {
+        clear();
+        let block_height = 840000;
+        let protocol_id = 122;
+        let mut test_block = helpers::create_block_with_coinbase_tx(block_height);
+
+        let previous_output = OutPoint {
+            txid: bitcoin::Txid::from_str(
+                "0000000000000000000000000000000000000000000000000000000000000000",
+            )
+            .unwrap(),
+            vout: 0,
+        };
+
+        let protoburn_tx =
+            helpers::create_default_protoburn_transaction(previous_output, protocol_id);
+
+        test_block.txdata.push(protoburn_tx.clone());
+
+        let previous_output = OutPoint {
+            txid: protoburn_tx.clone().compute_txid(),
+            vout: 0,
+        };
+
+        let transfer_tx = helpers::create_protostone_transaction(
+            previous_output,
+            None,
+            false,
+            1,
+            0,
+            protocol_id,
+            vec![],
+        );
+
+        test_block.txdata.push(transfer_tx);
+
+        assert!(Protorune::index_block::<TestMessageContext>(
+            test_block.clone(),
+            block_height as u64
+        )
+        .is_ok());
+
+        // tx 0 is coinbase, tx 1 is runestone, tx 2 is transfer
+        let outpoint_address: OutPoint = OutPoint {
+            txid: test_block.txdata[1].compute_txid(),
+            vout: 0,
+        };
+        // check runes balance
+        let sheet = load_sheet(
+            &tables::RUNES
+                .OUTPOINT_TO_RUNES
+                .select(&consensus_encode(&outpoint_address).unwrap()),
+        );
+
+        let protorunes_sheet = load_sheet(
+            &tables::RuneTable::for_protocol(protocol_id.into())
+                .OUTPOINT_TO_RUNES
+                .select(&consensus_encode(&outpoint_address).unwrap()),
+        );
+
+        let protorune_id = ProtoruneRuneId {
+            block: block_height as u128,
+            tx: 1,
+        };
+        // let v: Vec<u8> = protorune_id.into();
+        let stored_balance_address = sheet.get(&protorune_id);
+        assert_eq!(stored_balance_address, 0);
+        let stored_protorune_balance = protorunes_sheet.get(&protorune_id);
+        assert_eq!(stored_protorune_balance, 0);
+
+        let outpoint_address: OutPoint = OutPoint {
+            txid: test_block.txdata[2].compute_txid(),
+            vout: 0,
+        };
+        // check runes balance
+        let sheet = load_sheet(
+            &tables::RUNES
+                .OUTPOINT_TO_RUNES
+                .select(&consensus_encode(&outpoint_address).unwrap()),
+        );
+
+        let protorunes_sheet = load_sheet(
+            &tables::RuneTable::for_protocol(protocol_id.into())
+                .OUTPOINT_TO_RUNES
+                .select(&consensus_encode(&outpoint_address).unwrap()),
+        );
 
         let protorune_id = ProtoruneRuneId {
             block: block_height as u128,

@@ -26,6 +26,191 @@ fn test_auth_token() -> Result<()> {
         },
         inputs: vec![100],
     };
+    let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
+        [alkanes_std_auth_token_build::get_bytes()].into(),
+        [auth_cellpack].into(),
+    );
+
+    index_block(&test_block, block_height)?;
+
+    println!("block indexed");
+    let _auth_token_id_factory = AlkaneId {
+        block: 4,
+        tx: 0xffee,
+    };
+    let original_rune_id = AlkaneId {
+        block: 840000,
+        tx: 1,
+    };
+
+    let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
+    let outpoint = OutPoint {
+        txid: tx.compute_txid(),
+        vout: 0,
+    };
+    let sheet = load_sheet(
+        &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
+            .OUTPOINT_TO_RUNES
+            .select(&consensus_encode(&outpoint)?),
+    );
+    println!("balances at end {:?}", sheet);
+    assert_eq!(sheet.get(&original_rune_id.into()), 1000);
+    assert_eq!(
+        IndexPointer::from_keyword("/alkanes/")
+            .select(&_auth_token_id_factory.into())
+            .get()
+            .as_ref()
+            .clone(),
+        compress(alkanes_std_auth_token_build::get_bytes().into())?
+    );
+
+    Ok(())
+}
+
+#[wasm_bindgen_test]
+fn test_owned_token() -> Result<()> {
+    clear();
+    let block_height = 840_000;
+
+    let test_cellpack = Cellpack {
+        target: AlkaneId { block: 1, tx: 0 },
+        inputs: vec![100],
+    };
+    let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
+        [alkanes_std_owned_token_build::get_bytes()].into(),
+        [test_cellpack].into(),
+    );
+
+    index_block(&test_block, block_height)?;
+
+    println!("block indexed");
+    let owned_token_id = AlkaneId { block: 2, tx: 0 };
+    let original_rune_id = AlkaneId {
+        block: 840000,
+        tx: 1,
+    };
+
+    let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
+    let outpoint = OutPoint {
+        txid: tx.compute_txid(),
+        vout: 0,
+    };
+    let sheet = load_sheet(
+        &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
+            .OUTPOINT_TO_RUNES
+            .select(&consensus_encode(&outpoint)?),
+    );
+    println!("balances at end {:?}", sheet);
+    assert_eq!(sheet.get(&original_rune_id.into()), 1000);
+    assert_eq!(
+        IndexPointer::from_keyword("/alkanes/")
+            .select(&owned_token_id.into())
+            .get()
+            .as_ref()
+            .clone(),
+        compress(alkanes_std_owned_token_build::get_bytes().into())?
+    );
+
+    Ok(())
+}
+
+#[wasm_bindgen_test]
+fn test_auth_and_owned_token_noop() -> Result<()> {
+    clear();
+    let block_height = 840_000;
+
+    let auth_cellpack = Cellpack {
+        target: AlkaneId {
+            block: 3,
+            tx: 0xffee,
+        },
+        inputs: vec![100],
+    };
+
+    let test_cellpack = Cellpack {
+        target: AlkaneId { block: 1, tx: 0 },
+        inputs: vec![100],
+    };
+    let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
+        [
+            alkanes_std_auth_token_build::get_bytes(),
+            alkanes_std_owned_token_build::get_bytes(),
+        ]
+        .into(),
+        [auth_cellpack, test_cellpack].into(),
+    );
+
+    index_block(&test_block, block_height)?;
+
+    println!("block indexed");
+    let _auth_token_id_factory = AlkaneId {
+        block: 4,
+        tx: 0xffee,
+    };
+
+    let owned_token_id = AlkaneId { block: 2, tx: 0 };
+    let original_rune_id = AlkaneId {
+        block: 840000,
+        tx: 1,
+    };
+
+    let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
+    let outpoint = OutPoint {
+        txid: tx.compute_txid(),
+        vout: 0,
+    };
+    let sheet = load_sheet(
+        &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
+            .OUTPOINT_TO_RUNES
+            .select(&consensus_encode(&outpoint)?),
+    );
+    println!("balances at end {:?}", sheet);
+    // assert_eq!(sheet.get(&original_rune_id.into()), 1000);
+
+    let tx_first = test_block.txdata.first().ok_or(anyhow!("no first el"))?;
+    let outpoint_first = OutPoint {
+        txid: tx_first.compute_txid(),
+        vout: 0,
+    };
+    let sheet_first = load_sheet(
+        &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
+            .OUTPOINT_TO_RUNES
+            .select(&consensus_encode(&outpoint_first)?),
+    );
+    println!("balances at first {:?}", sheet_first);
+    assert_eq!(sheet_first.balances.len(), 0);
+    assert_eq!(
+        IndexPointer::from_keyword("/alkanes/")
+            .select(&owned_token_id.into())
+            .get()
+            .as_ref()
+            .clone(),
+        compress(alkanes_std_owned_token_build::get_bytes().into())?
+    );
+    assert_eq!(
+        IndexPointer::from_keyword("/alkanes/")
+            .select(&_auth_token_id_factory.into())
+            .get()
+            .as_ref()
+            .clone(),
+        compress(alkanes_std_auth_token_build::get_bytes().into())?
+    );
+
+    Ok(())
+}
+
+#[wasm_bindgen_test]
+fn test_auth_and_owned_token() -> Result<()> {
+    clear();
+    let block_height = 840_000;
+
+    let auth_cellpack = Cellpack {
+        target: AlkaneId {
+            block: 3,
+            tx: 0xffee,
+        },
+        inputs: vec![100],
+    };
 
     let test_cellpack = Cellpack {
         target: AlkaneId { block: 1, tx: 0 },
@@ -68,6 +253,18 @@ fn test_auth_token() -> Result<()> {
     println!("balances at end {:?}", sheet);
     assert_eq!(sheet.get(&owned_token_id.into()), 1000);
     assert_eq!(sheet.get(&auth_token_id_deployment.into()), 1);
+
+    let tx_first = test_block.txdata.first().ok_or(anyhow!("no first el"))?;
+    let outpoint_first = OutPoint {
+        txid: tx_first.compute_txid(),
+        vout: 0,
+    };
+    let sheet_first = load_sheet(
+        &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
+            .OUTPOINT_TO_RUNES
+            .select(&consensus_encode(&outpoint_first)?),
+    );
+    assert_eq!(sheet_first.balances.len(), 0);
     assert_eq!(
         IndexPointer::from_keyword("/alkanes/")
             .select(&owned_token_id.into())
