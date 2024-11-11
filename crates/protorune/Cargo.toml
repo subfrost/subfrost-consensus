@@ -34,6 +34,7 @@ protobuf = "3.6.0"
 metashrew = { path = "../metashrew", features = ["test-utils"] }
 wasm-bindgen-cli = "0.2.92"
 getrandom = { version = "0.2.15", features = ["js"] }
+protorune = { path = ".", features = ["test-utils"] }
 
 [build-dependencies]
 protobuf-codegen = "3.4.0"

@@ -1900,6 +1900,7 @@ dependencies = [
  "protobuf-codegen 3.7.1",
  "protoc-bin-vendored",
  "protoc-rust",
+ "protorune",
  "protorune-support",
  "ruint",
  "serde",
