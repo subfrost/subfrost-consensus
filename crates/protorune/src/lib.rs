@@ -4,6 +4,7 @@ use crate::protostone::{
     add_to_indexable_protocols, initialized_protocol_index, MessageProcessor, Protostones,
 };
 use anyhow::{anyhow, Ok, Result};
+use balance_sheet::clear_balances;
 use bitcoin::blockdata::block::Block;
 use bitcoin::hashes::Hash;
 use bitcoin::script::Instruction;
@@ -499,6 +500,11 @@ impl Protorune {
                         atomic.commit();
                     }
                 };
+                for input in &tx.input {
+                    //all inputs must be used up
+                    let key = consensus_encode(&input.previous_output)?;
+                    clear_balances(&mut tables::RUNES.OUTPOINT_TO_RUNES.select(&key));
+                }
             }
         }
         Ok(())

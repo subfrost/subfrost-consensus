@@ -296,7 +296,7 @@ mod tests {
         assert_eq!(expected_address2_amount, stored_balance_address2);
 
         let outpoint_original_transaction: OutPoint = OutPoint {
-            txid: test_block.txdata[1].compute_txid(),
+            txid: test_block.txdata[0].compute_txid(),
             vout: 0,
         };
         let sheet_original_transaction = load_sheet(

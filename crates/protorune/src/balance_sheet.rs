@@ -50,6 +50,16 @@ pub fn load_sheet<T: KeyValuePointer>(ptr: &T) -> BalanceSheet {
     result
 }
 
+pub fn clear_balances<T: KeyValuePointer>(ptr: &T) {
+    let runes_ptr = ptr.keyword("/runes");
+    let balances_ptr = ptr.keyword("/balances");
+    let length = runes_ptr.length();
+
+    for i in 0..length {
+        balances_ptr.select_index(i).set_value::<u128>(0);
+    }
+}
+
 impl PersistentRecord for BalanceSheet {
     fn balances(&self) -> &HashMap<ProtoruneRuneId, u128> {
         &self.balances
