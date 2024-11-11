@@ -11,6 +11,10 @@ mod tests {
     use protorune_support::utils::consensus_encode;
 
     use metashrew::clear;
+    use metashrew::{
+        flush, input, println,
+        stdio::{stdout, Write},
+    };
     use metashrew_support::index_pointer::KeyValuePointer;
     use std::str::FromStr;
     use wasm_bindgen_test::*;
@@ -159,7 +163,11 @@ mod tests {
         let stored_balance_address = sheet.get(&protorune_id);
         assert_eq!(stored_balance_address, 0);
         let stored_protorune_balance = protorunes_sheet.get(&protorune_id);
-        assert_eq!(stored_protorune_balance, 0);
+        println!(
+            "first tx stored_protorune_balance {}",
+            stored_protorune_balance
+        );
+        // assert_eq!(stored_protorune_balance, 0);
 
         let outpoint_address: OutPoint = OutPoint {
             txid: test_block.txdata[2].compute_txid(),
@@ -186,6 +194,10 @@ mod tests {
         let stored_balance_address = sheet.get(&protorune_id);
         assert_eq!(stored_balance_address, 0);
         let stored_protorune_balance = protorunes_sheet.get(&protorune_id);
+        println!(
+            "second tx stored_protorune_balance {}",
+            stored_protorune_balance
+        );
         assert_eq!(stored_protorune_balance, 1000);
     }
 

@@ -138,7 +138,7 @@ pub fn create_test_transaction_with_witness(script: Vec<u8>) -> Transaction {
         output: vec![txout],
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RunesTestingConfig {
     pub address1: String,
     pub address2: String,
@@ -257,9 +257,7 @@ pub fn create_rune_etching_transaction(config: &RunesTestingConfig) -> Transacti
 pub fn create_rune_transfer_transaction(
     config: &RunesTestingConfig,
     previous_output: OutPoint,
-    rune_id: RuneId,
-    edict_amount: u128,
-    edict_output: u32,
+    edicts: Vec<Edict>,
 ) -> Transaction {
     let input_script = ScriptBuf::new();
 
@@ -289,16 +287,10 @@ pub fn create_rune_transfer_transaction(
         script_pubkey: script_pubkey1,
     };
 
-    let edict = Edict {
-        id: rune_id,
-        amount: edict_amount,
-        output: edict_output,
-    };
-
     let runestone: ScriptBuf = (Runestone {
         etching: None,
         pointer: Some(1), // refund to vout 1
-        edicts: vec![edict],
+        edicts,
         mint: None,
         protocol: None,
     })
@@ -384,33 +376,15 @@ pub fn create_block_with_coinbase_tx(height: u32) -> Block {
 ///         - [0]: ptpkh address2
 ///         - [1]: ptpkh address1
 ///         - [2]: runestone with edict to transfer to vout0, default to vout1
-pub fn create_block_with_rune_transfer(
-    edict_amount: u128,
-    edict_output: u32,
-) -> (Block, RunesTestingConfig) {
-    let config = RunesTestingConfig::new(
-        "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu",
-        "bc1qwml3ckq4gtmxe7hwvs38nvt5j63gwnwwmvk5r5",
-        "TESTER",
-        "Z",
-        840001,
-        0,
-    );
-    let tx0 = create_rune_etching_transaction(&config);
+pub fn create_block_with_rune_transfer(config: &RunesTestingConfig, edicts: Vec<Edict>) -> Block {
+    let tx0 = create_rune_etching_transaction(config);
     let outpoint_with_runes = OutPoint {
         txid: tx0.compute_txid(),
         vout: 0,
     };
-    let rune_id = RuneId::new(config.rune_etch_height, config.rune_etch_vout).unwrap();
 
-    let tx1 = create_rune_transfer_transaction(
-        &config,
-        outpoint_with_runes,
-        rune_id,
-        edict_amount,
-        edict_output,
-    );
-    return (create_block_with_txs(vec![tx0, tx1]), config);
+    let tx1 = create_rune_transfer_transaction(config, outpoint_with_runes, edicts);
+    return create_block_with_txs(vec![tx0, tx1]);
 }
 
 pub fn create_protostone_encoded_tx(

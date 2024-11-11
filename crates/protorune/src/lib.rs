@@ -684,8 +684,12 @@ impl Protorune {
                         protostone_unallocated_to,
                     )?;
                     println!(
-                        "after handle leftover balances by output: {:?}",
+                        "after handle leftover proto balances by output: {:?}",
                         proto_balances_by_output
+                    );
+                    println!(
+                        "after handle leftover balances by output: {:?}",
+                        balances_by_output
                     );
 
                     for (vout, sheet) in balances_by_output.clone() {
