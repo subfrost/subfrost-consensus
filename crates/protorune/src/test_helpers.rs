@@ -138,7 +138,7 @@ pub fn create_test_transaction_with_witness(script: Vec<u8>) -> Transaction {
         output: vec![txout],
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RunesTestingConfig {
     pub address1: String,
     pub address2: String,
@@ -257,9 +257,7 @@ pub fn create_rune_etching_transaction(config: &RunesTestingConfig) -> Transacti
 pub fn create_rune_transfer_transaction(
     config: &RunesTestingConfig,
     previous_output: OutPoint,
-    rune_id: RuneId,
-    edict_amount: u128,
-    edict_output: u32,
+    edicts: Vec<Edict>,
 ) -> Transaction {
     let input_script = ScriptBuf::new();
 
@@ -289,16 +287,10 @@ pub fn create_rune_transfer_transaction(
         script_pubkey: script_pubkey1,
     };
 
-    let edict = Edict {
-        id: rune_id,
-        amount: edict_amount,
-        output: edict_output,
-    };
-
     let runestone: ScriptBuf = (Runestone {
         etching: None,
         pointer: Some(1), // refund to vout 1
-        edicts: vec![edict],
+        edicts,
         mint: None,
         protocol: None,
     })
@@ -384,33 +376,15 @@ pub fn create_block_with_coinbase_tx(height: u32) -> Block {
 ///         - [0]: ptpkh address2
 ///         - [1]: ptpkh address1
 ///         - [2]: runestone with edict to transfer to vout0, default to vout1
-pub fn create_block_with_rune_transfer(
-    edict_amount: u128,
-    edict_output: u32,
-) -> (Block, RunesTestingConfig) {
-    let config = RunesTestingConfig::new(
-        "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu",
-        "bc1qwml3ckq4gtmxe7hwvs38nvt5j63gwnwwmvk5r5",
-        "TESTER",
-        "Z",
-        840001,
-        0,
-    );
-    let tx0 = create_rune_etching_transaction(&config);
+pub fn create_block_with_rune_transfer(config: &RunesTestingConfig, edicts: Vec<Edict>) -> Block {
+    let tx0 = create_rune_etching_transaction(config);
     let outpoint_with_runes = OutPoint {
         txid: tx0.compute_txid(),
         vout: 0,
     };
-    let rune_id = RuneId::new(config.rune_etch_height, config.rune_etch_vout).unwrap();
 
-    let tx1 = create_rune_transfer_transaction(
-        &config,
-        outpoint_with_runes,
-        rune_id,
-        edict_amount,
-        edict_output,
-    );
-    return (create_block_with_txs(vec![tx0, tx1]), config);
+    let tx1 = create_rune_transfer_transaction(config, outpoint_with_runes, edicts);
+    return create_block_with_txs(vec![tx0, tx1]);
 }
 
 pub fn create_protostone_encoded_tx(
@@ -469,10 +443,35 @@ pub fn create_protostone_encoded_tx(
     }
 }
 
+pub fn create_default_protoburn_transaction(
+    previous_output: OutPoint,
+    burn_protocol_id: u128,
+) -> Transaction {
+    // output rune pointer points to the OP_RETURN, so therefore targets the protoburn
+    return create_protostone_transaction(
+        previous_output,
+        Some(burn_protocol_id),
+        true,
+        1,
+        // protoburn and give protorunes to output 0
+        0,
+        13, // this value must be 13 if protoburn
+        vec![],
+    );
+}
+
 /// Create a protoburn given an input that holds runes
 /// Outpoint with protorunes is the txid and vout 0
 /// This outpoint holds 1000 protorunes
-pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128) -> Transaction {
+pub fn create_protostone_transaction(
+    previous_output: OutPoint,
+    burn_protocol_id: Option<u128>,
+    etch: bool,
+    output_rune_pointer: u32,
+    output_protostone_pointer: u32,
+    protocol_tag: u128,
+    protostone_edicts: Vec<ProtostoneEdict>,
+) -> Transaction {
     let input_script = ScriptBuf::new();
 
     // Create a transaction input
@@ -492,8 +491,8 @@ pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128
         script_pubkey,
     };
 
-    let runestone: ScriptBuf = (Runestone {
-        etching: Some(Etching {
+    let etching = if etch {
+        Some(Etching {
             divisibility: Some(2),
             premine: Some(1000),
             rune: Some(Rune::from_str("TESTTESTTEST").unwrap()),
@@ -501,18 +500,23 @@ pub fn create_protoburn_transaction(previous_output: OutPoint, protocol_id: u128
             symbol: Some(char::from_str("A").unwrap()),
             turbo: true,
             terms: None,
-        }),
-        pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
+        })
+    } else {
+        None
+    };
+
+    let runestone: ScriptBuf = (Runestone {
+        etching,
+        pointer: Some(output_rune_pointer),
         edicts: Vec::new(),
         mint: None,
         protocol: match vec![Protostone {
-            // protoburn and give protorunes to output 0
-            burn: Some(protocol_id),
-            edicts: vec![],
-            pointer: Some(0),
+            burn: burn_protocol_id,
+            edicts: protostone_edicts,
+            pointer: Some(output_protostone_pointer),
             refund: None,
             from: None,
-            protocol_tag: 13, // this value must be 13 if protoburn
+            protocol_tag: protocol_tag,
             message: vec![],
         }]
         .encipher()

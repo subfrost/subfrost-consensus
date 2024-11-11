@@ -5,7 +5,7 @@ mod tests {
     use crate::proto::protorune::{RunesByHeightRequest, WalletRequest};
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 
-    use crate::test_helpers as helpers;
+    use crate::test_helpers::{self as helpers, RunesTestingConfig};
     use crate::test_helpers::{display_list_as_hex, display_vec_as_hex};
     use crate::Protorune;
     use crate::{message::MessageContextParcel, tables, view};
@@ -20,7 +20,7 @@ mod tests {
 
     use metashrew::clear;
     use metashrew_support::index_pointer::KeyValuePointer;
-    use ordinals::Rune;
+    use ordinals::{Edict, Rune, RuneId};
 
     use protobuf::{Message, SpecialFields};
 
@@ -189,7 +189,8 @@ mod tests {
         assert!(Protorune::index_block::<MyMessageContext>(
             test_block.clone(),
             config.rune_etch_height
-        ).is_ok());
+        )
+        .is_ok());
         let rune_id = ProtoruneRuneId::new(
             config.rune_etch_height as u128,
             config.rune_etch_vout as u128,
@@ -238,14 +239,32 @@ mod tests {
     ///
 
     fn edict_test(
-        edict_amount: u128,
-        edict_output: u32,
+        edict_amount: Option<u128>,
+        edict_output: Option<u32>,
         expected_address1_amount: u128,
         expected_address2_amount: u128,
     ) {
         clear();
-        let (test_block, config) =
-            helpers::create_block_with_rune_transfer(edict_amount, edict_output);
+        let config = RunesTestingConfig::new(
+            "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu",
+            "bc1qwml3ckq4gtmxe7hwvs38nvt5j63gwnwwmvk5r5",
+            "TESTER",
+            "Z",
+            840001,
+            0,
+        );
+
+        let rune_id = RuneId::new(config.rune_etch_height, config.rune_etch_vout).unwrap();
+        let edicts = match (edict_amount, edict_output) {
+            (Some(amount), Some(output)) => vec![Edict {
+                id: rune_id,
+                amount,
+                output,
+            }],
+            _ => Vec::new(),
+        };
+
+        let test_block = helpers::create_block_with_rune_transfer(&config, edicts);
         let _ =
             Protorune::index_block::<MyMessageContext>(test_block.clone(), config.rune_etch_height);
         let outpoint_address2: OutPoint = OutPoint {
@@ -275,44 +294,56 @@ mod tests {
         );
         let stored_balance_address2 = sheet2.get(&protorune_id);
         assert_eq!(expected_address2_amount, stored_balance_address2);
+
+        let outpoint_original_transaction: OutPoint = OutPoint {
+            txid: test_block.txdata[0].compute_txid(),
+            vout: 0,
+        };
+        let sheet_original_transaction = load_sheet(
+            &tables::RUNES
+                .OUTPOINT_TO_RUNES
+                .select(&consensus_encode(&outpoint_original_transaction).unwrap()),
+        );
+        let stored_balance_address1 = sheet_original_transaction.get(&protorune_id);
+        assert_eq!(0, stored_balance_address1); //assert that original outpoint runes are all spent
     }
 
     /// normal transfer works
     #[wasm_bindgen_test]
     fn correct_balance_sheet_with_transfers() {
-        edict_test(200, 0, 800 as u128, 200 as u128);
+        edict_test(Some(200), Some(0), 800 as u128, 200 as u128);
     }
 
     /// transferring more runes only transfers the amount remaining
     #[wasm_bindgen_test]
     fn correct_balance_sheet_transfer_too_much() {
-        edict_test(1200, 0, 0 as u128, 1000 as u128);
+        edict_test(Some(1200), Some(0), 0 as u128, 1000 as u128);
     }
 
     /// Tests that transferring runes to an outpoint > num outpoints is a cenotaph.
     /// All runes input to a tx containing a cenotaph is burned
     #[wasm_bindgen_test]
     fn cenotaph_balance_sheet_transfer_bad_target() {
-        edict_test(200, 4, 0, 0);
+        edict_test(Some(200), Some(4), 0, 0);
     }
 
     /// Tests that transferring runes to an outpoint == OP_RETURN burns the runes.
     #[wasm_bindgen_test]
     fn correct_balance_sheet_transfer_target_op_return() {
-        edict_test(200, 2, 800, 0);
+        edict_test(Some(200), Some(2), 800, 0);
     }
 
     /// An edict with amount zero allocates all remaining units of rune id.
     #[wasm_bindgen_test]
     fn correct_balance_sheet_transfer_0() {
-        edict_test(0, 0, 0, 1000);
+        edict_test(Some(0), Some(0), 0, 1000);
     }
 
     /// An edict with output == number of transaction outputs will
     /// allocates amount runes to each non-OP_RETURN output in order
     #[wasm_bindgen_test]
     fn correct_balance_sheet_equal_distribute_300() {
-        edict_test(300, 3, 700, 300);
+        edict_test(Some(300), Some(3), 700, 300);
     }
 
     /// An edict with output == number of transaction outputs
@@ -320,6 +351,12 @@ mod tests {
     /// to each non-OP_RETURN output in order
     #[wasm_bindgen_test]
     fn correct_balance_sheet_equal_distribute_0() {
-        edict_test(0, 3, 500, 500);
+        edict_test(Some(0), Some(3), 500, 500);
+    }
+
+    /// No edict, all amount should go to pointer
+    #[wasm_bindgen_test]
+    fn no_edict_pointer() {
+        edict_test(None, None, 1000, 0);
     }
 }
