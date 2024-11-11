@@ -167,7 +167,7 @@ mod tests {
             "first tx stored_protorune_balance {}",
             stored_protorune_balance
         );
-        // assert_eq!(stored_protorune_balance, 0);
+        assert_eq!(stored_protorune_balance, 0);
 
         let outpoint_address: OutPoint = OutPoint {
             txid: test_block.txdata[2].compute_txid(),
