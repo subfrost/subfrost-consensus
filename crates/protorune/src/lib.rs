@@ -500,11 +500,11 @@ impl Protorune {
                         atomic.commit();
                     }
                 };
-                for input in &tx.input {
-                    //all inputs must be used up
-                    let key = consensus_encode(&input.previous_output)?;
-                    clear_balances(&mut tables::RUNES.OUTPOINT_TO_RUNES.select(&key));
-                }
+            }
+            for input in &tx.input {
+                //all inputs must be used up, even in cenotaphs
+                let key = consensus_encode(&input.previous_output)?;
+                clear_balances(&mut tables::RUNES.OUTPOINT_TO_RUNES.select(&key));
             }
         }
         Ok(())
