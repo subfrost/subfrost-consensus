@@ -1,6 +1,5 @@
 use crate::rune_transfer::RuneTransfer;
 use anyhow::{anyhow, Result};
-use metashrew::index_pointer::IndexPointer;
 use metashrew_support::index_pointer::KeyValuePointer;
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
@@ -37,16 +36,6 @@ impl ProtoruneRuneId {
         };
 
         Some((block.into(), tx.into()))
-    }
-
-    /// A protorune is mintable if there is no corresponding rune.
-    /// We check the index of all etchings to see if the rune exists.
-    pub fn mintable_in_protocol(&self) -> bool {
-        let ptr = IndexPointer::from_keyword("/etching/byruneid/");
-        if ptr.select(&(self.clone().into())).get().len() > 0 {
-            return false;
-        }
-        return true;
     }
 }
 
@@ -134,21 +123,6 @@ impl BalanceSheet {
         }
     }
 
-    fn debit_underlying(&mut self, sheet: &BalanceSheet, mintable: bool) -> Result<()> {
-        for (rune, balance) in &sheet.balances {
-            let mut amount = *balance;
-            if sheet.get(&rune) > self.get(&rune) {
-                if mintable && rune.mintable_in_protocol() {
-                    // minatable tokens first debit from existing amounts
-                    amount = self.get(&rune);
-                } else {
-                    return Err(anyhow!("balance underflow"));
-                }
-            }
-            self.decrease(rune, amount);
-        }
-        Ok(())
-    }
     /// When processing the return value for MessageContext.handle()
     /// we want to be able to mint arbituary amounts of mintable tokens.
     ///
@@ -156,11 +130,20 @@ impl BalanceSheet {
     /// of a mintable token without returning an Err so that MessageContext
     /// can mint more than what the initial balance sheet has.
     pub fn debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
-        self.debit_underlying(sheet, true)
+        for (rune, balance) in &sheet.balances {
+            let mut amount = *balance;
+            if sheet.get(&rune) > self.get(&rune) {
+              amount = self.get(&rune);
+            } else {
+              return Err(anyhow!("balance underflow"));
+            }
+            self.decrease(rune, amount);
+        }
+        Ok(())
     }
 
     pub fn rune_debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
-        self.debit_underlying(sheet, false)
+        self.debit(sheet)
     }
 
     pub fn inspect(&self) -> String {

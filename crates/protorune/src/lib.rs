@@ -25,7 +25,7 @@ use ordinals::{Artifact, Runestone};
 use proto::protorune::{Output, RunesResponse, WalletResponse};
 use protobuf::{Message, SpecialFields};
 use protorune_support::constants;
-use protorune_support::tables::RuneTable;
+use crate::tables::RuneTable;
 use protorune_support::{
     balance_sheet::{BalanceSheet, ProtoruneRuneId},
     protostone::{into_protostone_edicts, Protostone, ProtostoneEdict},
