@@ -36,6 +36,17 @@ pub trait PersistentRecord {
         Ok(())
     }
 }
+
+pub trait Mintable {
+  fn mintable_in_protocol<T: KeyValuePointer>(&self) -> bool;
+}
+
+impl Mintable for ProtoruneRuneId {
+  fn mintable_in_protocol<T: KeyValuePointer>(&self) -> bool {
+    T::from_keyword("/etching/byruneid/").select(&(self.clone().into())).get().len() > 0
+  }
+}
+
 pub fn load_sheet<T: KeyValuePointer>(ptr: &T) -> BalanceSheet {
     let runes_ptr = ptr.keyword("/runes");
     let balances_ptr = ptr.keyword("/balances");

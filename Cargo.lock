@@ -1916,7 +1916,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bitcoin 0.32.4",
- "metashrew",
  "metashrew-support",
  "ordinals 0.0.10",
  "serde",
