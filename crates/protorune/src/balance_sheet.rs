@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use metashrew_support::index_pointer::KeyValuePointer;
+use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use protorune_support::rune_transfer::{increase_balances_using_sheet, refund_to_refund_pointer};
 use protorune_support::rune_transfer::{RuneTransfer};
@@ -40,18 +41,19 @@ pub trait PersistentRecord {
 }
 
 pub trait Mintable {
-  fn mintable_in_protocol<T: KeyValuePointer>(&self) -> bool;
+  fn mintable_in_protocol(&self, atomic: &mut AtomicPointer) -> bool;
 }
 
 impl Mintable for ProtoruneRuneId {
-  fn mintable_in_protocol<T: KeyValuePointer>(&self) -> bool {
-    T::from_keyword("/etching/byruneid/").select(&(self.clone().into())).get().len() > 0
+  fn mintable_in_protocol(&self, atomic: &mut AtomicPointer) -> bool {
+    atomic.derive(&IndexPointer::from_keyword("/etching/byruneid/").select(&(self.clone().into()))).get().len() == 0
   }
 }
 
 pub trait OutgoingRunes {
     fn reconcile(
         &self,
+        atomic: &mut AtomicPointer,
         balances_by_output: &mut HashMap<u32, BalanceSheet>,
         vout: u32,
         pointer: u32,
@@ -59,10 +61,33 @@ pub trait OutgoingRunes {
     ) -> Result<()>;
 }
 
+pub trait CheckedDebit {
+  fn debit_checked(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()>; 
+}
+
+impl CheckedDebit for BalanceSheet {
+  fn debit_checked(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()> {
+        for (rune, balance) in &sheet.balances {
+            let mut amount = *balance;
+            let current = self.get(&rune);
+            if sheet.get(&rune) > current {
+                if rune.mintable_in_protocol(atomic) {
+                  amount = current;
+                } else {
+                  return Err(anyhow!("balance underflow during debit"));
+                }
+            }
+            self.decrease(rune, amount);
+        }
+        Ok(())
+  }
+}
+
 
 impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
     fn reconcile(
         &self,
+        atomic: &mut AtomicPointer,
         balances_by_output: &mut HashMap<u32, BalanceSheet>,
         vout: u32,
         pointer: u32,
@@ -86,8 +111,8 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
 
         // we want to subtract outgoing and the outgoing runtime balance
         // amount from the initial amount
-        initial.debit(&outgoing)?;
-        initial.debit(&outgoing_runtime)?;
+        initial.debit_checked(&outgoing, atomic)?;
+        initial.debit_checked(&outgoing_runtime, atomic)?;
 
         // increase the pointer by the outgoing runes balancesheet
         increase_balances_using_sheet(balances_by_output, &outgoing, pointer);

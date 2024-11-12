@@ -5,7 +5,7 @@ use alkanes_support::{
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
 };
 use anyhow::{anyhow, Result};
-use alkanes_runtime::{println, stdio::{stdout}};
+use crate::{println, stdio::{stdout}};
 use std::fmt::Write;
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::Arc;
