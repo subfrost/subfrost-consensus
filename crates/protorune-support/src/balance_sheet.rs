@@ -133,9 +133,9 @@ impl BalanceSheet {
         for (rune, balance) in &sheet.balances {
             let mut amount = *balance;
             if sheet.get(&rune) > self.get(&rune) {
-              amount = self.get(&rune);
+                amount = self.get(&rune);
             } else {
-              return Err(anyhow!("balance underflow"));
+                return Err(anyhow!("balance underflow during debit"));
             }
             self.decrease(rune, amount);
         }

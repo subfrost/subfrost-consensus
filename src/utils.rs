@@ -89,7 +89,7 @@ pub fn transfer_from(
             if &transfer.id == from {
                 balance = transfer.value;
             } else {
-                return Err(anyhow!("balance underflow"));
+                return Err(anyhow!("balance underflow during transfer_from"));
             }
         }
         from_pointer.set_value::<u128>(balance - transfer.value);
