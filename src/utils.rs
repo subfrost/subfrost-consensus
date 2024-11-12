@@ -6,6 +6,8 @@ use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::rune_transfer::RuneTransfer;
+use metashrew::{println, stdio::{stdout}};
+use std::fmt::{Write};
 use std::sync::Arc;
 
 pub fn balance_pointer(
@@ -46,7 +48,8 @@ pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<Ru
             "crediting {:?} with token {:?} and amount {}",
             to, rune.id, rune.value
         );
-        balance_pointer(atomic, to, &rune.id.clone().into()).set_value::<u128>(rune.value);
+        let mut ptr = balance_pointer(atomic, to, &rune.id.clone().into());
+        ptr.set_value::<u128>(rune.value + ptr.get_value::<u128>());
     }
 }
 

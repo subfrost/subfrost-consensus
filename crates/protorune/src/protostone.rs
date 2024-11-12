@@ -6,10 +6,11 @@ use anyhow::Result;
 use bitcoin::{Block, Transaction, Txid};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use ordinals::Runestone;
+use crate::balance_sheet::{OutgoingRunes};
 use protorune_support::{
-    balance_sheet::BalanceSheet,
+    balance_sheet::{BalanceSheet},
     protostone::{split_bytes, Protostone},
-    rune_transfer::{refund_to_refund_pointer, OutgoingRunes, RuneTransfer},
+    rune_transfer::{refund_to_refund_pointer, RuneTransfer},
     utils::encode_varint_list,
 };
 use std::collections::{HashMap, HashSet};

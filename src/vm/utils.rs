@@ -96,6 +96,7 @@ pub fn run_special_cellpacks(
         let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
         let next_sequence = next_sequence_pointer.get_value::<u128>();
         payload.target = AlkaneId::new(2, next_sequence);
+        println!("payload.target: {:?}", payload.target);
         next_sequence_pointer.set_value(next_sequence + 1);
         let context_binary: Vec<u8> = context
             .message

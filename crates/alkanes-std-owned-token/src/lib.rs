@@ -4,6 +4,8 @@ use alkanes_runtime::{
     stdio::{stdout, Write},
 };
 use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
+use alkanes_runtime::{println, stdio::{stdout}};
+use std::fmt::{Write};
 use alkanes_support::utils::shift;
 use alkanes_support::{context::Context, parcel::AlkaneTransfer, response::CallResponse};
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
@@ -47,6 +49,7 @@ impl AlkaneResponder for OwnedToken {
                 if pointer.get().len() == 0 {
                     let auth_token_units = shift(&mut inputs).unwrap();
                     let token_units = shift(&mut inputs).unwrap();
+                    println!("deploy auth token");
                     response
                         .alkanes
                         .0
@@ -56,13 +59,16 @@ impl AlkaneResponder for OwnedToken {
                         value: token_units,
                     });
                     pointer.set(Arc::new(vec![0x01]));
+                    println!("deployed");
                     response
                 } else {
                     panic!("already initialized");
                 }
             }
             1 => {
+                self.only_owner().unwrap();
                 let token_units = shift(&mut inputs).unwrap();
+                if context.incoming_runes.0.position(|v| => 
                 let transfer = self.mint(&context, token_units);
                 response.alkanes.0.push(transfer);
                 response

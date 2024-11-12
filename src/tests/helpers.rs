@@ -58,7 +58,7 @@ pub fn init_with_multiple_cellpacks_with_tx(
                 });
                 tx
             } else {
-                let tx = create_multiple_cellpack_with_witness(witness, [cellpack].into(), true);
+                let tx = create_multiple_cellpack_with_witness(witness, [cellpack].into(), false);
                 previous_out = Some(OutPoint {
                     txid: tx.compute_txid(),
                     vout: 0,
@@ -81,7 +81,7 @@ pub fn init_with_multiple_cellpacks(binary: Vec<u8>, cellpacks: Vec<Cellpack>) -
     test_block
         .txdata
         .push(create_multiple_cellpack_with_witness(
-            witness, cellpacks, true,
+            witness, cellpacks, false,
         ));
     test_block
 }
@@ -142,10 +142,7 @@ pub fn create_multiple_cellpack_with_witness_and_in(
         pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
         edicts: Vec::new(),
         mint: None,
-        protocol: match protostones.encipher() {
-            Ok(v) => Some(v),
-            Err(_) => None,
-        },
+        protocol: protostones.encipher().ok()
     })
     .encipher();
 
@@ -170,7 +167,7 @@ pub fn create_multiple_cellpack_with_witness_and_in(
 }
 
 pub fn create_cellpack_with_witness(witness: Witness, cellpack: Cellpack) -> Transaction {
-    create_multiple_cellpack_with_witness(witness, [cellpack].into(), true)
+    create_multiple_cellpack_with_witness(witness, [cellpack].into(), false)
 }
 
 pub fn create_multiple_cellpack_with_witness(

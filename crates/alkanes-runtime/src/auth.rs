@@ -5,6 +5,8 @@ use alkanes_support::{
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
 };
 use anyhow::{anyhow, Result};
+use alkanes_runtime::{println, stdio::{stdout}};
+use std::fmt::Write;
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::Arc;
 
@@ -19,6 +21,7 @@ pub trait AuthenticatedResponder: AlkaneResponder {
         };
         let sequence = self.sequence();
         let response = self.call(&cellpack, &AlkaneTransferParcel::default(), self.fuel())?;
+        println!("auth token response: {:?}", response.alkanes.0);
         StoragePointer::from_keyword("/auth").set(Arc::new(<AlkaneId as Into<Vec<u8>>>::into(
             AlkaneId {
                 block: 2,
