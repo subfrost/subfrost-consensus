@@ -155,10 +155,6 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
     };
 
     let owned_token_id = AlkaneId { block: 2, tx: 0 };
-    let original_rune_id = AlkaneId {
-        block: 840000,
-        tx: 1,
-    };
 
     let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
     let outpoint = OutPoint {

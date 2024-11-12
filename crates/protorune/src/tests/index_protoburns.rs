@@ -12,7 +12,7 @@ mod tests {
 
     use metashrew::clear;
     use metashrew::{
-        flush, input, println,
+        println,
         stdio::{stdout, Write},
     };
     use metashrew_support::index_pointer::KeyValuePointer;
