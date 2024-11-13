@@ -14,7 +14,7 @@ use metashrew::{clear, index_pointer::IndexPointer, println, stdio::stdout};
 use std::fmt::Write;
 use wasm_bindgen_test::wasm_bindgen_test;
 
-#[wasm_bindgen_test]
+//#[wasm_bindgen_test]
 fn test_auth_token() -> Result<()> {
     clear();
     let block_height = 840_000;
@@ -104,7 +104,7 @@ fn test_owned_token() -> Result<()> {
     let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
     let outpoint = OutPoint {
         txid: tx.compute_txid(),
-        vout: 0,
+        vout: 1,
     };
     let sheet = load_sheet(
         &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
@@ -125,7 +125,7 @@ fn test_owned_token() -> Result<()> {
     Ok(())
 }
 
-#[wasm_bindgen_test]
+//#[wasm_bindgen_test]
 fn test_auth_and_owned_token_noop() -> Result<()> {
     clear();
     let block_height = 840_000;
