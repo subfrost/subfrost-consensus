@@ -451,9 +451,10 @@ impl Protorune {
     // }
 
     pub fn build_rune_id(height: u64, tx: u32) -> Arc<Vec<u8>> {
-        let rune_id = ProtoruneRuneId::new(height as u128, tx as u128)
-            .to_string()
-            .into_bytes();
+        let rune_id = <ProtoruneRuneId as Into<Vec<u8>>>::into(ProtoruneRuneId::new(
+            height as u128,
+            tx as u128,
+        ));
         return Arc::new(rune_id);
     }
 

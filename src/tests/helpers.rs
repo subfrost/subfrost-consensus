@@ -43,7 +43,11 @@ pub fn init_with_multiple_cellpacks_with_tx(
         .zip(cellpacks.into_iter())
         .map(|i| {
             let (binary, cellpack) = i;
-            let witness = if binary.len() == 0 { Witness::new() } else { RawEnvelope::from(binary).to_gzipped_witness() };
+            let witness = if binary.len() == 0 {
+                Witness::new()
+            } else {
+                RawEnvelope::from(binary).to_gzipped_witness()
+            };
             if let Some(previous_output) = previous_out {
                 let tx = create_multiple_cellpack_with_witness_and_in(
                     witness,
@@ -83,6 +87,37 @@ pub fn init_with_multiple_cellpacks(binary: Vec<u8>, cellpacks: Vec<Cellpack>) -
             witness, cellpacks, false,
         ));
     test_block
+}
+
+pub fn create_protostone_tx_with_inputs(
+    inputs: Vec<TxIn>,
+    outputs: Vec<TxOut>,
+    protostone: Protostone,
+) -> Transaction {
+    let protocol_id = 1;
+    let input_script = ScriptBuf::new();
+    let runestone: ScriptBuf = (Runestone {
+        etching: None,
+        pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
+        edicts: Vec::new(),
+        mint: None,
+        protocol: vec![protostone].encipher().ok(),
+    })
+    .encipher();
+    let op_return = TxOut {
+        value: Amount::from_sat(0),
+        script_pubkey: runestone,
+    };
+    let address: Address<NetworkChecked> = get_address(&ADDRESS1);
+    let script_pubkey = address.script_pubkey();
+    let mut _outputs = outputs.clone();
+    _outputs.push(op_return);
+    Transaction {
+        version: Version::ONE,
+        lock_time: bitcoin::absolute::LockTime::ZERO,
+        input: inputs,
+        output: _outputs,
+    }
 }
 
 pub fn create_multiple_cellpack_with_witness_and_in(

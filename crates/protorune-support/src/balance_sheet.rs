@@ -1,5 +1,6 @@
 use crate::rune_transfer::RuneTransfer;
 use anyhow::{anyhow, Result};
+use hex;
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -57,11 +58,13 @@ impl From<RuneId> for ProtoruneRuneId {
     }
 }
 
+/*
 impl fmt::Display for ProtoruneRuneId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "RuneId {{ block: {}, tx: {} }}", self.block, self.tx)
     }
 }
+*/
 
 impl From<ProtoruneRuneId> for Vec<u8> {
     fn from(rune_id: ProtoruneRuneId) -> Self {
@@ -144,6 +147,7 @@ impl BalanceSheet {
         self.debit(sheet)
     }
 
+    /*
     pub fn inspect(&self) -> String {
         let mut base = String::from("balances: [\n");
         for (rune, balance) in &self.balances {
@@ -152,6 +156,7 @@ impl BalanceSheet {
         base.push_str("]");
         base
     }
+    */
 
     pub fn get(&self, rune: &ProtoruneRuneId) -> u128 {
         *self.balances.get(rune).unwrap_or(&0u128) // Return 0 if rune not found
@@ -219,12 +224,6 @@ pub trait IntoString {
 
 impl IntoString for Vec<u8> {
     fn to_str(&self) -> String {
-        let mut str: String = "".to_string();
-        for i in self {
-            str = str + i.to_string().as_str() + ",";
-            ()
-        }
-
-        str
+        hex::encode(self)
     }
 }

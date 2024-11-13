@@ -6,8 +6,8 @@ use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::Arc;
 
-use alkanes_runtime::{println, stdio::{stdout}};
-use std::fmt::{Write};
+use alkanes_runtime::{println, stdio::stdout};
+use std::fmt::Write;
 
 #[derive(Default)]
 pub struct OwnedToken(());

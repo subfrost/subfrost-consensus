@@ -891,7 +891,6 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        println!("result: {:?}", proto_balances_by_output);
         let expected_sheet_0 = BalanceSheet::from_pairs(
             vec![
                 ProtoruneRuneId { block: 1, tx: 1 },

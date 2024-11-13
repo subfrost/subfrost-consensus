@@ -11,6 +11,7 @@ use alkanes_support::{
     utils::{overflow_error, shift},
 };
 use anyhow::{anyhow, Result};
+use hex;
 use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr},
     index_pointer::KeyValuePointer,
@@ -19,6 +20,8 @@ use num::integer::Roots;
 use protorune_support::balance_sheet::BalanceSheet;
 use ruint::Uint;
 use std::sync::Arc;
+
+pub const MINIMUM_LIQUIDITY: u128 = 1000;
 
 type U256 = Uint<256, 4>;
 
@@ -31,14 +34,13 @@ pub fn sub_fees(v: u128) -> Result<u128> {
 
 impl AMMPool {
     pub fn alkanes_for_self(&self) -> Result<(AlkaneId, AlkaneId)> {
-        println!("fetching alkanes_for_self");
         Ok((
-            StoragePointer::from_keyword("/alkanes/0")
+            StoragePointer::from_keyword("/alkane/0")
                 .get()
                 .as_ref()
                 .clone()
                 .try_into()?,
-            StoragePointer::from_keyword("/alkanes/1")
+            StoragePointer::from_keyword("/alkane/1")
                 .get()
                 .as_ref()
                 .clone()
@@ -58,9 +60,7 @@ impl AMMPool {
                 n
             )))
         } else {
-            println!("inside else block in check_inputs");
             let (a, b) = self.alkanes_for_self()?;
-            println!("self alkanes: a: {:?}, b: {:?}", a, b);
             if let Some(_) = parcel
                 .0
                 .iter()
@@ -113,25 +113,28 @@ impl AMMPool {
         )
     }
     pub fn mint(&self, myself: AlkaneId, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
-        println!("before check_inputs");
         self.check_inputs(&myself, &parcel, 2)?;
-        println!("checked inputs");
-        let total_supply = self.total_supply();
+        let mut total_supply = self.total_supply();
         let (reserve_a, reserve_b) = self.reserves();
         let (previous_a, previous_b) = self.previous_reserves(&parcel);
         let root_k_last = overflow_error(previous_a.value.checked_mul(previous_b.value))?.sqrt();
         let root_k = overflow_error(reserve_a.value.checked_mul(reserve_b.value))?.sqrt();
-        println!("before root_k > root_k_last");
-        if root_k > root_k_last {
-            let numerator = overflow_error(
-                total_supply.checked_mul(overflow_error(root_k.checked_sub(root_k_last))?),
-            )?;
-            let denominator =
-                overflow_error(overflow_error(root_k.checked_mul(5))?.checked_add(root_k_last))?;
-            let liquidity = numerator / denominator;
+        if root_k > root_k_last || root_k_last == 0 {
+            let mut liquidity = 0;
+            if total_supply == 0 {
+                liquidity = overflow_error(root_k.checked_sub(MINIMUM_LIQUIDITY))?;
+                total_supply = total_supply + MINIMUM_LIQUIDITY;
+            } else {
+                let numerator = overflow_error(
+                    total_supply.checked_mul(overflow_error(root_k.checked_sub(root_k_last))?),
+                )?;
+                let denominator = overflow_error(
+                    overflow_error(root_k.checked_mul(5))?.checked_add(root_k_last),
+                )?;
+                liquidity = numerator / denominator;
+            }
             self.set_total_supply(overflow_error(total_supply.checked_add(liquidity))?);
             let mut response = CallResponse::default();
-            println!("before response generated for mint");
             response.alkanes = AlkaneTransferParcel(vec![AlkaneTransfer {
                 id: myself,
                 value: liquidity,
@@ -236,10 +239,8 @@ impl AlkaneResponder for AMMPool {
                 if pointer.get().len() == 0 {
                     pointer.set(Arc::new(vec![0x01]));
                     let (a, b) = self.pull_ids(&mut inputs).unwrap();
-                    println!("alkane id a: {:?}, b: {:?}", a, b);
                     StoragePointer::from_keyword("/alkane/0").set(Arc::new(a.into()));
                     StoragePointer::from_keyword("/alkane/1").set(Arc::new(b.into()));
-                    println!("before mint");
                     self.mint(context.myself, context.incoming_alkanes).unwrap()
                 } else {
                     panic!("already initialized");
@@ -250,8 +251,8 @@ impl AlkaneResponder for AMMPool {
             3 => self
                 .swap(context.incoming_alkanes, shift(&mut inputs).unwrap())
                 .unwrap(),
-            50 => { CallResponse::forward(&context.incoming_alkanes) }
-            
+            50 => CallResponse::forward(&context.incoming_alkanes),
+
             _ => {
                 panic!("unrecognized opcode");
             }

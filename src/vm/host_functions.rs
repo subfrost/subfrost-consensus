@@ -2,7 +2,7 @@ use super::{
     get_memory, read_arraybuffer, send_to_arraybuffer, sequence_pointer, AlkanesState, Extcall,
     Saveable, SaveableExtendedCallResponse,
 };
-use crate::utils::{pipe_storagemap_to, transfer_from};
+use crate::utils::{balance_pointer, pipe_storagemap_to, transfer_from};
 use crate::vm::{run_after_special, run_special_cellpacks};
 use alkanes_support::{
     cellpack::Cellpack, id::AlkaneId, parcel::AlkaneTransferParcel, response::CallResponse,
@@ -226,20 +226,14 @@ impl AlkanesHostFunctionsImpl {
                 AlkaneId::parse(&mut Cursor::new(read_arraybuffer(data, what_ptr)?))?,
             )
         };
-        let balance = caller
-            .data_mut()
-            .context
-            .lock()
-            .unwrap()
-            .message
-            .atomic
-            .keyword("/alkanes/")
-            .select(&who.into())
-            .keyword("/balances/")
-            .select(&what.into())
-            .get()
-            .as_ref()
-            .clone();
+        let balance = balance_pointer(
+            &mut caller.data_mut().context.lock().unwrap().message.atomic,
+            &who.into(),
+            &what.into(),
+        )
+        .get()
+        .as_ref()
+        .clone();
         consume_fuel(caller, FUEL_BALANCE)?;
         send_to_arraybuffer(caller, output.try_into()?, &balance)?;
         Ok(())
@@ -311,9 +305,7 @@ impl AlkanesHostFunctionsImpl {
         )?;
         run_after_special(subcontext.clone(), binary_rc, start_fuel)
             .and_then(|(response, gas_used)| {
-                println!("gas used: {}", gas_used);
                 caller.set_fuel(overflow_error(start_fuel.checked_sub(gas_used))?)?;
-                println!("gas left: {}", (&caller).get_fuel().unwrap());
                 let mut context = caller.data().context.lock().unwrap();
                 let mut saveable: SaveableExtendedCallResponse = response.clone().into();
                 saveable.associate(&subcontext);

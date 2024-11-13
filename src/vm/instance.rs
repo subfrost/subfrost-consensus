@@ -337,8 +337,8 @@ impl AlkanesInstance {
                     }
                 }
                 Err(e) => {
-                  err = Some(e);
-                  (ExtendedCallResponse::default(), true)
+                    err = Some(e);
+                    (ExtendedCallResponse::default(), true)
                 }
             }
         };
@@ -346,9 +346,9 @@ impl AlkanesInstance {
         if had_failure {
             self.rollback();
             if let Some(e) = err {
-              Err(anyhow!(format!("ALKANES: revert: {:?}", e)))
+                Err(anyhow!(format!("ALKANES: revert: {:?}", e)))
             } else {
-              Err(anyhow!("ALKANES: revert"))
+                Err(anyhow!("ALKANES: revert"))
             }
         } else {
             self.commit();

@@ -46,7 +46,6 @@ fn test_owned_token() -> Result<()> {
 
     index_block(&test_block, block_height)?;
 
-    println!("block indexed");
     let owned_token_id = AlkaneId { block: 2, tx: 0 };
     let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
     let outpoint = OutPoint {
@@ -58,7 +57,6 @@ fn test_owned_token() -> Result<()> {
             .OUTPOINT_TO_RUNES
             .select(&consensus_encode(&outpoint)?),
     );
-    println!("balances at end {:?}", sheet);
     //    assert_eq!(sheet.get(&original_rune_id.into()), 1000);
     assert_eq!(
         IndexPointer::from_keyword("/alkanes/")
@@ -100,7 +98,6 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
 
     index_block(&test_block, block_height)?;
 
-    println!("block indexed");
     let _auth_token_id_factory = AlkaneId {
         block: 4,
         tx: 0xffee,
@@ -118,7 +115,6 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
             .OUTPOINT_TO_RUNES
             .select(&consensus_encode(&outpoint)?),
     );
-    println!("balances at end {:?}", sheet);
     // assert_eq!(sheet.get(&original_rune_id.into()), 1000);
 
     let tx_first = test_block.txdata.first().ok_or(anyhow!("no first el"))?;
@@ -131,7 +127,6 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
             .OUTPOINT_TO_RUNES
             .select(&consensus_encode(&outpoint_first)?),
     );
-    println!("balances at first {:?}", sheet_first);
     assert_eq!(sheet_first.balances.len(), 0);
     assert_eq!(
         IndexPointer::from_keyword("/alkanes/")
@@ -185,7 +180,6 @@ fn test_auth_and_owned_token() -> Result<()> {
 
     index_block(&test_block, block_height)?;
 
-    println!("block indexed");
     let _auth_token_id_factory = AlkaneId {
         block: 4,
         tx: 0xffee,
@@ -204,7 +198,6 @@ fn test_auth_and_owned_token() -> Result<()> {
             .OUTPOINT_TO_RUNES
             .select(&consensus_encode(&outpoint)?),
     );
-    println!("balances at end {:?}", sheet);
     assert_eq!(sheet.get(&owned_token_id.into()), 1000);
     assert_eq!(sheet.get(&auth_token_id_deployment.into()), 1);
 
