@@ -14,59 +14,6 @@ use metashrew::{clear, index_pointer::IndexPointer, println, stdio::stdout};
 use std::fmt::Write;
 use wasm_bindgen_test::wasm_bindgen_test;
 
-//#[wasm_bindgen_test]
-fn test_auth_token() -> Result<()> {
-    clear();
-    let block_height = 840_000;
-
-    let auth_cellpack = Cellpack {
-        target: AlkaneId {
-            block: 3,
-            tx: 0xffee,
-        },
-        inputs: vec![100],
-    };
-    let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
-        [alkanes_std_auth_token_build::get_bytes()].into(),
-        [auth_cellpack].into(),
-    );
-
-    index_block(&test_block, block_height)?;
-
-    println!("block indexed");
-    let _auth_token_id_factory = AlkaneId {
-        block: 4,
-        tx: 0xffee,
-    };
-    let original_rune_id = AlkaneId {
-        block: 840000,
-        tx: 1,
-    };
-
-    let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
-    let outpoint = OutPoint {
-        txid: tx.compute_txid(),
-        vout: 0,
-    };
-    let sheet = load_sheet(
-        &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
-            .OUTPOINT_TO_RUNES
-            .select(&consensus_encode(&outpoint)?),
-    );
-    println!("balances at end {:?}", sheet);
-    assert_eq!(sheet.get(&original_rune_id.into()), 1000);
-    assert_eq!(
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&_auth_token_id_factory.into())
-            .get()
-            .as_ref()
-            .clone(),
-        compress(alkanes_std_auth_token_build::get_bytes().into())?
-    );
-
-    Ok(())
-}
-
 #[wasm_bindgen_test]
 fn test_owned_token() -> Result<()> {
     clear();
@@ -125,7 +72,7 @@ fn test_owned_token() -> Result<()> {
     Ok(())
 }
 
-//#[wasm_bindgen_test]
+#[wasm_bindgen_test]
 fn test_auth_and_owned_token_noop() -> Result<()> {
     clear();
     let block_height = 840_000;
