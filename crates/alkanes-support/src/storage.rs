@@ -38,12 +38,15 @@ impl StorageMap {
     }
     pub fn serialize(&self) -> Vec<u8> {
         let mut buffer = Vec::<u8>::new();
-        buffer.extend(&(self.0.len() as u32).to_le_bytes());
-        for (k, v) in self.0.iter() {
-            buffer.extend(&(k.len() as u32).to_le_bytes());
-            buffer.extend(k);
-            buffer.extend(&(v.len() as u32).to_le_bytes());
-            buffer.extend(v);
+        let size = self.0.len() as u32;
+        buffer.extend(&(size).to_le_bytes());
+        if size > 0 {
+            for (k, v) in self.0.iter() {
+                buffer.extend(&(k.len() as u32).to_le_bytes());
+                buffer.extend(k);
+                buffer.extend(&(v.len() as u32).to_le_bytes());
+                buffer.extend(v);
+            }
         }
         buffer
     }

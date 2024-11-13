@@ -7,14 +7,12 @@ use crate::vm::{
 use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
-use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune::balance_sheet::CheckedDebit;
 use protorune::message::{MessageContext, MessageContextParcel};
 use protorune_support::{
     balance_sheet::BalanceSheet, rune_transfer::RuneTransfer, utils::decode_varint_list,
 };
-use std::fmt::Write;
 use std::io::Cursor;
 
 #[derive(Clone, Default)]

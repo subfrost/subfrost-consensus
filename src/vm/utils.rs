@@ -7,11 +7,7 @@ use alkanes_support::{
     witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
-use metashrew::{
-    index_pointer::{AtomicPointer, IndexPointer},
-    println,
-    stdio::{stdout, Write},
-};
+use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use std::sync::Arc;
@@ -102,7 +98,6 @@ pub fn run_special_cellpacks(
         binary = Arc::new(decompress(wasm_payload.clone().as_ref().clone())?);
     } else if let Some(factory) = cellpack.target.factory() {
         payload.target = AlkaneId::new(2, next_sequence);
-        println!("payload.target: {:?}", payload.target);
         next_sequence_pointer.set_value(next_sequence + 1);
         let context_binary: Vec<u8> = context
             .message
@@ -224,10 +219,6 @@ pub fn run(
     delegate: bool,
 ) -> Result<(ExtendedCallResponse, u64)> {
     let (caller, myself, binary) = run_special_cellpacks(&mut context, cellpack)?;
-    println!(
-        "running special cellpack, caller: {:?}, myself: {:?}",
-        caller, myself
-    );
     prepare_context(&mut context, &caller, &myself, delegate);
     run_after_special(context, binary, start_fuel)
 }

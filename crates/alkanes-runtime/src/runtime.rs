@@ -4,6 +4,11 @@ use crate::imports::{
     __load_storage, __load_transaction, __log, __request_block, __request_context,
     __request_storage, __request_transaction, __returndatacopy, __sequence, __staticcall, abort,
 };
+#[allow(unused_imports)]
+use crate::{
+    println,
+    stdio::{stdout, Write},
+};
 use anyhow::anyhow;
 #[allow(unused_imports)]
 use anyhow::Result;

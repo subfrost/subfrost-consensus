@@ -322,7 +322,6 @@ impl AlkanesHostFunctionsImpl {
                 let plain_response: CallResponse = response.clone().into();
                 let serialized = plain_response.serialize();
                 context.returndata = serialized;
-                println!("returndata: {:?}", response);
                 Ok(context.returndata.len().try_into()?)
             })
             .and_then(|len| {

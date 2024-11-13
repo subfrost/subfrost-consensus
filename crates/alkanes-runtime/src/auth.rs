@@ -1,4 +1,3 @@
-use crate::{println, stdio::stdout};
 use crate::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     cellpack::Cellpack,
@@ -7,7 +6,6 @@ use alkanes_support::{
 };
 use anyhow::{anyhow, Result};
 use metashrew_support::index_pointer::KeyValuePointer;
-use std::fmt::Write;
 use std::sync::Arc;
 
 pub trait AuthenticatedResponder: AlkaneResponder {
@@ -50,7 +48,6 @@ pub trait AuthenticatedResponder: AlkaneResponder {
             }]),
             self.fuel(),
         )?;
-        println!("response: {:?}", response);
         if response.data == vec![0x01] {
             Ok(())
         } else {

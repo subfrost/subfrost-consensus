@@ -25,7 +25,6 @@ impl Token for AuthToken {
 
 impl AlkaneResponder for AuthToken {
     fn execute(&self) -> CallResponse {
-        println!("auth token called");
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
         let mut response: CallResponse = CallResponse::forward(&context.incoming_alkanes.clone());
@@ -46,7 +45,6 @@ impl AlkaneResponder for AuthToken {
                 }
             }
             1 => {
-                println!("checking authentication");
                 if context.incoming_alkanes.0.len() != 1 {
                     panic!("did not authenticate with only the authentication token");
                 }
