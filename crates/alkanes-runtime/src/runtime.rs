@@ -11,6 +11,7 @@ use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr, to_ptr};
 use std::io::Cursor;
 
 use crate::compat::panic_hook;
+
 #[allow(unused_imports)]
 use alkanes_support::{
     cellpack::Cellpack,
@@ -125,10 +126,10 @@ pub trait AlkaneResponder {
                     .unwrap_or_else(|| Vec::<u8>::new())
             } else {
                 let mut key_bytes = to_arraybuffer_layout(&k);
-                let key = to_ptr(&mut key_bytes) + 4;
-                let mut buffer: Vec<u8> =
-                    to_arraybuffer_layout(vec![0; __request_storage(key) as usize]);
-                __load_storage(key, to_ptr(&mut buffer) + 4);
+                let key = to_passback_ptr(&mut key_bytes);
+                let buf_size = __request_storage(key) as usize;
+                let mut buffer: Vec<u8> = to_arraybuffer_layout(vec![0; buf_size]);
+                __load_storage(key, to_passback_ptr(&mut buffer));
                 (&buffer[4..]).to_vec()
             }
         }

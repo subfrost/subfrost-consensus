@@ -54,8 +54,9 @@ hex_lit = "0.1.1"
 alkanes = { path = ".", features = [
     "genesis_alkane",
     "genesis_protorune",
-    "amm",
+    # "amm",
     "orbital",
+    "auth_token",
 ] }
 metashrew = { path = "crates/metashrew", features = ["test-utils"] }
 protorune = { path = "crates/protorune", features = ["test-utils"] }

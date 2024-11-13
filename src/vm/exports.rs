@@ -1,6 +1,13 @@
 use super::{AlkanesInstance, AlkanesState};
-use alkanes_support::response::ExtendedCallResponse;
+use alkanes_support::{
+    parcel::AlkaneTransferParcel, response::ExtendedCallResponse, storage::StorageMap,
+};
 use anyhow::{anyhow, Result};
+use metashrew::{
+    println,
+    stdio::{stdout, Write},
+};
+use metashrew_support::utils::{consume_exact, consume_sized_int, consume_to_end};
 use wasmi::*;
 
 pub struct AlkanesExportsImpl(());
@@ -24,6 +31,31 @@ impl AlkanesExportsImpl {
         )
     }
 
+    pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<ExtendedCallResponse> {
+        let alkanes = AlkaneTransferParcel::parse(cursor)?;
+        let storage = {
+            let mut pairs = Vec::<(Vec<u8>, Vec<u8>)>::new();
+            let len = consume_sized_int::<u32>(cursor)? as u64;
+            println!("len: {}", len);
+            if len > 0 {
+                for _i in 0..len {
+                    println!("iteration {}", _i);
+                    let key_length: usize = consume_sized_int::<u32>(cursor)?.try_into()?;
+                    let key: Vec<u8> = consume_exact(cursor, key_length)?;
+                    let value_length: usize = consume_sized_int::<u32>(cursor)?.try_into()?;
+                    let value: Vec<u8> = consume_exact(cursor, value_length)?;
+                    pairs.push((key, value));
+                }
+            }
+            StorageMap::from_iter(pairs.into_iter())
+        };
+        let data = consume_to_end(cursor)?;
+        Ok(ExtendedCallResponse {
+            alkanes,
+            storage,
+            data,
+        })
+    }
     pub fn execute(vm: &mut AlkanesInstance) -> Result<ExtendedCallResponse> {
         let mut result = [Val::I32(0)];
         let func = Self::_get_export(vm, "__execute")?;

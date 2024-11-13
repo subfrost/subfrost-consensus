@@ -203,6 +203,7 @@ mod tests {
 
     /// In one runestone, etches a rune, then protoburns it, then transfers it
     #[wasm_bindgen_test]
+    #[allow(non_snake_case)]
     fn protoburn_transfer_to_OP_RETURN() {
         clear();
         let block_height = 840000;

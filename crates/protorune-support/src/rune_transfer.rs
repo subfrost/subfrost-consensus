@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::balance_sheet::{BalanceSheet, ProtoruneRuneId};
-use anyhow::{anyhow, Result};
 
 #[derive(Default, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RuneTransfer {
@@ -20,7 +19,6 @@ impl RuneTransfer {
             .collect::<Vec<RuneTransfer>>()
     }
 }
-
 
 /// Parameters:
 ///   balances_by_output: The running store of balances by each transaction output for

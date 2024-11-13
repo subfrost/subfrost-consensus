@@ -1,8 +1,4 @@
 use alkanes_runtime::{auth::AuthenticatedResponder, token::Token};
-use alkanes_runtime::{
-    println,
-    stdio::{stdout, Write},
-};
 use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::utils::shift;
 use alkanes_support::{context::Context, parcel::AlkaneTransfer, response::CallResponse};
@@ -39,15 +35,12 @@ impl AlkaneResponder for OwnedToken {
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
         let mut response: CallResponse = CallResponse::forward(&context.incoming_alkanes.clone());
-        println!("incoming alkanes in owned token: {:?}", response);
         match shift(&mut inputs).unwrap() {
             0 => {
-                println!("initializing std token");
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() == 0 {
                     let auth_token_units = shift(&mut inputs).unwrap();
                     let token_units = shift(&mut inputs).unwrap();
-                    println!("deploy auth token");
                     response
                         .alkanes
                         .0
@@ -57,7 +50,6 @@ impl AlkaneResponder for OwnedToken {
                         value: token_units,
                     });
                     pointer.set(Arc::new(vec![0x01]));
-                    println!("deployed");
                     response
                 } else {
                     panic!("already initialized");
