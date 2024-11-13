@@ -13,7 +13,9 @@ use protorune::message::{MessageContext, MessageContextParcel};
 use protorune_support::{
     balance_sheet::BalanceSheet, rune_transfer::RuneTransfer, utils::decode_varint_list,
 };
+use std::fmt::{Write};
 use std::io::Cursor;
+use metashrew::{println, stdio::{stdout}};
 
 #[derive(Clone, Default)]
 pub struct AlkaneMessageContext(());
@@ -26,6 +28,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
     let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
+    println!("binary: {}", binary.len());
     credit_balances(&mut atomic, &myself, &parcel.runes);
     prepare_context(&mut context, &caller, &myself, false);
     let (response, _gas_used) = run_after_special(context, binary, start_fuel())?;
@@ -38,6 +41,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
     combined.debit_checked(&sheet, &mut atomic)?;
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
+    println!("alkanes: {:?}", response.alkanes);
     Ok((response.alkanes.into(), combined))
 }
 
@@ -49,7 +53,7 @@ impl MessageContext for AlkaneMessageContext {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
             Err(e) => {
-                panic!("Error: {:?}", e); // Print the error
+                panic!("{:?}", e); // Print the error
             }
         }
     }

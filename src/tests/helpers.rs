@@ -43,8 +43,7 @@ pub fn init_with_multiple_cellpacks_with_tx(
         .zip(cellpacks.into_iter())
         .map(|i| {
             let (binary, cellpack) = i;
-            let raw_envelope = RawEnvelope::from(binary);
-            let witness = raw_envelope.to_gzipped_witness();
+            let witness = if binary.len() == 0 { Witness::new() } else { RawEnvelope::from(binary).to_gzipped_witness() };
             if let Some(previous_output) = previous_out {
                 let tx = create_multiple_cellpack_with_witness_and_in(
                     witness,

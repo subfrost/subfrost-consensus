@@ -110,6 +110,7 @@ impl MessageProcessor for Protostone {
                 sheets: Box::new(BalanceSheet::default()),
             };
             let pointer = self.pointer.unwrap_or_else(|| default_output);
+            println!("pointer: {}", pointer);
             let refund_pointer = self.refund.unwrap_or_else(|| default_output);
             match T::handle(&parcel) {
                 Ok(values) => {

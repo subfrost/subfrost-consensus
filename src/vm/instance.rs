@@ -20,7 +20,6 @@ fn handle_extcall(v: Result<i32>, caller: Caller<'_, AlkanesState>) -> i32 {
     match v {
         Ok(v) => v,
         Err(e) => {
-            println!("extcall failed with error: {:#?}", e);
             AlkanesHostFunctionsImpl::_abort(caller);
             -1
         }
@@ -327,6 +326,7 @@ impl AlkanesInstance {
     }
     pub fn execute(&mut self) -> Result<ExtendedCallResponse> {
         self.checkpoint();
+        let mut err: Option<anyhow::Error> = None;
         let (call_response, had_failure): (ExtendedCallResponse, bool) = {
             match AlkanesExportsImpl::execute(self) {
                 Ok(v) => {
@@ -336,13 +336,20 @@ impl AlkanesInstance {
                         (v, false)
                     }
                 }
-                Err(_) => (ExtendedCallResponse::default(), true),
+                Err(e) => {
+                  err = Some(e);
+                  (ExtendedCallResponse::default(), true)
+                }
             }
         };
         self.reset();
         if had_failure {
             self.rollback();
-            Err(anyhow!("ALKANES: revert"))
+            if let Some(e) = err {
+              Err(anyhow!(format!("ALKANES: revert: {:?}", e)))
+            } else {
+              Err(anyhow!("ALKANES: revert"))
+            }
         } else {
             self.commit();
             Ok(call_response)
