@@ -30,7 +30,7 @@ pub fn consume_to_end(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<Vec<u8>> 
     if is_empty(cursor) {
         return Ok(vec![]);
     }
-    let mut result = vec![0u8; (cursor.get_ref().len() as u64 - cursor.position()).try_into()?];
+    let mut result: Vec<u8> = vec![];
     cursor.read_to_end(&mut result)?;
     Ok(result)
 }

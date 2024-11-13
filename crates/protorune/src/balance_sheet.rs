@@ -1,9 +1,8 @@
 use anyhow::{anyhow, Result};
-use metashrew_support::index_pointer::KeyValuePointer;
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
-use protorune_support::rune_transfer::{increase_balances_using_sheet, refund_to_refund_pointer};
-use protorune_support::rune_transfer::{RuneTransfer};
+use protorune_support::rune_transfer::{increase_balances_using_sheet, RuneTransfer};
 use std::collections::HashMap;
 pub trait PersistentRecord {
     fn save<T: KeyValuePointer>(&self, ptr: &T, is_cenotaph: bool) {
@@ -41,13 +40,19 @@ pub trait PersistentRecord {
 }
 
 pub trait Mintable {
-  fn mintable_in_protocol(&self, atomic: &mut AtomicPointer) -> bool;
+    fn mintable_in_protocol(&self, atomic: &mut AtomicPointer) -> bool;
 }
 
 impl Mintable for ProtoruneRuneId {
-  fn mintable_in_protocol(&self, atomic: &mut AtomicPointer) -> bool {
-    atomic.derive(&IndexPointer::from_keyword("/etching/byruneid/").select(&(self.clone().into()))).get().len() == 0
-  }
+    fn mintable_in_protocol(&self, atomic: &mut AtomicPointer) -> bool {
+        atomic
+            .derive(
+                &IndexPointer::from_keyword("/etching/byruneid/").select(&(self.clone().into())),
+            )
+            .get()
+            .len()
+            == 0
+    }
 }
 
 pub trait OutgoingRunes {
@@ -62,27 +67,26 @@ pub trait OutgoingRunes {
 }
 
 pub trait CheckedDebit {
-  fn debit_checked(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()>; 
+    fn debit_checked(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()>;
 }
 
 impl CheckedDebit for BalanceSheet {
-  fn debit_checked(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()> {
+    fn debit_checked(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()> {
         for (rune, balance) in &sheet.balances {
             let mut amount = *balance;
             let current = self.get(&rune);
             if sheet.get(&rune) > current {
                 if rune.mintable_in_protocol(atomic) {
-                  amount = current;
+                    amount = current;
                 } else {
-                  return Err(anyhow!("balance underflow during debit"));
+                    return Err(anyhow!("balance underflow during debit"));
                 }
             }
             self.decrease(rune, amount);
         }
         Ok(())
-  }
+    }
 }
-
 
 impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
     fn reconcile(

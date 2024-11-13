@@ -3,6 +3,7 @@ use crate::message::MessageContext;
 use crate::protostone::{
     add_to_indexable_protocols, initialized_protocol_index, MessageProcessor, Protostones,
 };
+use crate::tables::RuneTable;
 use anyhow::{anyhow, Ok, Result};
 use balance_sheet::clear_balances;
 use bitcoin::blockdata::block::Block;
@@ -25,7 +26,6 @@ use ordinals::{Artifact, Runestone};
 use proto::protorune::{Output, RunesResponse, WalletResponse};
 use protobuf::{Message, SpecialFields};
 use protorune_support::constants;
-use crate::tables::RuneTable;
 use protorune_support::{
     balance_sheet::{BalanceSheet, ProtoruneRuneId},
     protostone::{into_protostone_edicts, Protostone, ProtostoneEdict},
@@ -285,10 +285,6 @@ impl Protorune {
         match balances_by_output.get_mut(&unallocated_to) {
             Some(v) => balances.pipe(v),
             None => {
-                println!(
-                    "Adding new entry in balances by output at key {}",
-                    unallocated_to
-                );
                 balances_by_output.insert(unallocated_to, balances.clone());
             }
         }
@@ -678,25 +674,11 @@ impl Protorune {
                         Some(v) => v,
                         None => default_output(tx),
                     };
-                    println!(
-                        "handling leftover runes going to otuput {}",
-                        protostone_unallocated_to
-                    );
-                    println!("balances leftover: {:?}", balance_sheet);
-                    println!("current balances by output: {:?}", proto_balances_by_output);
                     Self::handle_leftover_runes(
                         &mut balance_sheet,
                         &mut proto_balances_by_output,
                         protostone_unallocated_to,
                     )?;
-                    println!(
-                        "after handle leftover proto balances by output: {:?}",
-                        proto_balances_by_output
-                    );
-                    println!(
-                        "after handle leftover balances by output: {:?}",
-                        balances_by_output
-                    );
 
                     for (vout, sheet) in balances_by_output.clone() {
                         let outpoint = OutPoint::new(tx.compute_txid(), vout);

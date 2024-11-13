@@ -16,14 +16,15 @@ impl StorageMap {
     pub fn parse(cursor: &mut Cursor<Vec<u8>>) -> Result<StorageMap> {
         let mut pairs = Vec::<(Vec<u8>, Vec<u8>)>::new();
         let len = consume_sized_int::<u32>(cursor)? as u64;
-        let stop = cursor.position() + len;
-        while cursor.position() < stop {
+
+        for _i in 0..len {
             let key_length: usize = consume_sized_int::<u32>(cursor)?.try_into()?;
             let key: Vec<u8> = consume_exact(cursor, key_length)?;
             let value_length: usize = consume_sized_int::<u32>(cursor)?.try_into()?;
             let value: Vec<u8> = consume_exact(cursor, value_length)?;
             pairs.push((key, value));
         }
+
         Ok(StorageMap::from_iter(pairs.into_iter()))
     }
     pub fn get<T: AsRef<[u8]>>(&self, k: T) -> Option<&Vec<u8>> {
@@ -37,13 +38,16 @@ impl StorageMap {
     }
     pub fn serialize(&self) -> Vec<u8> {
         let mut buffer = Vec::<u8>::new();
-        buffer.extend(&(self.0.len() as u32).to_le_bytes());
-        self.0.iter().for_each(|(k, v)| {
-            buffer.extend(&(k.len() as u32).to_le_bytes());
-            buffer.extend(k);
-            buffer.extend(&(v.len() as u32).to_le_bytes());
-            buffer.extend(v);
-        });
+        let size = self.0.len() as u32;
+        buffer.extend(&(size).to_le_bytes());
+        if size > 0 {
+            for (k, v) in self.0.iter() {
+                buffer.extend(&(k.len() as u32).to_le_bytes());
+                buffer.extend(k);
+                buffer.extend(&(v.len() as u32).to_le_bytes());
+                buffer.extend(v);
+            }
+        }
         buffer
     }
 }

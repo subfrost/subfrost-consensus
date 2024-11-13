@@ -1,6 +1,5 @@
 use crate::rune_transfer::RuneTransfer;
 use anyhow::{anyhow, Result};
-use metashrew_support::index_pointer::KeyValuePointer;
 use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -131,13 +130,12 @@ impl BalanceSheet {
     /// can mint more than what the initial balance sheet has.
     pub fn debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
         for (rune, balance) in &sheet.balances {
-            let mut amount = *balance;
-            if sheet.get(&rune) > self.get(&rune) {
-                amount = self.get(&rune);
+            if *balance >= self.get(&rune) {
+                let amount = self.get(&rune);
+                self.decrease(rune, amount);
             } else {
-                return Err(anyhow!("balance underflow during debit"));
+                return Err(anyhow!("balance underflow"));
             }
-            self.decrease(rune, amount);
         }
         Ok(())
     }

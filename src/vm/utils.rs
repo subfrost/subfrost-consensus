@@ -7,11 +7,7 @@ use alkanes_support::{
     witness::find_witness_payload,
 };
 use anyhow::{anyhow, Result};
-use metashrew::{
-    index_pointer::{AtomicPointer, IndexPointer},
-    println,
-    stdio::{stdout, Write},
-};
+use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use std::sync::Arc;
@@ -46,14 +42,22 @@ pub fn run_special_cellpacks(
 ) -> Result<(AlkaneId, AlkaneId, Arc<Vec<u8>>)> {
     let mut payload = cellpack.clone();
     let mut binary = Arc::<Vec<u8>>::new(vec![]);
-    if cellpack.target.is_create() {
+    let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
+    let next_sequence = next_sequence_pointer.get_value::<u128>();
+    if cellpack.target.is_created(next_sequence) {
+        let wasm_payload = context
+            .message
+            .atomic
+            .keyword("/alkanes/")
+            .select(&payload.target.clone().into())
+            .get();
+        binary = Arc::new(decompress(wasm_payload.as_ref().clone())?);
+    } else if cellpack.target.is_create() {
         let wasm_payload = Arc::new(
             find_witness_payload(&context.message.transaction, 0)
                 .ok_or("finding witness payload failed for creation of alkane")
                 .map_err(|_| anyhow!("used CREATE cellpack but no binary found in witness"))?,
         );
-        let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
-        let next_sequence = next_sequence_pointer.get_value::<u128>();
         payload.target = AlkaneId {
             block: 2,
             tx: next_sequence,
@@ -93,10 +97,7 @@ pub fn run_special_cellpacks(
         }
         binary = Arc::new(decompress(wasm_payload.clone().as_ref().clone())?);
     } else if let Some(factory) = cellpack.target.factory() {
-        let mut next_sequence_pointer = sequence_pointer(&context.message.atomic);
-        let next_sequence = next_sequence_pointer.get_value::<u128>();
         payload.target = AlkaneId::new(2, next_sequence);
-        println!("payload.target: {:?}", payload.target);
         next_sequence_pointer.set_value(next_sequence + 1);
         let context_binary: Vec<u8> = context
             .message
@@ -218,10 +219,6 @@ pub fn run(
     delegate: bool,
 ) -> Result<(ExtendedCallResponse, u64)> {
     let (caller, myself, binary) = run_special_cellpacks(&mut context, cellpack)?;
-    println!(
-        "running special cellpack, caller: {:?}, myself: {:?}",
-        caller, myself
-    );
     prepare_context(&mut context, &caller, &myself, delegate);
     run_after_special(context, binary, start_fuel)
 }

@@ -14,7 +14,7 @@ use metashrew::{clear, index_pointer::IndexPointer, println, stdio::stdout};
 use std::fmt::Write;
 use wasm_bindgen_test::wasm_bindgen_test;
 
-//#[wasm_bindgen_test]
+#[wasm_bindgen_test]
 fn test_auth_token() -> Result<()> {
     clear();
     let block_height = 840_000;
@@ -74,11 +74,11 @@ fn test_owned_token() -> Result<()> {
 
     let test_cellpack = Cellpack {
         target: AlkaneId { block: 1, tx: 0 },
-        inputs: vec![0, 1, 1000]
+        inputs: vec![0, 1, 1000],
     };
     let mint_test_cellpack = Cellpack {
         target: AlkaneId { block: 2, tx: 0 },
-        inputs: vec![1, 1000]
+        inputs: vec![1, 1000],
     };
     let auth_cellpack = Cellpack {
         target: AlkaneId {
@@ -88,7 +88,12 @@ fn test_owned_token() -> Result<()> {
         inputs: vec![100],
     };
     let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
-        [alkanes_std_auth_token_build::get_bytes(), alkanes_std_owned_token_build::get_bytes(), [].into()].into(),
+        [
+            alkanes_std_auth_token_build::get_bytes(),
+            alkanes_std_owned_token_build::get_bytes(),
+            [].into(),
+        ]
+        .into(),
         [auth_cellpack, test_cellpack, mint_test_cellpack].into(),
     );
 
@@ -107,7 +112,7 @@ fn test_owned_token() -> Result<()> {
             .select(&consensus_encode(&outpoint)?),
     );
     println!("balances at end {:?}", sheet);
-//    assert_eq!(sheet.get(&original_rune_id.into()), 1000);
+    //    assert_eq!(sheet.get(&original_rune_id.into()), 1000);
     assert_eq!(
         IndexPointer::from_keyword("/alkanes/")
             .select(&owned_token_id.into())
@@ -120,7 +125,7 @@ fn test_owned_token() -> Result<()> {
     Ok(())
 }
 
-//#[wasm_bindgen_test]
+#[wasm_bindgen_test]
 fn test_auth_and_owned_token_noop() -> Result<()> {
     clear();
     let block_height = 840_000;
@@ -155,10 +160,6 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
     };
 
     let owned_token_id = AlkaneId { block: 2, tx: 0 };
-    let original_rune_id = AlkaneId {
-        block: 840000,
-        tx: 1,
-    };
 
     let tx = test_block.txdata.last().ok_or(anyhow!("no last el"))?;
     let outpoint = OutPoint {
@@ -205,7 +206,7 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
     Ok(())
 }
 
-//#[wasm_bindgen_test]
+#[wasm_bindgen_test]
 fn test_auth_and_owned_token() -> Result<()> {
     clear();
     let block_height = 840_000;

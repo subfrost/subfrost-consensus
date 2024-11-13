@@ -4,10 +4,13 @@ use alkanes_support::storage::StorageMap;
 use alkanes_support::utils::overflow_error;
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+#[allow(unused_imports)]
+use metashrew::{
+    println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::rune_transfer::RuneTransfer;
-use metashrew::{println, stdio::{stdout}};
-use std::fmt::{Write};
 use std::sync::Arc;
 
 pub fn balance_pointer(
@@ -44,10 +47,6 @@ pub fn u128_from_bytes(v: Vec<u8>) -> u128 {
 }
 pub fn credit_balances(atomic: &mut AtomicPointer, to: &AlkaneId, runes: &Vec<RuneTransfer>) {
     for rune in runes.clone() {
-        println!(
-            "crediting {:?} with token {:?} and amount {}",
-            to, rune.id, rune.value
-        );
         let mut ptr = balance_pointer(atomic, to, &rune.id.clone().into());
         ptr.set_value::<u128>(rune.value + ptr.get_value::<u128>());
     }
@@ -61,7 +60,6 @@ pub fn debit_balances(
     for rune in runes.0.clone() {
         let mut pointer = balance_pointer(atomic, to, &rune.id.clone().into());
         let pointer_value = pointer.get_value::<u128>();
-        println!("debiting to {:?} rune {:?}", to, rune);
         let v = {
             if *to == rune.id {
                 match pointer_value.checked_sub(rune.value) {
@@ -87,7 +85,6 @@ pub fn transfer_from(
         let mut from_pointer =
             balance_pointer(atomic, &from.clone().into(), &transfer.id.clone().into());
         let mut balance = from_pointer.get_value::<u128>();
-        println!("transferring details: {:?}", transfer);
         if balance < transfer.value {
             if &transfer.id == from {
                 balance = transfer.value;

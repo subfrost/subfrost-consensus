@@ -5,8 +5,6 @@ use alkanes_support::{
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
 };
 use anyhow::{anyhow, Result};
-use crate::{println, stdio::{stdout}};
-use std::fmt::Write;
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::sync::Arc;
 
@@ -21,13 +19,11 @@ pub trait AuthenticatedResponder: AlkaneResponder {
         };
         let sequence = self.sequence();
         let response = self.call(&cellpack, &AlkaneTransferParcel::default(), self.fuel())?;
-        println!("auth token response: {:?}", response.alkanes.0);
-        StoragePointer::from_keyword("/auth").set(Arc::new(<AlkaneId as Into<Vec<u8>>>::into(
-            AlkaneId {
-                block: 2,
-                tx: sequence,
-            },
-        )));
+        let mut ptr = StoragePointer::from_keyword("/auth");
+        ptr.set(Arc::new(<AlkaneId as Into<Vec<u8>>>::into(AlkaneId {
+            block: 2,
+            tx: sequence,
+        })));
         if response.alkanes.0.len() < 1 {
             Err(anyhow!("auth token not returned with factory"))
         } else {
@@ -35,8 +31,8 @@ pub trait AuthenticatedResponder: AlkaneResponder {
         }
     }
     fn auth_token(&self) -> Result<AlkaneId> {
-        let pointer = StoragePointer::from_keyword("/auth");
-        Ok(pointer.get().as_ref().clone().try_into()?)
+        let pointer = StoragePointer::from_keyword("/auth").get();
+        Ok(pointer.as_ref().clone().try_into()?)
     }
     fn only_owner(&self) -> Result<()> {
         let auth_token = self.auth_token()?;

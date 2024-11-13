@@ -53,7 +53,7 @@ impl AlkanesHostFunctionsImpl {
                 .atomic
                 .keyword("/alkanes/")
                 .select(&myself.into())
-                .keyword("/storage")
+                .keyword("/storage/")
                 .select(&key)
                 .get()
                 .len()
@@ -83,7 +83,7 @@ impl AlkanesHostFunctionsImpl {
                     .atomic
                     .keyword("/alkanes/")
                     .select(&myself.into())
-                    .keyword("/storage")
+                    .keyword("/storage/")
                     .select(&key)
                     .get()
             };
@@ -319,7 +319,7 @@ impl AlkanesHostFunctionsImpl {
                 saveable.associate(&subcontext);
                 saveable.save(&mut context.message.atomic)?;
                 T::handle_atomic(&mut context.message.atomic);
-                let plain_response: CallResponse = response.into();
+                let plain_response: CallResponse = response.clone().into();
                 let serialized = plain_response.serialize();
                 context.returndata = serialized;
                 Ok(context.returndata.len().try_into()?)

@@ -30,7 +30,6 @@ impl AlkaneResponder for AuthToken {
         let mut response: CallResponse = CallResponse::forward(&context.incoming_alkanes.clone());
         match shift(&mut inputs).unwrap() {
             0 => {
-                println!("initializing auth token");
                 let mut pointer = StoragePointer::from_keyword("/initialized");
                 if pointer.get().len() == 0 {
                     let amount = shift(&mut inputs).unwrap();
@@ -39,7 +38,6 @@ impl AlkaneResponder for AuthToken {
                         id: context.myself.clone(),
                         value: amount,
                     });
-                    println!("intialize response: {:?}", response);
                     pointer.set(Arc::new(vec![0x01]));
                     response
                 } else {
