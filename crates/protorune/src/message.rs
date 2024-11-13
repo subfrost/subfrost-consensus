@@ -1,10 +1,10 @@
+use crate::tables::RuneTable;
 use anyhow::Result;
 use bitcoin::{Block, OutPoint, Transaction};
 use metashrew::index_pointer::AtomicPointer;
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use protorune_support::rune_transfer::RuneTransfer;
-use crate::tables::RuneTable;
 use protorune_support::utils::consensus_encode;
 use std::u128;
 

@@ -44,13 +44,14 @@ pub struct Auxpow {
     pub block_hash: BlockHash,
     pub coinbase_branch: AuxpowMerkleBranch,
     pub blockchain_branch: AuxpowMerkleBranch,
-    pub parent_block: AuxpowHeader
+    pub parent_block: AuxpowHeader,
 }
 
 impl Auxpow {
     pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<Auxpow> {
         let coinbase_txn: Transaction = consensus_decode::<Transaction>(cursor)?;
-        let block_hash: BlockHash = BlockHash::from_byte_array(to_ref(&consume_exact(cursor, 0x20)?).try_into().unwrap());
+        let block_hash: BlockHash =
+            BlockHash::from_byte_array(to_ref(&consume_exact(cursor, 0x20)?).try_into().unwrap());
         let coinbase_branch: AuxpowMerkleBranch = AuxpowMerkleBranch::parse(cursor)?;
         let blockchain_branch: AuxpowMerkleBranch = AuxpowMerkleBranch::parse(cursor)?;
         let parent_block = AuxpowHeader::parse_without_auxpow(cursor)?;
@@ -59,7 +60,7 @@ impl Auxpow {
             block_hash,
             coinbase_branch,
             blockchain_branch,
-            parent_block
+            parent_block,
         })
     }
 }
@@ -102,27 +103,28 @@ pub struct AuxpowBlock {
 
 #[derive(Clone, Debug)]
 pub struct AuxpowMerkleBranch {
-  pub branch_length: u64,
-  pub branch_hash: Vec<BlockHash>,
-  pub branch_side_mask: i32
+    pub branch_length: u64,
+    pub branch_hash: Vec<BlockHash>,
+    pub branch_side_mask: i32,
 }
 
 impl AuxpowMerkleBranch {
-  pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AuxpowMerkleBranch> {
-    let branch_length = consume_varint(cursor)?;
-    let mut branch_hash: Vec<BlockHash> = vec![];
-    for _ in 0..branch_length {
-      branch_hash.push(BlockHash::from_byte_array(to_ref(&consume_exact(cursor, 0x20)?).try_into()?));
+    pub fn parse(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<AuxpowMerkleBranch> {
+        let branch_length = consume_varint(cursor)?;
+        let mut branch_hash: Vec<BlockHash> = vec![];
+        for _ in 0..branch_length {
+            branch_hash.push(BlockHash::from_byte_array(
+                to_ref(&consume_exact(cursor, 0x20)?).try_into()?,
+            ));
+        }
+        let branch_side_mask = consume_sized_int::<u32>(cursor)? as i32;
+        Ok(AuxpowMerkleBranch {
+            branch_length,
+            branch_hash,
+            branch_side_mask,
+        })
     }
-    let branch_side_mask = consume_sized_int::<u32>(cursor)? as i32;
-    Ok(AuxpowMerkleBranch {
-      branch_length,
-      branch_hash,
-      branch_side_mask
-    })
-  }
 }
-
 
 impl AuxpowBlock {
     pub fn to_consensus(&self) -> Block {

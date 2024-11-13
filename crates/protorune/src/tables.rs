@@ -121,7 +121,6 @@ impl RuneTable {
     }
 }
 
-
 pub static RUNES: Lazy<RuneTable> = Lazy::new(|| RuneTable::new());
 
 pub static HEIGHT_TO_RUNES: Lazy<IndexPointer> =

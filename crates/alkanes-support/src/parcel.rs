@@ -57,7 +57,7 @@ impl AlkaneTransferParcel {
         Ok(result)
     }
     pub fn pay(&mut self, transfer: AlkaneTransfer) {
-      self.0.push(transfer);
+        self.0.push(transfer);
     }
     pub fn to_vec(&self) -> Vec<u128> {
         let len = self.0.len();

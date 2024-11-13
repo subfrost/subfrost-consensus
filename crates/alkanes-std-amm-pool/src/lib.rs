@@ -250,6 +250,8 @@ impl AlkaneResponder for AMMPool {
             3 => self
                 .swap(context.incoming_alkanes, shift(&mut inputs).unwrap())
                 .unwrap(),
+            50 => { CallResponse::forward(&context.incoming_alkanes) }
+            
             _ => {
                 panic!("unrecognized opcode");
             }

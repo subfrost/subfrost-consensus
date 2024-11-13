@@ -142,7 +142,7 @@ pub fn create_multiple_cellpack_with_witness_and_in(
         pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
         edicts: Vec::new(),
         mint: None,
-        protocol: protostones.encipher().ok()
+        protocol: protostones.encipher().ok(),
     })
     .encipher();
 

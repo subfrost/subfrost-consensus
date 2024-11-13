@@ -59,35 +59,36 @@ fn main() {
         .unwrap()
         .join("crates");
     std::env::set_current_dir(&crates_dir).unwrap();
-    let files = fs::read_dir(&crates_dir)
+    let mods = fs::read_dir(&crates_dir)
         .unwrap()
         .filter_map(|v| {
-             // let name = v.ok()?.file_name().into_string().ok()?;
-             // if name.starts_with("alkanes-std-") {
-             //   Some(name)
-             // } else {
-             //   None
-             // }
-
             let name = v.ok()?.file_name().into_string().ok()?;
             if name.starts_with("alkanes-std-") {
-                if let Some(feature_name) = name.strip_prefix("alkanes-std-") {
-                    let final_name = feature_name.to_uppercase().replace("-", "_");
-                    if let Some(_) = env::var(format!("CARGO_FEATURE_{}", final_name.as_str())).ok() {
-                        Some(name)
-                    } else if let Some(_) = env::var(format!("CARGO_FEATURE_{}", "ALL")).ok() {
-                        Some(name)
-                    } else {
-                        None
-                    }
+                Some(name)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<String>>();
+    let files = mods
+        .clone()
+        .into_iter()
+        .filter_map(|name| {
+            if let Some(feature_name) = name.strip_prefix("alkanes-std-") {
+                let final_name = feature_name.to_uppercase().replace("-", "_");
+                if let Some(_) = env::var(format!("CARGO_FEATURE_{}", final_name.as_str())).ok() {
+                    Some(name)
+                } else if let Some(_) = env::var(format!("CARGO_FEATURE_{}", "ALL")).ok() {
+                    Some(name)
                 } else {
                     None
                 }
             } else {
                 None
             }
-
         })
+        .collect::<Vec<String>>();
+    files.into_iter()
         .map(|v| -> Result<String> {
             std::env::set_current_dir(&crates_dir.clone().join(v.clone()))?;
             Command::new("cargo")
@@ -149,9 +150,11 @@ fn main() {
     );
     fs::write(
         &write_dir.join("std").join("mod.rs"),
-        files.into_iter().fold(String::default(), |r, v| {
-            r + "pub mod " + v.as_str() + "_build;\n"
-        }),
+        mods.into_iter()
+            .map(|v| v.replace("-", "_"))
+            .fold(String::default(), |r, v| {
+                r + "pub mod " + v.as_str() + "_build;\n"
+            }),
     )
     .unwrap();
 }

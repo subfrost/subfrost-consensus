@@ -5,7 +5,7 @@ use anyhow::Result;
 
 use crate::index_block;
 use crate::tests::helpers as alkane_helpers;
-use crate::tests::std::alkanes_std_owned_token_build;
+use crate::tests::std::{alkanes_std_owned_token_build, alkanes_std_amm_factory_build};
 #[allow(unused_imports)]
 use metashrew::{
     clear,
@@ -23,15 +23,16 @@ fn test_amm_pool() -> Result<()> {
         Cellpack {
             target: AlkaneId {
                 block: 3,
-                tx: 0xffee,
+                tx: 0xffef,
             },
-            inputs: vec![100],
+            inputs: vec![50],
         },
         // token 1 init and mint
         Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
-            inputs: vec![0, 1, 1000],
+            inputs: vec![0],
         },
+        /*
         // token 2 init and mint
         Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
@@ -42,14 +43,13 @@ fn test_amm_pool() -> Result<()> {
             target: AlkaneId { block: 1, tx: 0 },
             inputs: vec![0, 2, 0, 2, 1],
         },
+        */
     ]
     .into();
     let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
         [
-            alkanes_std_auth_token_build::get_bytes(),
-            alkanes_std_owned_token_build::get_bytes(),
-            alkanes_std_owned_token_build::get_bytes(),
             alkanes_std_amm_pool_build::get_bytes(),
+            alkanes_std_amm_factory_build::get_bytes()
         ]
         .into(),
         cellpacks,
