@@ -109,6 +109,7 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
             .map_err(|_| anyhow!("balance sheet not found"))?
             .clone();
         let mut initial = BalanceSheet::merge(&incoming_initial, &runtime_initial);
+        println!("initial: {:?}", initial);
 
         // self.0 is the amount to forward to the pointer
         // self.1 is the amount to put into the runtime balance
@@ -121,7 +122,9 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
         initial.debit_checked(&outgoing_runtime, atomic)?;
 
         // increase the pointer by the outgoing runes balancesheet
+        println!("balance before pointer: {:?}", balances_by_output.get(&pointer));
         increase_balances_using_sheet(balances_by_output, &outgoing, pointer);
+        println!("balance after pointer: {:?}", balances_by_output.get(&pointer));
 
         // set the runtime to the ending runtime balance sheet
         // note that u32::MAX is the runtime vout

@@ -36,9 +36,12 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
         &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),
     );
     let mut combined = parcel.runtime_balances.as_ref().clone();
+    println!("combined before: {:?}", combined);
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
+    println!("sheet: {:?}", sheet);
     combined.debit_checked(&sheet, &mut atomic)?;
+    println!("combined: {:?}", combined);
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
     Ok((response.alkanes.into(), combined))
 }
