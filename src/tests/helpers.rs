@@ -94,8 +94,8 @@ pub fn create_protostone_tx_with_inputs(
     outputs: Vec<TxOut>,
     protostone: Protostone,
 ) -> Transaction {
-    let protocol_id = 1;
-    let input_script = ScriptBuf::new();
+    let _protocol_id = 1;
+    let _input_script = ScriptBuf::new();
     let runestone: ScriptBuf = (Runestone {
         etching: None,
         pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
@@ -109,7 +109,7 @@ pub fn create_protostone_tx_with_inputs(
         script_pubkey: runestone,
     };
     let address: Address<NetworkChecked> = get_address(&ADDRESS1);
-    let script_pubkey = address.script_pubkey();
+    let _script_pubkey = address.script_pubkey();
     let mut _outputs = outputs.clone();
     _outputs.push(op_return);
     Transaction {

@@ -1,11 +1,9 @@
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use protorune_support::rune_transfer::{increase_balances_using_sheet, RuneTransfer};
 use std::collections::HashMap;
-use std::fmt::Write;
 pub trait PersistentRecord {
     fn save<T: KeyValuePointer>(&self, ptr: &T, is_cenotaph: bool) {
         let runes_ptr = ptr.keyword("/runes");

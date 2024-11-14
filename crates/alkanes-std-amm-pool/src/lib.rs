@@ -1,9 +1,4 @@
-use alkanes_runtime::{
-    println,
-    runtime::AlkaneResponder,
-    stdio::{stdout, Write},
-    storage::StoragePointer,
-};
+use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
@@ -11,7 +6,6 @@ use alkanes_support::{
     utils::{overflow_error, shift},
 };
 use anyhow::{anyhow, Result};
-use hex;
 use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr},
     index_pointer::KeyValuePointer,
@@ -120,7 +114,7 @@ impl AMMPool {
         let root_k_last = overflow_error(previous_a.value.checked_mul(previous_b.value))?.sqrt();
         let root_k = overflow_error(reserve_a.value.checked_mul(reserve_b.value))?.sqrt();
         if root_k > root_k_last || root_k_last == 0 {
-            let mut liquidity = 0;
+            let liquidity;
             if total_supply == 0 {
                 liquidity = overflow_error(root_k.checked_sub(MINIMUM_LIQUIDITY))?;
                 total_supply = total_supply + MINIMUM_LIQUIDITY;

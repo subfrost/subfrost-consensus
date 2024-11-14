@@ -7,7 +7,6 @@ use bitcoin::address::NetworkChecked;
 use bitcoin::blockdata::transaction::OutPoint;
 use bitcoin::{Address, Amount, ScriptBuf, Sequence, TxIn, TxOut, Witness};
 use metashrew_support::index_pointer::KeyValuePointer;
-use ordinals::{Edict, RuneId};
 use protorune::{balance_sheet::load_sheet, message::MessageContext, tables::RuneTable};
 use protorune_support::balance_sheet::ProtoruneRuneId;
 use protorune_support::protostone::Protostone;
@@ -19,7 +18,6 @@ use crate::tests::helpers as alkane_helpers;
 use crate::tests::std::{alkanes_std_amm_factory_build, alkanes_std_owned_token_build};
 #[allow(unused_imports)]
 use metashrew::{clear, get_cache, index_pointer::IndexPointer, println, stdio::stdout};
-use metashrew_support::utils::format_key;
 use std::fmt::Write;
 use wasm_bindgen_test::wasm_bindgen_test;
 #[wasm_bindgen_test]
@@ -70,7 +68,7 @@ fn test_amm_pool() -> Result<()> {
     );
     let address: Address<NetworkChecked> =
         protorune::test_helpers::get_address(&protorune::test_helpers::ADDRESS1);
-    let mut script_pubkey = address.script_pubkey();
+    let script_pubkey = address.script_pubkey();
     let split = alkane_helpers::create_protostone_tx_with_inputs(
         vec![TxIn {
             previous_output: OutPoint {
