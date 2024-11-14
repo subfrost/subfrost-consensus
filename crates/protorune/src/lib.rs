@@ -660,14 +660,17 @@ impl Protorune {
                 unallocated_to,
                 tx.compute_txid(),
             )?;
-            Self::handle_leftover_runes(&mut balance_sheet, &mut proto_balances_by_output, (tx.output.len() as u32) + 1)?;
+            Self::handle_leftover_runes(
+                &mut balance_sheet,
+                &mut proto_balances_by_output,
+                (tx.output.len() as u32) + 1,
+            )?;
             protostones
                 .into_iter()
                 .enumerate()
                 .map(|(i, stone)| {
                     let shadow_vout = (i as u32) + (tx.output.len() as u32) + 1;
-                    let mut balance_sheet = proto_balances_by_output.get(&shadow_vout).unwrap().clone();
-//                    proto_balances_by_output.insert(&shadow_vout, BalanceSheet::default());
+                    proto_balances_by_output.insert(shadow_vout, BalanceSheet::default());
                     let protostone_unallocated_to = match stone.pointer {
                         Some(v) => v,
                         None => default_output(tx),
@@ -693,21 +696,34 @@ impl Protorune {
                             runestone_output_index,
                             shadow_vout,
                             &mut proto_balances_by_output,
-                            protostone_unallocated_to
+                            protostone_unallocated_to,
                         )?;
                     }
-                    proto_balances_by_output.get_mut(&shadow_vout).unwrap().debit(&balance_sheet)?;
-                    let mut prior_balance_sheet = proto_balances_by_output.get(&((tx.output.len() as u32) + 1 + (i as u32))).unwrap().clone();
+                    proto_balances_by_output
+                        .get_mut(&shadow_vout)
+                        .unwrap()
+                        .debit(&balance_sheet)?;
+                    let mut prior_balance_sheet = proto_balances_by_output
+                        .get(&((tx.output.len() as u32) + 1 + (i as u32)))
+                        .unwrap()
+                        .clone();
                     Self::process_edicts(
-                      tx,
-                      &stone.edicts,
-                      &mut proto_balances_by_output,
-                      &mut prior_balance_sheet,
-                      &tx.output,
+                        tx,
+                        &stone.edicts,
+                        &mut proto_balances_by_output,
+                        &mut prior_balance_sheet,
+                        &tx.output,
                     )?;
-                    let mut final_balance_sheet = proto_balances_by_output.get(&((tx.output.len() as u32) + 1 + (i as u32))).unwrap().clone();
+                    let mut final_balance_sheet = proto_balances_by_output
+                        .get(&((tx.output.len() as u32) + 1 + (i as u32)))
+                        .unwrap()
+                        .clone();
 
-                    Self::handle_leftover_runes(&mut final_balance_sheet, &mut proto_balances_by_output, protostone_unallocated_to)?;
+                    Self::handle_leftover_runes(
+                        &mut final_balance_sheet,
+                        &mut proto_balances_by_output,
+                        protostone_unallocated_to,
+                    )?;
 
                     Ok(())
                 })

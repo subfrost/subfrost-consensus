@@ -2,6 +2,11 @@ use crate::tables::{RuneTable, RUNES};
 use anyhow::{anyhow, Result};
 use bitcoin::{OutPoint, Txid};
 use metashrew::index_pointer::AtomicPointer;
+#[allow(unused_imports)]
+use metashrew::{
+    println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::{
     cmp::min,
@@ -14,7 +19,7 @@ use ordinals::Edict;
 
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Protoburn {
     pub tag: Option<u128>,
     pub pointer: Option<u32>,
@@ -30,6 +35,7 @@ impl Protoburn {
         outpoint: OutPoint,
     ) -> Result<()> {
         let table = RuneTable::for_protocol(self.tag.ok_or(anyhow!("no tag found"))?);
+        println!("balancesheet: {:?}", balance_sheet);
         for (rune, _balance) in balance_sheet.clone().balances.into_iter() {
             let runeid: Arc<Vec<u8>> = rune.into();
             let name = RUNES.RUNE_ID_TO_ETCHING.select(&runeid).get();
@@ -93,7 +99,6 @@ impl Protoburns<Protoburn> for Vec<Protoburn> {
                 .ok_or(anyhow!("cannot find balance sheet"))?;
             sheet.pipe(&mut runestone_balance_sheet);
         }
-        //TODO: pipe stuff into runestone_balance_sheet
         let mut burn_cycles = self.construct_burncycle()?;
         let mut pull_set = HashMap::<u32, bool>::new();
         let mut burn_sheets = self

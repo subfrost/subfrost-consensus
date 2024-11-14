@@ -119,6 +119,7 @@ impl BalanceSheet {
         return sheet;
     }
 
+    // pipes a balancesheet onto itself
     pub fn pipe(&self, sheet: &mut BalanceSheet) -> () {
         for (rune, balance) in &self.balances {
             sheet.increase(rune, *balance);

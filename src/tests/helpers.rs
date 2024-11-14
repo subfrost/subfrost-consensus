@@ -135,20 +135,24 @@ pub fn create_multiple_cellpack_with_witness_and_in(
         witness,
     };
     let protostones = [
-        vec![Protostone {
-            burn: Some(protocol_id),
-            edicts: vec![],
-            pointer: Some(4),
-            refund: None,
-            from: None,
-            protocol_tag: 13, // this value must be 13 if protoburn
-            message: vec![],
-        }],
+        match etch {
+            true => vec![Protostone {
+                burn: Some(protocol_id),
+                edicts: vec![],
+                pointer: Some(4),
+                refund: None,
+                from: None,
+                protocol_tag: 13, // this value must be 13 if protoburn
+                message: vec![],
+            }],
+            false => vec![],
+        },
         cellpacks
             .into_iter()
-            .map(|cellpack| Protostone {
+            .enumerate()
+            .map(|(i, cellpack)| Protostone {
                 message: cellpack.encipher(),
-                pointer: Some(0),
+                pointer: Some(4 + (i as u32)),
                 refund: Some(0),
                 edicts: vec![],
                 from: None,
