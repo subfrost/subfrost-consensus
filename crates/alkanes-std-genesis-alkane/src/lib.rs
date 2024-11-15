@@ -9,6 +9,8 @@ use hex;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::utils::consensus_decode;
+use std::io::{Cursor};
+use metashrew_support::block::{AuxpowBlock};
 pub mod chain;
 use crate::chain::{ChainConfiguration, CONTEXT_HANDLE};
 
@@ -38,7 +40,7 @@ impl ChainConfiguration for GenesisAlkane {
 
 impl GenesisAlkane {
     fn block(&self) -> Result<Block> {
-        consensus_decode::<Block>(&mut std::io::Cursor::new(CONTEXT_HANDLE.block()))
+      Ok(AuxpowBlock::parse(&mut Cursor::<Vec<u8>>::new(CONTEXT_HANDLE.block()))?.to_consensus())
     }
     pub fn seen_pointer(&self, hash: &Vec<u8>) -> StoragePointer {
         StoragePointer::from_keyword("/seen/").select(&hash)
@@ -79,6 +81,7 @@ impl GenesisAlkane {
         })
     }
     pub fn observe_initialization(&self) -> Result<()> {
+        self.observe_mint(&self.block()?)?;
         let mut initialized_pointer = StoragePointer::from_keyword("/initialized");
         if initialized_pointer.get().len() == 0 {
             initialized_pointer.set_value::<u32>(1);

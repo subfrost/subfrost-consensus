@@ -5,3 +5,4 @@ pub mod amm;
 //pub mod auth_token;
 pub mod std;
 pub mod utils;
+pub mod genesis;
