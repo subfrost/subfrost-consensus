@@ -149,10 +149,9 @@ pub fn create_multiple_cellpack_with_witness_and_in(
         },
         cellpacks
             .into_iter()
-            .enumerate()
-            .map(|(i, cellpack)| Protostone {
+            .map(|cellpack| Protostone {
                 message: cellpack.encipher(),
-                pointer: Some(4 + (i as u32)),
+                pointer: Some(0),
                 refund: Some(0),
                 edicts: vec![],
                 from: None,
@@ -177,7 +176,10 @@ pub fn create_multiple_cellpack_with_witness_and_in(
     };
     let runestone: ScriptBuf = (Runestone {
         etching,
-        pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
+        pointer: match etch {
+            true => Some(1),
+            false => Some(0),
+        }, // points to the OP_RETURN, so therefore targets the protoburn
         edicts: Vec::new(),
         mint: None,
         protocol: protostones.encipher().ok(),

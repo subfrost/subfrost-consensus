@@ -150,7 +150,7 @@ fn test_amm_pool_skewed() -> Result<()> {
     clear();
     let block_height = 840_000;
     let cellpacks: Vec<Cellpack> = [
-        //auth token factory init
+        //amm pool factory init
         Cellpack {
             target: AlkaneId {
                 block: 3,
@@ -158,6 +158,7 @@ fn test_amm_pool_skewed() -> Result<()> {
             },
             inputs: vec![50],
         },
+        // auth token init
         Cellpack {
             target: AlkaneId {
                 block: 3,
@@ -165,15 +166,17 @@ fn test_amm_pool_skewed() -> Result<()> {
             },
             inputs: vec![100],
         },
-        // token 1 init and mint
+        // amm factory init
         Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
             inputs: vec![0],
         },
+        // owned token 1 init
         Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
             inputs: vec![0, 1, 1000000 / 2],
         },
+        //owned token 2 init
         Cellpack {
             target: AlkaneId { block: 5, tx: 1 },
             inputs: vec![0, 1, 1000000],
@@ -197,7 +200,7 @@ fn test_amm_pool_skewed() -> Result<()> {
     let split = alkane_helpers::create_protostone_tx_with_inputs(
         vec![TxIn {
             previous_output: OutPoint {
-                txid: test_block.txdata[test_block.txdata.len() - 1].compute_txid(),
+                txid: test_block.txdata.last().unwrap().compute_txid(),
                 vout: 0,
             },
             script_sig: ScriptBuf::new(),

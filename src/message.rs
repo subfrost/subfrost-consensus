@@ -7,6 +7,10 @@ use crate::vm::{
 use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
+use metashrew::{
+    println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune::balance_sheet::CheckedDebit;
 use protorune::message::{MessageContext, MessageContextParcel};
@@ -25,6 +29,7 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
         decode_varint_list(&mut Cursor::new(parcel.calldata.clone()))?.try_into()?;
     let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
+    println!("incoming runes: {:?}", parcel.runes);
     let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself, &parcel.runes);
     prepare_context(&mut context, &caller, &myself, false);
@@ -34,12 +39,9 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
         &mut atomic.derive(&IndexPointer::from_keyword("/alkanes/").select(&myself.clone().into())),
     );
     let mut combined = parcel.runtime_balances.as_ref().clone();
-    println!("combined before: {:?}", combined);
     <BalanceSheet as From<Vec<RuneTransfer>>>::from(parcel.runes.clone()).pipe(&mut combined);
     let sheet = <BalanceSheet as From<Vec<RuneTransfer>>>::from(response.alkanes.clone().into());
-    println!("sheet: {:?}", sheet);
     combined.debit_checked(&sheet, &mut atomic)?;
-    println!("combined: {:?}", combined);
     debit_balances(&mut atomic, &myself, &response.alkanes)?;
     Ok((response.alkanes.into(), combined))
 }

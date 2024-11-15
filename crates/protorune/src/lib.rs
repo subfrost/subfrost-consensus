@@ -651,6 +651,7 @@ impl Protorune {
                 })
                 .collect::<Result<Vec<BalanceSheet>>>()?;
             let mut balance_sheet = BalanceSheet::concat(sheets);
+            println!("input balance sheet: {:?}", balance_sheet);
             protostones.process_burns(
                 &mut atomic.derive(&IndexPointer::default()),
                 runestone,
@@ -670,7 +671,9 @@ impl Protorune {
                 .enumerate()
                 .map(|(i, stone)| {
                     let shadow_vout = (i as u32) + (tx.output.len() as u32) + 1;
-                    proto_balances_by_output.insert(shadow_vout, BalanceSheet::default());
+                    if !proto_balances_by_output.contains_key(&shadow_vout) {
+                        proto_balances_by_output.insert(shadow_vout, BalanceSheet::default());
+                    }
                     let protostone_unallocated_to = match stone.pointer {
                         Some(v) => v,
                         None => default_output(tx),
@@ -703,10 +706,8 @@ impl Protorune {
                         .get_mut(&shadow_vout)
                         .unwrap()
                         .debit(&balance_sheet)?;
-                    let mut prior_balance_sheet = proto_balances_by_output
-                        .get(&((tx.output.len() as u32) + 1 + (i as u32)))
-                        .unwrap()
-                        .clone();
+                    let mut prior_balance_sheet =
+                        proto_balances_by_output.get(&shadow_vout).unwrap().clone();
                     Self::process_edicts(
                         tx,
                         &stone.edicts,
@@ -714,10 +715,8 @@ impl Protorune {
                         &mut prior_balance_sheet,
                         &tx.output,
                     )?;
-                    let mut final_balance_sheet = proto_balances_by_output
-                        .get(&((tx.output.len() as u32) + 1 + (i as u32)))
-                        .unwrap()
-                        .clone();
+                    let mut final_balance_sheet =
+                        proto_balances_by_output.get(&shadow_vout).unwrap().clone();
 
                     Self::handle_leftover_runes(
                         &mut final_balance_sheet,
