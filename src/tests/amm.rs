@@ -15,7 +15,7 @@ use protorune_support::protostone::ProtostoneEdict;
 use protorune_support::utils::consensus_encode;
 
 use crate::index_block;
-use crate::tests::helpers as alkane_helpers;
+use crate::tests::helpers::{self as alkane_helpers, assert_binary_deployed_to_id};
 use crate::tests::std::{alkanes_std_amm_factory_build, alkanes_std_owned_token_build};
 #[allow(unused_imports)]
 use metashrew::{clear, get_cache, index_pointer::IndexPointer, println, stdio::stdout};
@@ -42,21 +42,27 @@ fn test_amm_pool_normal() -> Result<()> {
             },
             inputs: vec![100],
         },
-        // token 1 init and mint
         Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
             inputs: vec![0],
         },
+        // token 1 init 1 auth token and mint 1000000 owned tokens
         Cellpack {
             target: AlkaneId { block: 1, tx: 0 },
             inputs: vec![0, 1, 1000000],
         },
+        // token 2 init 1 auth token and mint 1000000 owned tokens
         Cellpack {
-            target: AlkaneId { block: 5, tx: 1 },
+            target: AlkaneId { block: 5, tx: 1 }, // factory creation of owned token using {2, 1} as the factory. Then it deploys to {2,3}
             inputs: vec![0, 1, 1000000],
         },
     ]
     .into();
+    let amm_factory_deployment = AlkaneId { block: 2, tx: 0 };
+    let owned_token_1_deployment = AlkaneId { block: 2, tx: 1 };
+    let auth_token_1_deployment = AlkaneId { block: 2, tx: 2 };
+    let owned_token_2_deployment = AlkaneId { block: 2, tx: 3 };
+    let auth_token_2_deployment = AlkaneId { block: 2, tx: 4 };
     let mut test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
         [
             alkanes_std_amm_pool_build::get_bytes(),
@@ -100,12 +106,12 @@ fn test_amm_pool_normal() -> Result<()> {
             refund: None,
             edicts: vec![
                 ProtostoneEdict {
-                    id: ProtoruneRuneId { block: 2, tx: 1 },
+                    id: owned_token_1_deployment.into(),
                     amount: 1000000,
                     output: 0,
                 },
                 ProtostoneEdict {
-                    id: ProtoruneRuneId { block: 2, tx: 3 },
+                    id: owned_token_2_deployment.into(),
                     amount: 1000000,
                     output: 0,
                 },
@@ -117,7 +123,7 @@ fn test_amm_pool_normal() -> Result<()> {
         alkane_helpers::create_multiple_cellpack_with_witness_and_in(
             Witness::new(),
             vec![Cellpack {
-                target: AlkaneId { block: 2, tx: 0 },
+                target: amm_factory_deployment,
                 inputs: vec![1],
             }],
             OutPoint {
@@ -138,6 +144,26 @@ fn test_amm_pool_normal() -> Result<()> {
         .OUTPOINT_TO_RUNES
         .select(&consensus_encode(&outpoint)?);
     let sheet = load_sheet(&ptr);
+    let _ = assert_binary_deployed_to_id(
+        amm_factory_deployment.clone(),
+        alkanes_std_amm_factory_build::get_bytes(),
+    );
+    let _ = assert_binary_deployed_to_id(
+        owned_token_1_deployment.clone(),
+        alkanes_std_owned_token_build::get_bytes(),
+    );
+    let _ = assert_binary_deployed_to_id(
+        owned_token_2_deployment.clone(),
+        alkanes_std_owned_token_build::get_bytes(),
+    );
+    let _ = assert_binary_deployed_to_id(
+        auth_token_1_deployment.clone(),
+        alkanes_std_auth_token_build::get_bytes(),
+    );
+    let _ = assert_binary_deployed_to_id(
+        auth_token_2_deployment.clone(),
+        alkanes_std_auth_token_build::get_bytes(),
+    );
     /*
     get_cache().iter().for_each(|(k, v)| {
       if v.len() < 300 { println!("{}: {}", format_key(&k.as_ref().clone()), hex::encode(&v.as_ref().clone())); }

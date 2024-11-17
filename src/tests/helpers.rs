@@ -1,10 +1,15 @@
 use alkanes_support::cellpack::Cellpack;
 use alkanes_support::envelope::RawEnvelope;
+use alkanes_support::gz::compress;
+use alkanes_support::id::AlkaneId;
+use anyhow::Result;
 use bitcoin::blockdata::transaction::Version;
 use bitcoin::{
     address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut, Witness,
 };
 use bitcoin::{Block, Transaction};
+use metashrew::index_pointer::IndexPointer;
+use metashrew_support::index_pointer::KeyValuePointer;
 use protorune::protostone::Protostones;
 use protorune::test_helpers::{create_block_with_coinbase_tx, get_address, ADDRESS1};
 use protorune_support::protostone::Protostone;
@@ -230,4 +235,16 @@ pub fn create_multiple_cellpack_with_witness(
         vout: 0,
     };
     create_multiple_cellpack_with_witness_and_in(witness, cellpacks, previous_output, etch)
+}
+
+pub fn assert_binary_deployed_to_id(token_id: AlkaneId, binary: Vec<u8>) -> Result<()> {
+    assert_eq!(
+        IndexPointer::from_keyword("/alkanes/")
+            .select(&token_id.into())
+            .get()
+            .as_ref()
+            .clone(),
+        compress(binary.into())?
+    );
+    return Ok(());
 }
