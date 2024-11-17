@@ -651,7 +651,6 @@ impl Protorune {
                 })
                 .collect::<Result<Vec<BalanceSheet>>>()?;
             let mut balance_sheet = BalanceSheet::concat(sheets);
-            println!("input balance sheet: {:?}", balance_sheet);
             protostones.process_burns(
                 &mut atomic.derive(&IndexPointer::default()),
                 runestone,
@@ -678,18 +677,28 @@ impl Protorune {
                         Some(v) => v,
                         None => default_output(tx),
                     };
-                    for (vout, sheet) in balances_by_output.clone() {
-                        let outpoint = OutPoint::new(tx.compute_txid(), vout);
-                        sheet.save(
-                            &mut atomic.derive(
-                                &table
-                                    .OUTPOINT_TO_RUNES
-                                    .select(&consensus_encode(&outpoint)?),
-                            ),
-                            false,
-                        );
-                    }
+                    // no idea why this is here
+                    // for (vout, sheet) in balances_by_output.clone() {
+                    //     let outpoint = OutPoint::new(tx.compute_txid(), vout);
+                    //     sheet.save(
+                    //         &mut atomic.derive(
+                    //             &table
+                    //                 .OUTPOINT_TO_RUNES
+                    //                 .select(&consensus_encode(&outpoint)?),
+                    //         ),
+                    //         false,
+                    //     );
+                    // }
+                    // README: now calculates the amount left over for edicts in this fashion:
+                    // the protomessage is executed first, and all the runes that go to the refund pointer are available for the edicts to then transfer
+                    // if there is no protomessage, all incoming runes will be available to be transferred by the edict
+                    let mut prior_balance_sheet = balance_sheet.clone();
                     if stone.is_message() {
+                        let refund = stone.refund.unwrap();
+                        prior_balance_sheet = match proto_balances_by_output.get(&refund) {
+                            Some(sheet) => sheet.clone(),
+                            None => BalanceSheet::default(),
+                        };
                         stone.process_message::<T>(
                             &mut atomic.derive(&IndexPointer::default()),
                             tx,
@@ -701,13 +710,19 @@ impl Protorune {
                             &mut proto_balances_by_output,
                             protostone_unallocated_to,
                         )?;
+                        prior_balance_sheet = match proto_balances_by_output.get(&refund) {
+                            Some(sheet) => {
+                                let mut sheet = sheet.clone();
+                                sheet.debit(&prior_balance_sheet)?;
+                                sheet
+                            }
+                            None => prior_balance_sheet,
+                        }
                     }
                     proto_balances_by_output
                         .get_mut(&shadow_vout)
                         .unwrap()
                         .debit(&balance_sheet)?;
-                    let mut prior_balance_sheet =
-                        proto_balances_by_output.get(&shadow_vout).unwrap().clone();
                     Self::process_edicts(
                         tx,
                         &stone.edicts,
@@ -715,11 +730,9 @@ impl Protorune {
                         &mut prior_balance_sheet,
                         &tx.output,
                     )?;
-                    let mut final_balance_sheet =
-                        proto_balances_by_output.get(&shadow_vout).unwrap().clone();
 
                     Self::handle_leftover_runes(
-                        &mut final_balance_sheet,
+                        &mut prior_balance_sheet,
                         &mut proto_balances_by_output,
                         protostone_unallocated_to,
                     )?;
@@ -727,6 +740,11 @@ impl Protorune {
                     Ok(())
                 })
                 .collect::<Result<()>>()?;
+            // println!(
+            //     "protocol id: {}, saving sheets: {:#?}",
+            //     T::protocol_tag(),
+            //     proto_balances_by_output
+            // );
             Self::save_balances(
                 &mut atomic.derive(&IndexPointer::default()),
                 &table,
@@ -738,6 +756,7 @@ impl Protorune {
                 let key = consensus_encode(&input.previous_output)?;
                 clear_balances(&mut table.OUTPOINT_TO_RUNES.select(&key));
             }
+            println!("current tx: {}", tx.compute_txid());
         }
         Ok(())
     }

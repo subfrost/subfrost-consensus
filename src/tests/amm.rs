@@ -21,7 +21,7 @@ use metashrew::{clear, get_cache, index_pointer::IndexPointer, println, stdio::s
 use std::fmt::Write;
 use wasm_bindgen_test::wasm_bindgen_test;
 #[wasm_bindgen_test]
-fn test_amm_pool() -> Result<()> {
+fn test_amm_pool_normal() -> Result<()> {
     clear();
     let block_height = 840_000;
     let cellpacks: Vec<Cellpack> = [
