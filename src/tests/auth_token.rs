@@ -1,13 +1,13 @@
 use crate::{message::AlkaneMessageContext, tests::std::alkanes_std_auth_token_build};
-use alkanes_support::cellpack::Cellpack;
 use alkanes_support::id::AlkaneId;
+use alkanes_support::{cellpack::Cellpack, constants::AUTH_TOKEN_FACTORY_ID};
 use anyhow::{anyhow, Result};
 use bitcoin::OutPoint;
 use metashrew_support::{index_pointer::KeyValuePointer, utils::consensus_encode};
 use protorune::{balance_sheet::load_sheet, message::MessageContext, tables::RuneTable};
 
 use crate::index_block;
-use crate::tests::helpers as alkane_helpers;
+use crate::tests::helpers::{self as alkane_helpers, assert_binary_deployed_to_id};
 use crate::tests::std::alkanes_std_owned_token_build;
 use alkanes_support::gz::compress;
 use metashrew::{clear, index_pointer::IndexPointer, println, stdio::stdout};
@@ -58,14 +58,9 @@ fn test_owned_token() -> Result<()> {
             .OUTPOINT_TO_RUNES
             .select(&consensus_encode(&outpoint)?),
     );
-    //    assert_eq!(sheet.get(&original_rune_id.into()), 1000);
-    assert_eq!(
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&owned_token_id.into())
-            .get()
-            .as_ref()
-            .clone(),
-        compress(alkanes_std_owned_token_build::get_bytes().into())?
+    let _ = assert_binary_deployed_to_id(
+        owned_token_id.clone(),
+        alkanes_std_owned_token_build::get_bytes(),
     );
 
     Ok(())
@@ -129,21 +124,13 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
             .select(&consensus_encode(&outpoint_first)?),
     );
     assert_eq!(sheet_first.balances.len(), 0);
-    assert_eq!(
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&owned_token_id.into())
-            .get()
-            .as_ref()
-            .clone(),
-        compress(alkanes_std_owned_token_build::get_bytes().into())?
+    let _ = assert_binary_deployed_to_id(
+        owned_token_id.clone(),
+        alkanes_std_owned_token_build::get_bytes(),
     );
-    assert_eq!(
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&_auth_token_id_factory.into())
-            .get()
-            .as_ref()
-            .clone(),
-        compress(alkanes_std_auth_token_build::get_bytes().into())?
+    let _ = assert_binary_deployed_to_id(
+        _auth_token_id_factory.clone(),
+        alkanes_std_auth_token_build::get_bytes(),
     );
 
     Ok(())
@@ -213,29 +200,17 @@ fn test_auth_and_owned_token() -> Result<()> {
             .select(&consensus_encode(&outpoint_first)?),
     );
     assert_eq!(sheet_first.balances.len(), 0);
-    assert_eq!(
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&owned_token_id.into())
-            .get()
-            .as_ref()
-            .clone(),
-        compress(alkanes_std_owned_token_build::get_bytes().into())?
+    let _ = assert_binary_deployed_to_id(
+        owned_token_id.clone(),
+        alkanes_std_owned_token_build::get_bytes(),
     );
-    assert_eq!(
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&_auth_token_id_factory.into())
-            .get()
-            .as_ref()
-            .clone(),
-        compress(alkanes_std_auth_token_build::get_bytes().into())?
+    let _ = assert_binary_deployed_to_id(
+        _auth_token_id_factory.clone(),
+        alkanes_std_owned_token_build::get_bytes(),
     );
-    assert_eq!(
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&auth_token_id_deployment.into())
-            .get()
-            .as_ref()
-            .clone(),
-        compress(alkanes_std_auth_token_build::get_bytes().into())?
+    let _ = assert_binary_deployed_to_id(
+        auth_token_id_deployment.clone(),
+        alkanes_std_owned_token_build::get_bytes(),
     );
 
     Ok(())
