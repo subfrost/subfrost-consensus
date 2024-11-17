@@ -1,6 +1,7 @@
 use crate::tests::std::{alkanes_std_amm_pool_build, alkanes_std_auth_token_build};
 use alkanes::message::AlkaneMessageContext;
 use alkanes_support::cellpack::Cellpack;
+use alkanes_support::constants::AMM_FACTORY_ID;
 use alkanes_support::id::AlkaneId;
 use anyhow::Result;
 use bitcoin::address::NetworkChecked;
@@ -25,14 +26,15 @@ fn test_amm_pool_normal() -> Result<()> {
     clear();
     let block_height = 840_000;
     let cellpacks: Vec<Cellpack> = [
-        //auth token factory init
+        //amm pool factory init
         Cellpack {
             target: AlkaneId {
                 block: 3,
-                tx: 0xffef,
+                tx: AMM_FACTORY_ID,
             },
             inputs: vec![50],
         },
+        //auth token factory init
         Cellpack {
             target: AlkaneId {
                 block: 3,
@@ -154,7 +156,7 @@ fn test_amm_pool_skewed() -> Result<()> {
         Cellpack {
             target: AlkaneId {
                 block: 3,
-                tx: 0xffef,
+                tx: AMM_FACTORY_ID,
             },
             inputs: vec![50],
         },
