@@ -89,16 +89,15 @@ pub fn init_with_multiple_cellpacks(binary: Vec<u8>, cellpacks: Vec<Cellpack>) -
     test_block
 }
 
-pub fn create_protostone_tx_with_inputs(
+pub fn create_protostone_tx_with_inputs_and_default_pointer(
     inputs: Vec<TxIn>,
     outputs: Vec<TxOut>,
     protostone: Protostone,
+    default_pointer: u32,
 ) -> Transaction {
-    let _protocol_id = 1;
-    let _input_script = ScriptBuf::new();
     let runestone: ScriptBuf = (Runestone {
         etching: None,
-        pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
+        pointer: Some(default_pointer), // points to the OP_RETURN, so therefore targets the protoburn
         edicts: Vec::new(),
         mint: None,
         protocol: vec![protostone].encipher().ok(),
@@ -118,6 +117,14 @@ pub fn create_protostone_tx_with_inputs(
         input: inputs,
         output: _outputs,
     }
+}
+
+pub fn create_protostone_tx_with_inputs(
+    inputs: Vec<TxIn>,
+    outputs: Vec<TxOut>,
+    protostone: Protostone,
+) -> Transaction {
+    create_protostone_tx_with_inputs_and_default_pointer(inputs, outputs, protostone, 1)
 }
 
 pub fn create_multiple_cellpack_with_witness_and_in(

@@ -196,8 +196,8 @@ fn test_amm_pool_skewed() -> Result<()> {
     );
     let address: Address<NetworkChecked> =
         protorune::test_helpers::get_address(&protorune::test_helpers::ADDRESS1);
-    let mut script_pubkey = address.script_pubkey();
-    let split = alkane_helpers::create_protostone_tx_with_inputs(
+    let script_pubkey = address.script_pubkey();
+    let split = alkane_helpers::create_protostone_tx_with_inputs_and_default_pointer(
         vec![TxIn {
             previous_output: OutPoint {
                 txid: test_block.txdata.last().unwrap().compute_txid(),
@@ -237,6 +237,7 @@ fn test_amm_pool_skewed() -> Result<()> {
                 },
             ],
         },
+        0,
     );
     test_block.txdata.push(split);
     test_block.txdata.push(
