@@ -14,6 +14,7 @@ use metashrew::{clear, index_pointer::IndexPointer, println, stdio::stdout};
 use std::fmt::Write;
 use wasm_bindgen_test::wasm_bindgen_test;
 
+use alkanes_support::constants::AMM_FACTORY_ID;
 #[wasm_bindgen_test]
 fn test_owned_token() -> Result<()> {
     clear();
@@ -30,7 +31,7 @@ fn test_owned_token() -> Result<()> {
     let auth_cellpack = Cellpack {
         target: AlkaneId {
             block: 3,
-            tx: 0xffee,
+            tx: AUTH_TOKEN_FACTORY_ID,
         },
         inputs: vec![100],
     };
@@ -78,7 +79,7 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
     let auth_cellpack = Cellpack {
         target: AlkaneId {
             block: 3,
-            tx: 0xffee,
+            tx: AUTH_TOKEN_FACTORY_ID,
         },
         inputs: vec![100],
     };
@@ -100,7 +101,7 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
 
     let _auth_token_id_factory = AlkaneId {
         block: 4,
-        tx: 0xffee,
+        tx: AUTH_TOKEN_FACTORY_ID,
     };
 
     let owned_token_id = AlkaneId { block: 2, tx: 0 };
@@ -156,7 +157,7 @@ fn test_auth_and_owned_token() -> Result<()> {
     let auth_cellpack = Cellpack {
         target: AlkaneId {
             block: 3,
-            tx: 0xffee,
+            tx: AUTH_TOKEN_FACTORY_ID,
         },
         inputs: vec![100],
     };
@@ -182,7 +183,7 @@ fn test_auth_and_owned_token() -> Result<()> {
 
     let _auth_token_id_factory = AlkaneId {
         block: 4,
-        tx: 0xffee,
+        tx: AUTH_TOKEN_FACTORY_ID,
     };
 
     let auth_token_id_deployment = AlkaneId { block: 2, tx: 1 };

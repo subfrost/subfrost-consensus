@@ -1,6 +1,7 @@
 use crate::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     cellpack::Cellpack,
+    constants::AUTH_TOKEN_FACTORY_ID,
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
 };
@@ -13,7 +14,7 @@ pub trait AuthenticatedResponder: AlkaneResponder {
         let cellpack = Cellpack {
             target: AlkaneId {
                 block: 6,
-                tx: 0xffee,
+                tx: AUTH_TOKEN_FACTORY_ID,
             },
             inputs: vec![0x0, units],
         };
