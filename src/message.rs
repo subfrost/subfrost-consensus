@@ -7,6 +7,7 @@ use crate::vm::{
 use alkanes_support::cellpack::Cellpack;
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
+#[allow(unused_imports)]
 use metashrew::{
     println,
     stdio::{stdout, Write},
