@@ -5,7 +5,7 @@ use ordinals::RuneId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::{fmt, u128};
+use std::u128;
 
 // use metashrew::{println, stdio::stdout};
 // use std::fmt::Write;
@@ -119,6 +119,7 @@ impl BalanceSheet {
         return sheet;
     }
 
+    // pipes a balancesheet onto itself
     pub fn pipe(&self, sheet: &mut BalanceSheet) -> () {
         for (rune, balance) in &self.balances {
             sheet.increase(rune, *balance);

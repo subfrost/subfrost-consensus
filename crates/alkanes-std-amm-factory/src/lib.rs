@@ -1,6 +1,11 @@
+use alkanes_runtime::{
+    println,
+    stdio::{stdout, Write},
+};
 use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
 use alkanes_support::{
     cellpack::Cellpack,
+    constants::AMM_FACTORY_ID,
     context::Context,
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
@@ -95,6 +100,7 @@ impl AlkaneResponder for AMMFactory {
                 }
             }
             1 => {
+                println!("{:?}", context.incoming_alkanes);
                 if context.incoming_alkanes.0.len() != 2 {
                     panic!("must send two runes to initialize a pool");
                 } else {
@@ -107,7 +113,7 @@ impl AlkaneResponder for AMMFactory {
                         &Cellpack {
                             target: AlkaneId {
                                 block: 6,
-                                tx: 0xffef,
+                                tx: AMM_FACTORY_ID,
                             },
                             inputs: vec![0, a.block, a.tx, b.block, b.tx],
                         },

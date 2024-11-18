@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use alkanes_support::response::ExtendedCallResponse;
     use anyhow::Result;
     #[allow(unused_imports)]
     use metashrew::{

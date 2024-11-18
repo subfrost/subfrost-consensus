@@ -118,7 +118,6 @@ mod tests {
             txid: protoburn_tx.clone().compute_txid(),
             vout: 0,
         };
-
         let transfer_tx = helpers::create_protostone_transaction(
             previous_output,
             None,
@@ -142,6 +141,7 @@ mod tests {
             txid: test_block.txdata[1].compute_txid(),
             vout: 0,
         };
+        println!("output: {:?}", outpoint_address);
         // check runes balance
         let sheet = load_sheet(
             &tables::RUNES
@@ -159,6 +159,7 @@ mod tests {
             block: block_height as u128,
             tx: 1,
         };
+        println!("protorune sheet for outpoint: {:?}", protorunes_sheet);
         // let v: Vec<u8> = protorune_id.into();
         let stored_balance_address = sheet.get(&protorune_id);
         assert_eq!(stored_balance_address, 0);

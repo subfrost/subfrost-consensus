@@ -10,6 +10,7 @@ use alkanes_support::{
 };
 use anyhow::Result;
 use metashrew::index_pointer::IndexPointer;
+#[allow(unused_imports)]
 use metashrew::{
     print, println,
     stdio::{stdout, Write},

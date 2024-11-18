@@ -541,10 +541,25 @@ pub fn create_protostone_transaction(
     }
 }
 
+/// This creates the following transaction:
+///   inputs
+///     - 0: UTXO to previous_output
+///   outputs
+///     - 0: pointer
+///     - 1: refund pointer
+///     - 2: OP RETURN runestone
+///         - pointer to output 2 (the runestone), meaning all leftover runes get burned
+///         - Protostone:
+///             - protomessage: no useful calldata, used to call the MessageContext handle
+///             - protosone edict: from input
+///
+/// NOTE: The default behavior of any transaction is all protorunes will become spendable
+/// by the first protostone. In this case, the first protostone is the protomessage,
+/// so all input protorunes will be spendable by that protomessage
 pub fn create_protomessage_from_edict_tx(
     previous_output: OutPoint,
     protocol_id: u128,
-    protorune_id: ProtoruneRuneId,
+    protostone_edicts: Vec<ProtostoneEdict>,
 ) -> Transaction {
     let input_script = ScriptBuf::new();
     let txin = TxIn {
@@ -575,11 +590,7 @@ pub fn create_protomessage_from_edict_tx(
             message: vec![1u8],
             pointer: Some(0),
             refund: Some(1),
-            edicts: vec![ProtostoneEdict {
-                id: protorune_id,
-                amount: 800,
-                output: 4, // output 0, 1 are the spendable outputs, output 2 is the op_return, output 3 is reserved, output 4 is the protomessage
-            }],
+            edicts: protostone_edicts,
             from: None,
             burn: None,
             protocol_tag: protocol_id as u128,

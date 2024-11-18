@@ -1,10 +1,4 @@
-use alkanes_runtime::{
-    println,
-    runtime::AlkaneResponder,
-    stdio::{stdout, Write},
-    storage::StoragePointer,
-    token::Token,
-};
+use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer, token::Token};
 use alkanes_support::utils::shift;
 use alkanes_support::{parcel::AlkaneTransfer, response::CallResponse};
 use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};

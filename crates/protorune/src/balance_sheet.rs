@@ -1,11 +1,13 @@
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
-use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use protorune_support::rune_transfer::{increase_balances_using_sheet, RuneTransfer};
 use std::collections::HashMap;
-use std::fmt::Write;
+
+// use metashrew::{println, stdio::stdout};
+// use std::fmt::Write;
+
 pub trait PersistentRecord {
     fn save<T: KeyValuePointer>(&self, ptr: &T, is_cenotaph: bool) {
         let runes_ptr = ptr.keyword("/runes");
@@ -109,6 +111,7 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
             .map_err(|_| anyhow!("balance sheet not found"))?
             .clone();
         let mut initial = BalanceSheet::merge(&incoming_initial, &runtime_initial);
+        // println!("initial: {:?}", initial);
 
         // self.0 is the amount to forward to the pointer
         // self.1 is the amount to put into the runtime balance
@@ -119,6 +122,11 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
         // amount from the initial amount
         initial.debit_checked(&outgoing, atomic)?;
         initial.debit_checked(&outgoing_runtime, atomic)?;
+
+        // now lets update balances_by_output to correct values
+
+        // first remove the protomessage vout balances
+        balances_by_output.remove(&vout);
 
         // increase the pointer by the outgoing runes balancesheet
         increase_balances_using_sheet(balances_by_output, &outgoing, pointer);

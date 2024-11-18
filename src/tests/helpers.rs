@@ -1,10 +1,15 @@
 use alkanes_support::cellpack::Cellpack;
 use alkanes_support::envelope::RawEnvelope;
+use alkanes_support::gz::compress;
+use alkanes_support::id::AlkaneId;
+use anyhow::Result;
 use bitcoin::blockdata::transaction::Version;
 use bitcoin::{
     address::NetworkChecked, Address, Amount, OutPoint, ScriptBuf, Sequence, TxIn, TxOut, Witness,
 };
 use bitcoin::{Block, Transaction};
+use metashrew::index_pointer::IndexPointer;
+use metashrew_support::index_pointer::KeyValuePointer;
 use protorune::protostone::Protostones;
 use protorune::test_helpers::{create_block_with_coinbase_tx, get_address, ADDRESS1};
 use protorune_support::protostone::Protostone;
@@ -89,16 +94,15 @@ pub fn init_with_multiple_cellpacks(binary: Vec<u8>, cellpacks: Vec<Cellpack>) -
     test_block
 }
 
-pub fn create_protostone_tx_with_inputs(
+pub fn create_protostone_tx_with_inputs_and_default_pointer(
     inputs: Vec<TxIn>,
     outputs: Vec<TxOut>,
     protostone: Protostone,
+    default_pointer: u32,
 ) -> Transaction {
-    let protocol_id = 1;
-    let input_script = ScriptBuf::new();
     let runestone: ScriptBuf = (Runestone {
         etching: None,
-        pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
+        pointer: Some(default_pointer), // points to the OP_RETURN, so therefore targets the protoburn
         edicts: Vec::new(),
         mint: None,
         protocol: vec![protostone].encipher().ok(),
@@ -109,7 +113,7 @@ pub fn create_protostone_tx_with_inputs(
         script_pubkey: runestone,
     };
     let address: Address<NetworkChecked> = get_address(&ADDRESS1);
-    let script_pubkey = address.script_pubkey();
+    let _script_pubkey = address.script_pubkey();
     let mut _outputs = outputs.clone();
     _outputs.push(op_return);
     Transaction {
@@ -118,6 +122,14 @@ pub fn create_protostone_tx_with_inputs(
         input: inputs,
         output: _outputs,
     }
+}
+
+pub fn create_protostone_tx_with_inputs(
+    inputs: Vec<TxIn>,
+    outputs: Vec<TxOut>,
+    protostone: Protostone,
+) -> Transaction {
+    create_protostone_tx_with_inputs_and_default_pointer(inputs, outputs, protostone, 1)
 }
 
 pub fn create_multiple_cellpack_with_witness_and_in(
@@ -135,15 +147,18 @@ pub fn create_multiple_cellpack_with_witness_and_in(
         witness,
     };
     let protostones = [
-        vec![Protostone {
-            burn: Some(protocol_id),
-            edicts: vec![],
-            pointer: Some(4),
-            refund: None,
-            from: None,
-            protocol_tag: 13, // this value must be 13 if protoburn
-            message: vec![],
-        }],
+        match etch {
+            true => vec![Protostone {
+                burn: Some(protocol_id),
+                edicts: vec![],
+                pointer: Some(4),
+                refund: None,
+                from: None,
+                protocol_tag: 13, // this value must be 13 if protoburn
+                message: vec![],
+            }],
+            false => vec![],
+        },
         cellpacks
             .into_iter()
             .map(|cellpack| Protostone {
@@ -173,7 +188,10 @@ pub fn create_multiple_cellpack_with_witness_and_in(
     };
     let runestone: ScriptBuf = (Runestone {
         etching,
-        pointer: Some(1), // points to the OP_RETURN, so therefore targets the protoburn
+        pointer: match etch {
+            true => Some(1),
+            false => Some(0),
+        }, // points to the OP_RETURN, so therefore targets the protoburn
         edicts: Vec::new(),
         mint: None,
         protocol: protostones.encipher().ok(),
@@ -217,4 +235,16 @@ pub fn create_multiple_cellpack_with_witness(
         vout: 0,
     };
     create_multiple_cellpack_with_witness_and_in(witness, cellpacks, previous_output, etch)
+}
+
+pub fn assert_binary_deployed_to_id(token_id: AlkaneId, binary: Vec<u8>) -> Result<()> {
+    assert_eq!(
+        IndexPointer::from_keyword("/alkanes/")
+            .select(&token_id.into())
+            .get()
+            .as_ref()
+            .clone(),
+        compress(binary.into())?
+    );
+    return Ok(());
 }

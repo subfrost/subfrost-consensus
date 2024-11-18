@@ -4,10 +4,6 @@ use super::{
 };
 use alkanes_support::response::ExtendedCallResponse;
 use anyhow::{anyhow, Result};
-use metashrew::{
-    println,
-    stdio::{stdout, Write},
-};
 use std::sync::{Arc, Mutex};
 use wasmi::*;
 
@@ -19,7 +15,7 @@ pub struct AlkanesInstance {
 fn handle_extcall(v: Result<i32>, caller: Caller<'_, AlkanesState>) -> i32 {
     match v {
         Ok(v) => v,
-        Err(e) => {
+        Err(_e) => {
             AlkanesHostFunctionsImpl::_abort(caller);
             -1
         }
