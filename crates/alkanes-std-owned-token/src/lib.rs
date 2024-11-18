@@ -39,7 +39,6 @@ impl AlkaneResponder for OwnedToken {
     fn execute(&self) -> CallResponse {
         let context = self.context().unwrap();
         let mut inputs = context.inputs.clone();
-        println!("owned token inputs: {:?}", context.incoming_alkanes);
         let mut response: CallResponse = CallResponse::forward(&context.incoming_alkanes.clone());
         match shift(&mut inputs).unwrap() {
             0 => {

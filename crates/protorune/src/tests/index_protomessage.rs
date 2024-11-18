@@ -16,8 +16,11 @@ mod tests {
     use protorune_support::rune_transfer::RuneTransfer;
     use protorune_support::utils::consensus_encode;
 
-    use metashrew::{println, stdio::stdout};
-    use std::fmt::Write;
+    #[allow(unused_imports)]
+    use metashrew::{
+        println,
+        stdio::{stdout, Write},
+    };
 
     use metashrew::clear;
     use metashrew_support::index_pointer::KeyValuePointer;
@@ -296,7 +299,7 @@ mod tests {
 
         let protoburn_tx =
             helpers::create_default_protoburn_transaction(first_mock_output, protocol_id);
-        let protorune_id = ProtoruneRuneId {
+        let _protorune_id = ProtoruneRuneId {
             block: block_height as u128,
             tx: 0,
         };

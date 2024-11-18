@@ -29,7 +29,6 @@ pub fn handle_message(parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer
         decode_varint_list(&mut Cursor::new(parcel.calldata.clone()))?.try_into()?;
     let mut context = AlkanesRuntimeContext::from_parcel_and_cellpack(parcel, &cellpack);
     let mut atomic = parcel.atomic.derive(&IndexPointer::default());
-    println!("incoming runes: {:?}", parcel.runes);
     let (caller, myself, binary) = run_special_cellpacks(&mut context, &cellpack)?;
     credit_balances(&mut atomic, &myself, &parcel.runes);
     prepare_context(&mut context, &caller, &myself, false);

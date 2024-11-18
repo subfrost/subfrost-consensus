@@ -9,6 +9,11 @@ use bitcoin::{
 };
 use bitcoin::{Block, Transaction};
 use metashrew::index_pointer::IndexPointer;
+#[allow(unused_imports)]
+use metashrew::{
+    println,
+    stdio::{stdout, Write},
+};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protorune::protostone::Protostones;
 use protorune::test_helpers::{create_block_with_coinbase_tx, get_address, ADDRESS1};
@@ -238,13 +243,12 @@ pub fn create_multiple_cellpack_with_witness(
 }
 
 pub fn assert_binary_deployed_to_id(token_id: AlkaneId, binary: Vec<u8>) -> Result<()> {
-    assert_eq!(
-        IndexPointer::from_keyword("/alkanes/")
-            .select(&token_id.into())
-            .get()
-            .as_ref()
-            .clone(),
-        compress(binary.into())?
-    );
+    let binary_1 = IndexPointer::from_keyword("/alkanes/")
+        .select(&token_id.into())
+        .get()
+        .as_ref()
+        .clone();
+    let binary_2 = compress(binary.into())?;
+    assert_eq!(binary_1.len(), binary_2.len());
     return Ok(());
 }

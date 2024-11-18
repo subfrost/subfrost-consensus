@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use alkanes_runtime::{
     println,
     stdio::{stdout, Write},
@@ -100,7 +101,6 @@ impl AlkaneResponder for AMMFactory {
                 }
             }
             1 => {
-                println!("{:?}", context.incoming_alkanes);
                 if context.incoming_alkanes.0.len() != 2 {
                     panic!("must send two runes to initialize a pool");
                 } else {
