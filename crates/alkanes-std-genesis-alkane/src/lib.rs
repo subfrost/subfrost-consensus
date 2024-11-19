@@ -8,7 +8,6 @@ use bitcoin::Block;
 use hex;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
-use protorune_support::utils::consensus_decode;
 use std::io::{Cursor};
 use metashrew_support::block::{AuxpowBlock};
 pub mod chain;
@@ -28,13 +27,16 @@ impl Token for GenesisAlkane {
 
 impl ChainConfiguration for GenesisAlkane {
     fn block_reward(&self, n: u64) -> u128 {
-        return ((50e8 as u128) / (1u128 << ((n as u128) / 210000u128))) * 16;
+        return (50e8 as u128) / (1u128 << ((n as u128) / 210000u128));
     }
     fn genesis_block(&self) -> u64 {
         840000
     }
     fn average_payout_from_genesis(&self) -> u128 {
-        312500000 * 16
+        312500000
+    }
+    fn total_supply(&self) -> u128 {
+        131250000000000
     }
 }
 
@@ -74,7 +76,11 @@ impl GenesisAlkane {
         self.observe_mint(&self.block()?)?;
         let value = self.current_block_reward();
         let mut total_supply_pointer = self.total_supply_pointer();
-        total_supply_pointer.set_value::<u128>(total_supply_pointer.get_value::<u128>() + value);
+        let total_supply = total_supply_pointer.get_value::<u128>();
+        if total_supply >= self.total_supply() {
+          return Err(anyhow!("total supply has been reached"));
+        }
+        total_supply_pointer.set_value::<u128>(total_supply + value);
         Ok(AlkaneTransfer {
             id: context.myself.clone(),
             value,

@@ -26,4 +26,5 @@ pub trait ChainConfiguration {
     fn current_block_reward(&self) -> u128 {
         self.block_reward(CONTEXT_HANDLE.height())
     }
+    fn total_supply(&self) -> u128;
 }
