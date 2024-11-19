@@ -10,7 +10,6 @@ use core::str::FromStr;
 use metashrew::{get_cache, println, stdio::stdout};
 use metashrew_support::utils::format_key;
 use ordinals::{Edict, Etching, Rune, RuneId, Runestone};
-use protorune_support::balance_sheet::ProtoruneRuneId;
 use std::fmt::Write;
 use std::sync::Arc;
 

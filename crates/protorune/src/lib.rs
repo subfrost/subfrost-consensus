@@ -689,7 +689,8 @@ impl Protorune {
                     // the protomessage is executed first, and all the runes that go to the refund pointer are available for the edicts to then transfer
                     // if there is no protomessage, all incoming runes will be available to be transferred by the edict
                     let mut prior_balance_sheet = balance_sheet.clone();
-                    if stone.is_message() {
+                    let is_message = stone.is_message();
+                    if is_message {
                         let refund = stone.refund.unwrap();
                         prior_balance_sheet = match proto_balances_by_output.get(&refund) {
                             Some(sheet) => sheet.clone(),
@@ -736,11 +737,14 @@ impl Protorune {
 
                     // leftover runes should stay with the refund pointer, and
                     // should not be transferred to the default pointer
-                    // Self::handle_leftover_runes(
-                    //     &mut prior_balance_sheet,
-                    //     &mut proto_balances_by_output,
-                    //     protostone_unallocated_to,
-                    // )?;
+                    // transfer them to default pointer if the protostone doesnt contain a message
+                    if !is_message {
+                        Self::handle_leftover_runes(
+                            &mut prior_balance_sheet,
+                            &mut proto_balances_by_output,
+                            protostone_unallocated_to,
+                        )?;
+                    }
 
                     Ok(())
                 })
@@ -761,7 +765,6 @@ impl Protorune {
                 let key = consensus_encode(&input.previous_output)?;
                 clear_balances(&mut table.OUTPOINT_TO_RUNES.select(&key));
             }
-            println!("current tx: {}", tx.compute_txid());
         }
         Ok(())
     }

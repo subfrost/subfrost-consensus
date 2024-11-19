@@ -9,12 +9,14 @@ use protorune::{balance_sheet::load_sheet, message::MessageContext, tables::Rune
 use crate::index_block;
 use crate::tests::helpers::{self as alkane_helpers, assert_binary_deployed_to_id};
 use crate::tests::std::alkanes_std_owned_token_build;
-use alkanes_support::gz::compress;
-use metashrew::{clear, index_pointer::IndexPointer, println, stdio::stdout};
-use std::fmt::Write;
+use metashrew::clear;
+#[allow(unused_imports)]
+use metashrew::{
+    println,
+    stdio::{stdout, Write},
+};
 use wasm_bindgen_test::wasm_bindgen_test;
 
-use alkanes_support::constants::AMM_FACTORY_ID;
 #[wasm_bindgen_test]
 fn test_owned_token() -> Result<()> {
     clear();
@@ -53,7 +55,7 @@ fn test_owned_token() -> Result<()> {
         txid: tx.compute_txid(),
         vout: 1,
     };
-    let sheet = load_sheet(
+    let _sheet = load_sheet(
         &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
             .OUTPOINT_TO_RUNES
             .select(&consensus_encode(&outpoint)?),
@@ -106,7 +108,7 @@ fn test_auth_and_owned_token_noop() -> Result<()> {
         txid: tx.compute_txid(),
         vout: 0,
     };
-    let sheet = load_sheet(
+    let _sheet = load_sheet(
         &RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
             .OUTPOINT_TO_RUNES
             .select(&consensus_encode(&outpoint)?),
@@ -206,11 +208,11 @@ fn test_auth_and_owned_token() -> Result<()> {
     );
     let _ = assert_binary_deployed_to_id(
         _auth_token_id_factory.clone(),
-        alkanes_std_owned_token_build::get_bytes(),
+        alkanes_std_auth_token_build::get_bytes(),
     );
     let _ = assert_binary_deployed_to_id(
         auth_token_id_deployment.clone(),
-        alkanes_std_owned_token_build::get_bytes(),
+        alkanes_std_auth_token_build::get_bytes(),
     );
 
     Ok(())

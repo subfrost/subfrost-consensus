@@ -6,10 +6,10 @@ use anyhow::{anyhow, Result};
 use bitcoin::hashes::Hash;
 use bitcoin::Block;
 use hex;
+use metashrew_support::block::AuxpowBlock;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
 use std::io::{Cursor};
-use metashrew_support::block::{AuxpowBlock};
 pub mod chain;
 use crate::chain::{ChainConfiguration, CONTEXT_HANDLE};
 
@@ -42,7 +42,7 @@ impl ChainConfiguration for GenesisAlkane {
 
 impl GenesisAlkane {
     fn block(&self) -> Result<Block> {
-      Ok(AuxpowBlock::parse(&mut Cursor::<Vec<u8>>::new(CONTEXT_HANDLE.block()))?.to_consensus())
+        Ok(AuxpowBlock::parse(&mut Cursor::<Vec<u8>>::new(CONTEXT_HANDLE.block()))?.to_consensus())
     }
     pub fn seen_pointer(&self, hash: &Vec<u8>) -> StoragePointer {
         StoragePointer::from_keyword("/seen/").select(&hash)
