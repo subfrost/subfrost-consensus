@@ -25,6 +25,11 @@ amm_factory = ["auth_token"]
 amm = ["amm_pool", "amm_factory"]
 orbital = []
 all = []
+minimal = ["refunder", "merkle_distributor", "free_mint", "upgradeable", "proxy"]
+refunder = []
+merkle_distributor = []
+free_mint = []
+upgradeable = []
 
 
 [dependencies]
@@ -57,6 +62,7 @@ alkanes = { path = ".", features = [
     "amm",
     "orbital",
     "auth_token",
+    "minimal"
 ] }
 metashrew = { path = "crates/metashrew", features = ["test-utils"] }
 protorune = { path = "crates/protorune", features = ["test-utils"] }
