@@ -25,6 +25,23 @@ impl Token for GenesisAlkane {
     }
 }
 
+#[cfg(feature = "regtest")]
+impl ChainConfiguration for GenesisAlkane {
+    fn block_reward(&self, n: u64) -> u128 {
+        return (50e8 as u128) / (1u128 << ((n as u128) / 210000u128));
+    }
+    fn genesis_block(&self) -> u64 {
+        0
+    }
+    fn average_payout_from_genesis(&self) -> u128 {
+        50_000_000
+    }
+    fn total_supply(&self) -> u128 {
+        131250000000000
+    }
+}
+
+#[cfg(not(feature = "regtest"))]
 impl ChainConfiguration for GenesisAlkane {
     fn block_reward(&self, n: u64) -> u128 {
         return (50e8 as u128) / (1u128 << ((n as u128) / 210000u128));
