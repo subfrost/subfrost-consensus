@@ -200,6 +200,23 @@ pub fn runes_by_address(input: &Vec<u8>) -> Result<WalletResponse> {
     Ok(result)
 }
 
+pub fn protorunes_by_outpoint(input: &Vec<u8>) -> Result<OutpointResponse> {
+  match proto::protorune::OutpointWithProtocol::parse_from_bytes(input).ok() {
+    Some(req) => {
+     let protocol_tag_bytes: &[u8] = &req.protocol;
+
+     let outpoint = OutPoint {
+       txid: bitcoin::blockdata::transaction::Txid::from_byte_array(<Vec<u8> as AsRef<[u8]>>::as_ref(&req.txid).try_into()?),
+       vout: req.vout
+     };
+     protorune_outpoint_to_outpoint_response(&outpoint, u128::from_le_bytes(protocol_tag_bytes.try_into()?))
+    }
+    None => {
+      Err(anyhow!("malformed request"))
+    }
+  }
+}
+
 pub fn protorunes_by_address(input: &Vec<u8>) -> Result<WalletResponse> {
     let mut result: WalletResponse = WalletResponse::new();
     if let Some(req) = proto::protorune::ProtorunesWalletRequest::parse_from_bytes(input).ok() {

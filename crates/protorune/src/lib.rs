@@ -18,12 +18,12 @@ use metashrew::{
 };
 use metashrew_support::index_pointer::KeyValuePointer;
 use metashrew_support::{
-    compat::{to_arraybuffer_layout, to_ptr},
+    compat::{to_arraybuffer_layout, to_ptr, to_passback_ptr},
     utils::consume_to_end,
 };
 use ordinals::Etching;
 use ordinals::{Artifact, Runestone};
-use proto::protorune::{Output, RunesResponse, WalletResponse};
+use proto::protorune::{Output, RunesResponse, WalletResponse, OutpointResponse};
 use protobuf::{Message, SpecialFields};
 use protorune_support::constants;
 use protorune_support::{
@@ -91,6 +91,16 @@ pub fn protorunesbyaddress() -> i32 {
     to_ptr(&mut to_arraybuffer_layout::<&[u8]>(
         &result.write_to_bytes().unwrap(),
     )) + 4
+}
+
+#[no_mangle]
+pub fn protorunesbyoutpoint() -> i32 {
+    let mut data: Cursor<Vec<u8>> = Cursor::new(input());
+    let result: OutpointResponse =
+        view::protorunes_by_outpoint(&consume_to_end(&mut data).unwrap()).unwrap();
+    to_passback_ptr(&mut to_arraybuffer_layout::<&[u8]>(
+        &result.write_to_bytes().unwrap(),
+    ))
 }
 
 #[no_mangle]

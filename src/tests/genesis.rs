@@ -25,10 +25,6 @@ fn test_genesis() -> Result<()> {
             target: AlkaneId { block: 1, tx: 0 },
             inputs: vec![0],
         },
-        Cellpack {
-            target: AlkaneId { block: 2, tx: 0 },
-            inputs: vec![77],
-        },
     ]
     .into();
     let test_block = alkane_helpers::init_with_multiple_cellpacks_with_tx(
@@ -42,6 +38,12 @@ fn test_genesis() -> Result<()> {
     };
 
     index_block(&test_block, block_height)?;
+    let cellpacks2 = vec![Cellpack {
+        target: AlkaneId { block: 2, tx: 0 },
+        inputs: vec![77],
+    }];
+    let test_block2 = alkane_helpers::init_with_multiple_cellpacks_with_tx([].into(), cellpacks2);
+    index_block(&test_block2, block_height + 1)?;
     let ptr = RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
         .OUTPOINT_TO_RUNES
         .select(&consensus_encode(&outpoint)?);

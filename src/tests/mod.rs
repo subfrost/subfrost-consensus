@@ -5,6 +5,6 @@ pub mod helpers;
 pub mod amm;
 #[cfg(all(test, feature = "auth_token"))]
 pub mod auth_token;
+pub mod genesis;
 pub mod std;
 pub mod utils;
-pub mod genesis;

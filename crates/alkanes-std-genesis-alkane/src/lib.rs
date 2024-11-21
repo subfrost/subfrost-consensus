@@ -9,7 +9,7 @@ use hex;
 use metashrew_support::block::AuxpowBlock;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
-use std::io::{Cursor};
+use std::io::Cursor;
 pub mod chain;
 use crate::chain::{ChainConfiguration, CONTEXT_HANDLE};
 
@@ -95,7 +95,7 @@ impl GenesisAlkane {
         let mut total_supply_pointer = self.total_supply_pointer();
         let total_supply = total_supply_pointer.get_value::<u128>();
         if total_supply >= self.total_supply() {
-          return Err(anyhow!("total supply has been reached"));
+            return Err(anyhow!("total supply has been reached"));
         }
         total_supply_pointer.set_value::<u128>(total_supply + value);
         Ok(AlkaneTransfer {
