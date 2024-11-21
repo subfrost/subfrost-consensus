@@ -19,7 +19,7 @@ use metashrew::{
 use metashrew_support::index_pointer::KeyValuePointer;
 use metashrew_support::{
     compat::{to_arraybuffer_layout, to_ptr, to_passback_ptr},
-    utils::consume_to_end,
+    utils::{consume_to_end, consume_sized_int},
 };
 use ordinals::Etching;
 use ordinals::{Artifact, Runestone};
@@ -96,6 +96,7 @@ pub fn protorunesbyaddress() -> i32 {
 #[no_mangle]
 pub fn protorunesbyoutpoint() -> i32 {
     let mut data: Cursor<Vec<u8>> = Cursor::new(input());
+    let _height = consume_sized_int::<u32>(&mut data);
     let result: OutpointResponse =
         view::protorunes_by_outpoint(&consume_to_end(&mut data).unwrap()).unwrap();
     to_passback_ptr(&mut to_arraybuffer_layout::<&[u8]>(
