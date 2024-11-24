@@ -6,6 +6,8 @@ use alkanes_support::{
     response::ExtendedCallResponse, storage::StorageMap, utils::overflow_error,
     witness::find_witness_payload,
 };
+use metashrew::{println, stdio::{stdout}};
+use std::fmt::{Write};
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew_support::index_pointer::KeyValuePointer;

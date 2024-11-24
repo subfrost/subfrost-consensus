@@ -29,10 +29,7 @@ pub fn reverse_txid(v: &Txid) -> Txid {
 }
 
 pub fn outpoint_encode(v: &OutPoint) -> Result<Vec<u8>> {
-  consensus_encode(&OutPoint {
-    vout: v.vout,
-    txid: reverse_txid(&v.txid)
-  })
+  consensus_encode(&v)
 }
 
 pub fn decode_varint_list(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<Vec<u128>> {

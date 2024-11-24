@@ -54,6 +54,7 @@ impl MessageContext for AlkaneMessageContext {
         match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
             Err(e) => {
+                println!("{:?}", e);
                 Err(e) // Print the error
             }
         }
