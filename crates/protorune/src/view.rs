@@ -20,6 +20,8 @@ use bitcoin::OutPoint;
 use metashrew_support::index_pointer::KeyValuePointer;
 use protobuf::{Message, MessageField, SpecialFields};
 use std::io::Cursor;
+use metashrew::{println, stdio::{stdout}};
+use std::fmt::{Write};
 
 pub fn outpoint_to_bytes(outpoint: &OutPoint) -> Result<Vec<u8>> {
     Ok(consensus_encode(outpoint)?)
@@ -41,7 +43,7 @@ pub fn protorune_outpoint_to_outpoint_response(
     let balance_sheet: BalanceSheet = load_sheet(
         &tables::RuneTable::for_protocol(protocol_id)
             .OUTPOINT_TO_RUNES
-            .select(&hex::encode(&outpoint_bytes).as_bytes().to_vec()),
+            .select(&outpoint_bytes)
     );
 
     let mut height: u128 = tables::RUNES

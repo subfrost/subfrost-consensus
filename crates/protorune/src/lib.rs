@@ -558,7 +558,7 @@ impl Protorune {
                   txid: tx.compute_txid(),
                   vout: i as u32
                 })?;
-                atomic.derive(&tables::RUNES.OUTPOINT_TO_HEIGHT.select(&(hex::encode(&outpoint_bytes).as_bytes().to_vec()))).set_value(height);
+                atomic.derive(&tables::RUNES.OUTPOINT_TO_HEIGHT.select(&outpoint_bytes)).set_value(height);
                 atomic
                     .derive(
                         &tables::OUTPOINT_TO_OUTPUT.select(

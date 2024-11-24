@@ -172,30 +172,12 @@ pub fn simulate() -> i32 {
 //     to_passback_ptr(&mut to_arraybuffer_layout::<&[u8]>(result.write_to_bytes().unwrap().as_ref()))
 // }
 //
-#[no_mangle]
-pub fn block() -> i32 {
-  let bytes = IndexPointer::from_keyword("/block").get().as_ref().clone();
-  let data = input();
-  let height_bytes: &[u8] = &data[0..4];
-  let height = u32::from_le_bytes(height_bytes.try_into().unwrap());
-  println!("height: {}", height);
-  println!("bytes: {}", hex::encode(&bytes));
-  to_passback_ptr(&mut to_arraybuffer_layout::<Vec<u8>>(bytes))
-}
-
-#[no_mangle]
-pub fn test_function() -> i32 {
-  let v: Vec<u8> = vec![0x01, 0x02, 0x03, 0x04];
-  to_passback_ptr(&mut to_arraybuffer_layout::<Vec<u8>>(v))
-}
 
 #[no_mangle]
 pub fn _start() {
     let data = input();
     let height = u32::from_le_bytes((&data[0..4]).try_into().unwrap());
     let reader = &data[4..];
-    println!("last: {}", IndexPointer::from_keyword("/block").get_value::<u32>());
-    IndexPointer::from_keyword("/block").set_value(height);
     let block: Block = AuxpowBlock::parse(&mut Cursor::<Vec<u8>>::new(reader.to_vec()))
         .unwrap()
         .to_consensus();
