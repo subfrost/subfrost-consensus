@@ -3,6 +3,8 @@ use bitcoin::consensus::{
     deserialize_partial,
     encode::{Decodable, Encodable},
 };
+use bitcoin::{OutPoint, Txid};
+use bitcoin::hashes::{Hash};
 use metashrew_support::utils::{is_empty, remaining_slice};
 use ordinals::varint;
 use std::io::BufRead;
@@ -18,6 +20,19 @@ pub fn consensus_decode<T: Decodable>(cursor: &mut std::io::Cursor<Vec<u8>>) -> 
     let deserialized: (T, usize) = deserialize_partial(slice)?;
     cursor.consume(deserialized.1);
     Ok(deserialized.0)
+}
+
+pub fn reverse_txid(v: &Txid) -> Txid {
+  let reversed_bytes: Vec<u8> = v.clone().as_byte_array().into_iter().map(|v| { v.clone() }).rev().collect::<Vec<u8>>();
+  let reversed_bytes_ref: &[u8] = &reversed_bytes;
+  Txid::from_byte_array(reversed_bytes_ref.try_into().unwrap())
+}
+
+pub fn outpoint_encode(v: &OutPoint) -> Result<Vec<u8>> {
+  consensus_encode(&OutPoint {
+    vout: v.vout,
+    txid: reverse_txid(&v.txid)
+  })
 }
 
 pub fn decode_varint_list(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<Vec<u128>> {

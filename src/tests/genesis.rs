@@ -36,6 +36,7 @@ fn test_genesis() -> Result<()> {
         txid: test_block.txdata[len - 1].compute_txid(),
         vout: 0,
     };
+    println!("runestone: {}", hex::encode(&test_block.txdata[1].output[1].script_pubkey));
 
     index_block(&test_block, block_height)?;
     let cellpacks2 = vec![Cellpack {

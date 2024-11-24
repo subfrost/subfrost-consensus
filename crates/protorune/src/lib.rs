@@ -29,7 +29,7 @@ use protorune_support::constants;
 use protorune_support::{
     balance_sheet::{BalanceSheet, ProtoruneRuneId},
     protostone::{into_protostone_edicts, Protostone, ProtostoneEdict},
-    utils::{consensus_encode, field_to_name},
+    utils::{outpoint_encode, consensus_encode, field_to_name},
 };
 use std::collections::HashMap;
 use std::io::Cursor;
@@ -554,7 +554,7 @@ impl Protorune {
         let mut atomic = AtomicPointer::default();
         for tx in &block.txdata {
             for i in 0..tx.output.len() {
-                let outpoint_bytes = consensus_encode(&OutPoint {
+                let outpoint_bytes = outpoint_encode(&OutPoint {
                   txid: tx.compute_txid(),
                   vout: i as u32
                 })?;

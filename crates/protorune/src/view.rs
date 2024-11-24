@@ -12,7 +12,7 @@ use crate::{balance_sheet::load_sheet, tables};
 use anyhow::{anyhow, Result};
 use bitcoin;
 use protorune_support::balance_sheet::{BalanceSheet};
-use protorune_support::utils::{consensus_decode, consensus_encode};
+use protorune_support::utils::{consensus_decode, outpoint_encode, consensus_encode};
 //use bitcoin::consensus::Decodable;
 use bitcoin::hashes::Hash;
 use bitcoin::OutPoint;
@@ -24,7 +24,7 @@ use metashrew::{println, stdio::{stdout}};
 use std::fmt::{Write};
 
 pub fn outpoint_to_bytes(outpoint: &OutPoint) -> Result<Vec<u8>> {
-    Ok(consensus_encode(outpoint)?)
+    Ok(outpoint_encode(outpoint)?)
 }
 
 pub fn core_outpoint_to_proto(outpoint: &OutPoint) -> Outpoint {
@@ -39,6 +39,7 @@ pub fn protorune_outpoint_to_outpoint_response(
     outpoint: &OutPoint,
     protocol_id: u128,
 ) -> Result<OutpointResponse> {
+    println!("protocol_id: {}", protocol_id);
     let outpoint_bytes = outpoint_to_bytes(outpoint)?;
     let balance_sheet: BalanceSheet = load_sheet(
         &tables::RuneTable::for_protocol(protocol_id)
