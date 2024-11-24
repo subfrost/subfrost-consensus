@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 // use metashrew::{println, stdio::stdout};
 // use std::fmt::Write;
+//
 
 pub trait PersistentRecord {
     fn save<T: KeyValuePointer>(&self, ptr: &T, is_cenotaph: bool) {
@@ -91,7 +92,6 @@ impl CheckedDebit for BalanceSheet {
         Ok(())
     }
 }
-
 impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
     fn reconcile(
         &self,

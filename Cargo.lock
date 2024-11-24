@@ -1898,9 +1898,6 @@ dependencies = [
  "once_cell",
  "ordinals 0.0.10",
  "protobuf 3.7.1",
- "protobuf-codegen 3.7.1",
- "protoc-bin-vendored",
- "protoc-rust",
  "protorune",
  "protorune-support",
  "ruint",
@@ -1920,6 +1917,10 @@ dependencies = [
  "hex",
  "metashrew-support",
  "ordinals 0.0.10",
+ "protobuf 3.7.1",
+ "protobuf-codegen 3.7.1",
+ "protoc-bin-vendored",
+ "protoc-rust",
  "serde",
 ]
 

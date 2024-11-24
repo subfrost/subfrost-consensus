@@ -4,3 +4,4 @@ pub mod constants;
 pub mod protostone;
 pub mod rune_transfer;
 pub mod utils;
+pub mod proto;

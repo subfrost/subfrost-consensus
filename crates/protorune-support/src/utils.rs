@@ -12,6 +12,7 @@ pub fn consensus_encode<T: Encodable>(v: &T) -> Result<Vec<u8>> {
     Ok(result)
 }
 
+
 pub fn consensus_decode<T: Decodable>(cursor: &mut std::io::Cursor<Vec<u8>>) -> Result<T> {
     let slice = &cursor.get_ref()[cursor.position() as usize..cursor.get_ref().len() as usize];
     let deserialized: (T, usize) = deserialize_partial(slice)?;

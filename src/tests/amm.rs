@@ -7,9 +7,11 @@ use anyhow::Result;
 use bitcoin::address::NetworkChecked;
 use bitcoin::blockdata::transaction::OutPoint;
 use bitcoin::{Address, Amount, ScriptBuf, Sequence, TxIn, TxOut, Witness};
+use bitcoin::hashes::{Hash};
 use metashrew_support::index_pointer::KeyValuePointer;
-use protorune::{balance_sheet::load_sheet, message::MessageContext, tables::RuneTable};
-use protorune_support::balance_sheet::ProtoruneRuneId;
+use protobuf::{Message, MessageField};
+use protorune::{view::{protorunes_by_outpoint}, balance_sheet::load_sheet, message::MessageContext, tables::RuneTable};
+use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
 use protorune_support::protostone::Protostone;
 use protorune_support::protostone::ProtostoneEdict;
 use protorune_support::utils::consensus_encode;
@@ -292,12 +294,18 @@ fn test_amm_pool_skewed() -> Result<()> {
     let ptr = RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
         .OUTPOINT_TO_RUNES
         .select(&consensus_encode(&outpoint)?);
-    let sheet = load_sheet(&ptr);
+    let mut payload = protorune_support::proto::protorune::OutpointWithProtocol::new();
+    payload.protocol = MessageField::some((1u128).into());
+    payload.txid = outpoint.txid.as_byte_array().clone().to_vec();
+    payload.vout = outpoint.vout;
+    let response: BalanceSheet = protorunes_by_outpoint(&<Vec<u8> as AsRef<[u8]>>::as_ref(&payload.write_to_bytes().unwrap()).to_vec()).unwrap().into();
+    println!("{:?}", response);
+//    let sheet = load_sheet(&ptr);
     /*
     get_cache().iter().for_each(|(k, v)| {
       if v.len() < 300 { println!("{}: {}", format_key(&k.as_ref().clone()), hex::encode(&v.as_ref().clone())); }
     });
     */
-    println!("balances at end {:?}", sheet);
+ //   println!("balances at end {:?}", sheet);
     Ok(())
 }

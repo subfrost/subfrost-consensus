@@ -23,7 +23,7 @@ use metashrew_support::{
 };
 use ordinals::Etching;
 use ordinals::{Artifact, Runestone};
-use proto::protorune::{Output, RunesResponse, WalletResponse, OutpointResponse};
+use protorune_support::proto::protorune::{Output, RunesResponse, WalletResponse, OutpointResponse};
 use protobuf::{Message, SpecialFields};
 use protorune_support::constants;
 use protorune_support::{
@@ -38,7 +38,6 @@ use std::sync::Arc;
 
 pub mod balance_sheet;
 pub mod message;
-pub mod proto;
 pub mod protoburn;
 pub mod protostone;
 pub mod tables;

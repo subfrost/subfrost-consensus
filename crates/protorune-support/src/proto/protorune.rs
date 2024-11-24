@@ -164,12 +164,154 @@ impl ::protobuf::reflect::ProtobufValue for RuneId {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:protorune.ProtoruneRuneId)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct ProtoruneRuneId {
+    // message fields
+    // @@protoc_insertion_point(field:protorune.ProtoruneRuneId.height)
+    pub height: ::protobuf::MessageField<Uint128>,
+    // @@protoc_insertion_point(field:protorune.ProtoruneRuneId.txindex)
+    pub txindex: ::protobuf::MessageField<Uint128>,
+    // special fields
+    // @@protoc_insertion_point(special_field:protorune.ProtoruneRuneId.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a ProtoruneRuneId {
+    fn default() -> &'a ProtoruneRuneId {
+        <ProtoruneRuneId as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl ProtoruneRuneId {
+    pub fn new() -> ProtoruneRuneId {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Uint128>(
+            "height",
+            |m: &ProtoruneRuneId| { &m.height },
+            |m: &mut ProtoruneRuneId| { &mut m.height },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Uint128>(
+            "txindex",
+            |m: &ProtoruneRuneId| { &m.txindex },
+            |m: &mut ProtoruneRuneId| { &mut m.txindex },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ProtoruneRuneId>(
+            "ProtoruneRuneId",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for ProtoruneRuneId {
+    const NAME: &'static str = "ProtoruneRuneId";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.height)?;
+                },
+                18 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.txindex)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.height.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if let Some(v) = self.txindex.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.height.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if let Some(v) = self.txindex.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> ProtoruneRuneId {
+        ProtoruneRuneId::new()
+    }
+
+    fn clear(&mut self) {
+        self.height.clear();
+        self.txindex.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static ProtoruneRuneId {
+        static instance: ProtoruneRuneId = ProtoruneRuneId {
+            height: ::protobuf::MessageField::none(),
+            txindex: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for ProtoruneRuneId {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("ProtoruneRuneId").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for ProtoruneRuneId {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ProtoruneRuneId {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:protorune.Rune)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct Rune {
     // message fields
     // @@protoc_insertion_point(field:protorune.Rune.runeId)
-    pub runeId: ::protobuf::MessageField<RuneId>,
+    pub runeId: ::protobuf::MessageField<ProtoruneRuneId>,
     // @@protoc_insertion_point(field:protorune.Rune.name)
     pub name: ::std::vec::Vec<u8>,
     // @@protoc_insertion_point(field:protorune.Rune.divisibility)
@@ -197,7 +339,7 @@ impl Rune {
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, RuneId>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ProtoruneRuneId>(
             "runeId",
             |m: &Rune| { &m.runeId },
             |m: &mut Rune| { &mut m.runeId },
@@ -366,7 +508,7 @@ pub struct BalanceSheetItem {
     // @@protoc_insertion_point(field:protorune.BalanceSheetItem.rune)
     pub rune: ::protobuf::MessageField<Rune>,
     // @@protoc_insertion_point(field:protorune.BalanceSheetItem.balance)
-    pub balance: ::std::vec::Vec<u8>,
+    pub balance: ::protobuf::MessageField<Uint128>,
     // special fields
     // @@protoc_insertion_point(special_field:protorune.BalanceSheetItem.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -391,7 +533,7 @@ impl BalanceSheetItem {
             |m: &BalanceSheetItem| { &m.rune },
             |m: &mut BalanceSheetItem| { &mut m.rune },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Uint128>(
             "balance",
             |m: &BalanceSheetItem| { &m.balance },
             |m: &mut BalanceSheetItem| { &mut m.balance },
@@ -418,7 +560,7 @@ impl ::protobuf::Message for BalanceSheetItem {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.rune)?;
                 },
                 18 => {
-                    self.balance = is.read_bytes()?;
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.balance)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -436,8 +578,9 @@ impl ::protobuf::Message for BalanceSheetItem {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
-        if !self.balance.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(2, &self.balance);
+        if let Some(v) = self.balance.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -448,8 +591,8 @@ impl ::protobuf::Message for BalanceSheetItem {
         if let Some(v) = self.rune.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
         }
-        if !self.balance.is_empty() {
-            os.write_bytes(2, &self.balance)?;
+        if let Some(v) = self.balance.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -476,7 +619,7 @@ impl ::protobuf::Message for BalanceSheetItem {
     fn default_instance() -> &'static BalanceSheetItem {
         static instance: BalanceSheetItem = BalanceSheetItem {
             rune: ::protobuf::MessageField::none(),
-            balance: ::std::vec::Vec::new(),
+            balance: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -772,7 +915,7 @@ pub struct OutpointWithProtocol {
     // @@protoc_insertion_point(field:protorune.OutpointWithProtocol.vout)
     pub vout: u32,
     // @@protoc_insertion_point(field:protorune.OutpointWithProtocol.protocol)
-    pub protocol: ::std::vec::Vec<u8>,
+    pub protocol: ::protobuf::MessageField<Uint128>,
     // special fields
     // @@protoc_insertion_point(special_field:protorune.OutpointWithProtocol.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -802,7 +945,7 @@ impl OutpointWithProtocol {
             |m: &OutpointWithProtocol| { &m.vout },
             |m: &mut OutpointWithProtocol| { &mut m.vout },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Uint128>(
             "protocol",
             |m: &OutpointWithProtocol| { &m.protocol },
             |m: &mut OutpointWithProtocol| { &mut m.protocol },
@@ -832,7 +975,7 @@ impl ::protobuf::Message for OutpointWithProtocol {
                     self.vout = is.read_uint32()?;
                 },
                 26 => {
-                    self.protocol = is.read_bytes()?;
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.protocol)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -852,8 +995,9 @@ impl ::protobuf::Message for OutpointWithProtocol {
         if self.vout != 0 {
             my_size += ::protobuf::rt::uint32_size(2, self.vout);
         }
-        if !self.protocol.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(3, &self.protocol);
+        if let Some(v) = self.protocol.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -867,8 +1011,8 @@ impl ::protobuf::Message for OutpointWithProtocol {
         if self.vout != 0 {
             os.write_uint32(2, self.vout)?;
         }
-        if !self.protocol.is_empty() {
-            os.write_bytes(3, &self.protocol)?;
+        if let Some(v) = self.protocol.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -897,7 +1041,7 @@ impl ::protobuf::Message for OutpointWithProtocol {
         static instance: OutpointWithProtocol = OutpointWithProtocol {
             txid: ::std::vec::Vec::new(),
             vout: 0,
-            protocol: ::std::vec::Vec::new(),
+            protocol: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1669,7 +1813,7 @@ pub struct ProtorunesWalletRequest {
     // @@protoc_insertion_point(field:protorune.ProtorunesWalletRequest.wallet)
     pub wallet: ::std::vec::Vec<u8>,
     // @@protoc_insertion_point(field:protorune.ProtorunesWalletRequest.protocol_tag)
-    pub protocol_tag: ::std::vec::Vec<u8>,
+    pub protocol_tag: ::protobuf::MessageField<Uint128>,
     // special fields
     // @@protoc_insertion_point(special_field:protorune.ProtorunesWalletRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1694,7 +1838,7 @@ impl ProtorunesWalletRequest {
             |m: &ProtorunesWalletRequest| { &m.wallet },
             |m: &mut ProtorunesWalletRequest| { &mut m.wallet },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Uint128>(
             "protocol_tag",
             |m: &ProtorunesWalletRequest| { &m.protocol_tag },
             |m: &mut ProtorunesWalletRequest| { &mut m.protocol_tag },
@@ -1721,7 +1865,7 @@ impl ::protobuf::Message for ProtorunesWalletRequest {
                     self.wallet = is.read_bytes()?;
                 },
                 18 => {
-                    self.protocol_tag = is.read_bytes()?;
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.protocol_tag)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1738,8 +1882,9 @@ impl ::protobuf::Message for ProtorunesWalletRequest {
         if !self.wallet.is_empty() {
             my_size += ::protobuf::rt::bytes_size(1, &self.wallet);
         }
-        if !self.protocol_tag.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(2, &self.protocol_tag);
+        if let Some(v) = self.protocol_tag.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -1750,8 +1895,8 @@ impl ::protobuf::Message for ProtorunesWalletRequest {
         if !self.wallet.is_empty() {
             os.write_bytes(1, &self.wallet)?;
         }
-        if !self.protocol_tag.is_empty() {
-            os.write_bytes(2, &self.protocol_tag)?;
+        if let Some(v) = self.protocol_tag.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1778,7 +1923,7 @@ impl ::protobuf::Message for ProtorunesWalletRequest {
     fn default_instance() -> &'static ProtorunesWalletRequest {
         static instance: ProtorunesWalletRequest = ProtorunesWalletRequest {
             wallet: ::std::vec::Vec::new(),
-            protocol_tag: ::std::vec::Vec::new(),
+            protocol_tag: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2052,7 +2197,7 @@ impl ::protobuf::reflect::ProtobufValue for RunesResponse {
 pub struct ProtoBurn {
     // message fields
     // @@protoc_insertion_point(field:protorune.ProtoBurn.protocol_tag)
-    pub protocol_tag: ::std::vec::Vec<u8>,
+    pub protocol_tag: ::protobuf::MessageField<Uint128>,
     // @@protoc_insertion_point(field:protorune.ProtoBurn.pointer)
     pub pointer: u32,
     // special fields
@@ -2074,7 +2219,7 @@ impl ProtoBurn {
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Uint128>(
             "protocol_tag",
             |m: &ProtoBurn| { &m.protocol_tag },
             |m: &mut ProtoBurn| { &mut m.protocol_tag },
@@ -2103,7 +2248,7 @@ impl ::protobuf::Message for ProtoBurn {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.protocol_tag = is.read_bytes()?;
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.protocol_tag)?;
                 },
                 16 => {
                     self.pointer = is.read_uint32()?;
@@ -2120,8 +2265,9 @@ impl ::protobuf::Message for ProtoBurn {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if !self.protocol_tag.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(1, &self.protocol_tag);
+        if let Some(v) = self.protocol_tag.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
         if self.pointer != 0 {
             my_size += ::protobuf::rt::uint32_size(2, self.pointer);
@@ -2132,8 +2278,8 @@ impl ::protobuf::Message for ProtoBurn {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if !self.protocol_tag.is_empty() {
-            os.write_bytes(1, &self.protocol_tag)?;
+        if let Some(v) = self.protocol_tag.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
         }
         if self.pointer != 0 {
             os.write_uint32(2, self.pointer)?;
@@ -2162,7 +2308,7 @@ impl ::protobuf::Message for ProtoBurn {
 
     fn default_instance() -> &'static ProtoBurn {
         static instance: ProtoBurn = ProtoBurn {
-            protocol_tag: ::std::vec::Vec::new(),
+            protocol_tag: ::protobuf::MessageField::none(),
             pointer: 0,
             special_fields: ::protobuf::SpecialFields::new(),
         };
@@ -2332,7 +2478,7 @@ impl ::protobuf::reflect::ProtobufValue for Uint128 {
 pub struct Clause {
     // message fields
     // @@protoc_insertion_point(field:protorune.Clause.rune)
-    pub rune: ::protobuf::MessageField<RuneId>,
+    pub rune: ::protobuf::MessageField<ProtoruneRuneId>,
     // @@protoc_insertion_point(field:protorune.Clause.amount)
     pub amount: ::protobuf::MessageField<Uint128>,
     // special fields
@@ -2354,7 +2500,7 @@ impl Clause {
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, RuneId>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ProtoruneRuneId>(
             "rune",
             |m: &Clause| { &m.rune },
             |m: &mut Clause| { &mut m.rune },
@@ -2774,7 +2920,7 @@ impl ::protobuf::reflect::ProtobufValue for ProtoMessage {
 pub struct RuntimeInput {
     // message fields
     // @@protoc_insertion_point(field:protorune.RuntimeInput.protocol_tag)
-    pub protocol_tag: ::std::vec::Vec<u8>,
+    pub protocol_tag: ::protobuf::MessageField<Uint128>,
     // special fields
     // @@protoc_insertion_point(special_field:protorune.RuntimeInput.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2794,7 +2940,7 @@ impl RuntimeInput {
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
         let mut fields = ::std::vec::Vec::with_capacity(1);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, Uint128>(
             "protocol_tag",
             |m: &RuntimeInput| { &m.protocol_tag },
             |m: &mut RuntimeInput| { &mut m.protocol_tag },
@@ -2818,7 +2964,7 @@ impl ::protobuf::Message for RuntimeInput {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.protocol_tag = is.read_bytes()?;
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.protocol_tag)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -2832,8 +2978,9 @@ impl ::protobuf::Message for RuntimeInput {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if !self.protocol_tag.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(1, &self.protocol_tag);
+        if let Some(v) = self.protocol_tag.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -2841,8 +2988,8 @@ impl ::protobuf::Message for RuntimeInput {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if !self.protocol_tag.is_empty() {
-            os.write_bytes(1, &self.protocol_tag)?;
+        if let Some(v) = self.protocol_tag.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2867,7 +3014,7 @@ impl ::protobuf::Message for RuntimeInput {
 
     fn default_instance() -> &'static RuntimeInput {
         static instance: RuntimeInput = RuntimeInput {
-            protocol_tag: ::std::vec::Vec::new(),
+            protocol_tag: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3017,21 +3164,24 @@ impl ::protobuf::reflect::ProtobufValue for Runtime {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x0fprotorune.proto\x12\tprotorune\":\n\x06RuneId\x12\x16\n\x06height\
     \x18\x01\x20\x01(\rR\x06height\x12\x18\n\x07txindex\x18\x02\x20\x01(\rR\
-    \x07txindex\"\x9b\x01\n\x04Rune\x12)\n\x06runeId\x18\x01\x20\x01(\x0b2\
-    \x11.protorune.RuneIdR\x06runeId\x12\x12\n\x04name\x18\x02\x20\x01(\x0cR\
-    \x04name\x12\"\n\x0cdivisibility\x18\x03\x20\x01(\rR\x0cdivisibility\x12\
-    \x18\n\x07spacers\x18\x04\x20\x01(\rR\x07spacers\x12\x16\n\x06symbol\x18\
-    \x05\x20\x01(\rR\x06symbol\"Q\n\x10BalanceSheetItem\x12#\n\x04rune\x18\
-    \x01\x20\x01(\x0b2\x0f.protorune.RuneR\x04rune\x12\x18\n\x07balance\x18\
-    \x02\x20\x01(\x0cR\x07balance\"E\n\x0cBalanceSheet\x125\n\x07entries\x18\
-    \x01\x20\x03(\x0b2\x1b.protorune.BalanceSheetItemR\x07entries\"2\n\x08Ou\
-    tpoint\x12\x12\n\x04txid\x18\x01\x20\x01(\x0cR\x04txid\x12\x12\n\x04vout\
-    \x18\x02\x20\x01(\rR\x04vout\"Z\n\x14OutpointWithProtocol\x12\x12\n\x04t\
-    xid\x18\x01\x20\x01(\x0cR\x04txid\x12\x12\n\x04vout\x18\x02\x20\x01(\rR\
-    \x04vout\x12\x1a\n\x08protocol\x18\x03\x20\x01(\x0cR\x08protocol\"6\n\
-    \x06Output\x12\x16\n\x06script\x18\x01\x20\x01(\x0cR\x06script\x12\x14\n\
-    \x05value\x18\x02\x20\x01(\x04R\x05value\"\xd5\x01\n\x10OutpointResponse\
-    \x123\n\x08balances\x18\x01\x20\x01(\x0b2\x17.protorune.BalanceSheetR\
+    \x07txindex\"k\n\x0fProtoruneRuneId\x12*\n\x06height\x18\x01\x20\x01(\
+    \x0b2\x12.protorune.uint128R\x06height\x12,\n\x07txindex\x18\x02\x20\x01\
+    (\x0b2\x12.protorune.uint128R\x07txindex\"\xa4\x01\n\x04Rune\x122\n\x06r\
+    uneId\x18\x01\x20\x01(\x0b2\x1a.protorune.ProtoruneRuneIdR\x06runeId\x12\
+    \x12\n\x04name\x18\x02\x20\x01(\x0cR\x04name\x12\"\n\x0cdivisibility\x18\
+    \x03\x20\x01(\rR\x0cdivisibility\x12\x18\n\x07spacers\x18\x04\x20\x01(\r\
+    R\x07spacers\x12\x16\n\x06symbol\x18\x05\x20\x01(\rR\x06symbol\"e\n\x10B\
+    alanceSheetItem\x12#\n\x04rune\x18\x01\x20\x01(\x0b2\x0f.protorune.RuneR\
+    \x04rune\x12,\n\x07balance\x18\x02\x20\x01(\x0b2\x12.protorune.uint128R\
+    \x07balance\"E\n\x0cBalanceSheet\x125\n\x07entries\x18\x01\x20\x03(\x0b2\
+    \x1b.protorune.BalanceSheetItemR\x07entries\"2\n\x08Outpoint\x12\x12\n\
+    \x04txid\x18\x01\x20\x01(\x0cR\x04txid\x12\x12\n\x04vout\x18\x02\x20\x01\
+    (\rR\x04vout\"n\n\x14OutpointWithProtocol\x12\x12\n\x04txid\x18\x01\x20\
+    \x01(\x0cR\x04txid\x12\x12\n\x04vout\x18\x02\x20\x01(\rR\x04vout\x12.\n\
+    \x08protocol\x18\x03\x20\x01(\x0b2\x12.protorune.uint128R\x08protocol\"6\
+    \n\x06Output\x12\x16\n\x06script\x18\x01\x20\x01(\x0cR\x06script\x12\x14\
+    \n\x05value\x18\x02\x20\x01(\x04R\x05value\"\xd5\x01\n\x10OutpointRespon\
+    se\x123\n\x08balances\x18\x01\x20\x01(\x0b2\x17.protorune.BalanceSheetR\
     \x08balances\x12/\n\x08outpoint\x18\x02\x20\x01(\x0b2\x13.protorune.Outp\
     ointR\x08outpoint\x12)\n\x06output\x18\x03\x20\x01(\x0b2\x11.protorune.O\
     utputR\x06output\x12\x16\n\x06height\x18\x04\x20\x01(\rR\x06height\x12\
@@ -3041,24 +3191,25 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\x0cR\x06wallet\"\x80\x01\n\x0eWalletResponse\x129\n\toutpoints\
     \x18\x01\x20\x03(\x0b2\x1b.protorune.OutpointResponseR\toutpoints\x123\n\
     \x08balances\x18\x02\x20\x01(\x0b2\x17.protorune.BalanceSheetR\x08balanc\
-    es\"T\n\x17ProtorunesWalletRequest\x12\x16\n\x06wallet\x18\x01\x20\x01(\
-    \x0cR\x06wallet\x12!\n\x0cprotocol_tag\x18\x02\x20\x01(\x0cR\x0bprotocol\
-    Tag\".\n\x14RunesByHeightRequest\x12\x16\n\x06height\x18\x01\x20\x01(\
-    \x04R\x06height\"6\n\rRunesResponse\x12%\n\x05runes\x18\x01\x20\x03(\x0b\
-    2\x0f.protorune.RuneR\x05runes\"H\n\tProtoBurn\x12!\n\x0cprotocol_tag\
-    \x18\x01\x20\x01(\x0cR\x0bprotocolTag\x12\x18\n\x07pointer\x18\x02\x20\
-    \x01(\rR\x07pointer\")\n\x07uint128\x12\x0e\n\x02lo\x18\x01\x20\x01(\x04\
-    R\x02lo\x12\x0e\n\x02hi\x18\x02\x20\x01(\x04R\x02hi\"[\n\x06Clause\x12%\
-    \n\x04rune\x18\x01\x20\x01(\x0b2\x11.protorune.RuneIdR\x04rune\x12*\n\
-    \x06amount\x18\x02\x20\x01(\x0b2\x12.protorune.uint128R\x06amount\"8\n\t\
-    Predicate\x12+\n\x07clauses\x18\x01\x20\x03(\x0b2\x11.protorune.ClauseR\
-    \x07clauses\"\x9f\x01\n\x0cProtoMessage\x12\x1a\n\x08calldata\x18\x01\
-    \x20\x01(\x0cR\x08calldata\x122\n\tpredicate\x18\x02\x20\x01(\x0b2\x14.p\
-    rotorune.PredicateR\tpredicate\x12\x18\n\x07pointer\x18\x03\x20\x01(\rR\
-    \x07pointer\x12%\n\x0erefund_pointer\x18\x04\x20\x01(\rR\rrefundPointer\
-    \"1\n\x0cRuntimeInput\x12!\n\x0cprotocol_tag\x18\x01\x20\x01(\x0cR\x0bpr\
-    otocolTag\">\n\x07Runtime\x123\n\x08balances\x18\x01\x20\x01(\x0b2\x17.p\
-    rotorune.BalanceSheetR\x08balancesb\x06proto3\
+    es\"h\n\x17ProtorunesWalletRequest\x12\x16\n\x06wallet\x18\x01\x20\x01(\
+    \x0cR\x06wallet\x125\n\x0cprotocol_tag\x18\x02\x20\x01(\x0b2\x12.protoru\
+    ne.uint128R\x0bprotocolTag\".\n\x14RunesByHeightRequest\x12\x16\n\x06hei\
+    ght\x18\x01\x20\x01(\x04R\x06height\"6\n\rRunesResponse\x12%\n\x05runes\
+    \x18\x01\x20\x03(\x0b2\x0f.protorune.RuneR\x05runes\"\\\n\tProtoBurn\x12\
+    5\n\x0cprotocol_tag\x18\x01\x20\x01(\x0b2\x12.protorune.uint128R\x0bprot\
+    ocolTag\x12\x18\n\x07pointer\x18\x02\x20\x01(\rR\x07pointer\")\n\x07uint\
+    128\x12\x0e\n\x02lo\x18\x01\x20\x01(\x04R\x02lo\x12\x0e\n\x02hi\x18\x02\
+    \x20\x01(\x04R\x02hi\"d\n\x06Clause\x12.\n\x04rune\x18\x01\x20\x01(\x0b2\
+    \x1a.protorune.ProtoruneRuneIdR\x04rune\x12*\n\x06amount\x18\x02\x20\x01\
+    (\x0b2\x12.protorune.uint128R\x06amount\"8\n\tPredicate\x12+\n\x07clause\
+    s\x18\x01\x20\x03(\x0b2\x11.protorune.ClauseR\x07clauses\"\x9f\x01\n\x0c\
+    ProtoMessage\x12\x1a\n\x08calldata\x18\x01\x20\x01(\x0cR\x08calldata\x12\
+    2\n\tpredicate\x18\x02\x20\x01(\x0b2\x14.protorune.PredicateR\tpredicate\
+    \x12\x18\n\x07pointer\x18\x03\x20\x01(\rR\x07pointer\x12%\n\x0erefund_po\
+    inter\x18\x04\x20\x01(\rR\rrefundPointer\"E\n\x0cRuntimeInput\x125\n\x0c\
+    protocol_tag\x18\x01\x20\x01(\x0b2\x12.protorune.uint128R\x0bprotocolTag\
+    \">\n\x07Runtime\x123\n\x08balances\x18\x01\x20\x01(\x0b2\x17.protorune.\
+    BalanceSheetR\x08balancesb\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3076,8 +3227,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(0);
-            let mut messages = ::std::vec::Vec::with_capacity(21);
+            let mut messages = ::std::vec::Vec::with_capacity(22);
             messages.push(RuneId::generated_message_descriptor_data());
+            messages.push(ProtoruneRuneId::generated_message_descriptor_data());
             messages.push(Rune::generated_message_descriptor_data());
             messages.push(BalanceSheetItem::generated_message_descriptor_data());
             messages.push(BalanceSheet::generated_message_descriptor_data());
