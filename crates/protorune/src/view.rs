@@ -41,7 +41,7 @@ pub fn protorune_outpoint_to_outpoint_response(
     let balance_sheet: BalanceSheet = load_sheet(
         &tables::RuneTable::for_protocol(protocol_id)
             .OUTPOINT_TO_RUNES
-            .select(&outpoint_bytes),
+            .select(&hex::encode(&outpoint_bytes).as_bytes().to_vec()),
     );
 
     let mut height: u128 = tables::RUNES

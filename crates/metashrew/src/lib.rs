@@ -16,7 +16,7 @@ use crate::compat::panic_hook;
 use crate::imports::{__flush, __get, __get_len, __host_len, __load_input};
 use crate::proto::metashrew::KeyValueFlush;
 pub use crate::stdio::stdout;
-use metashrew_support::compat::{to_arraybuffer_layout, to_ptr};
+use metashrew_support::compat::{to_passback_ptr, to_arraybuffer_layout, to_ptr};
 
 static mut CACHE: Option<HashMap<Arc<Vec<u8>>, Arc<Vec<u8>>>> = None;
 static mut TO_FLUSH: Option<Vec<Arc<Vec<u8>>>> = None;
@@ -31,14 +31,14 @@ pub fn get(v: Arc<Vec<u8>>) -> Arc<Vec<u8>> {
         if CACHE.as_ref().unwrap().contains_key(&v.clone()) {
             return CACHE.as_ref().unwrap().get(&v.clone()).unwrap().clone();
         }
-        let mut key = to_arraybuffer_layout(v.as_ref());
-        let mut value = to_arraybuffer_layout(Vec::<u8>::with_capacity(__get_len(
-            to_ptr(&mut key) + 4,
-        ) as usize));
-        __get(to_ptr(&mut key) + 4, to_ptr(&mut value) + 4);
-        let result = Arc::<Vec<u8>>::new(value[4..].to_vec());
-        CACHE.as_mut().unwrap().insert(v.clone(), result.clone());
-        return result.clone();
+        let length: i32 = __get_len(to_passback_ptr(&mut to_arraybuffer_layout(v.as_ref())));
+        let mut buffer = Vec::<u8>::new();
+        buffer.extend_from_slice(&length.to_le_bytes());
+        buffer.resize((length as usize) + 4, 0);
+        __get(to_passback_ptr(&mut to_arraybuffer_layout(v.as_ref())), to_passback_ptr(&mut buffer));
+        let value = Arc::new(buffer[4..].to_vec());
+        CACHE.as_mut().unwrap().insert(v.clone(), value.clone());
+        value
     }
 }
 
