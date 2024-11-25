@@ -1,42 +1,22 @@
-use crate::proto;
-use crate::proto::alkanes::{AlkaneInventoryRequest, AlkaneInventoryResponse};
+use alkanes_support::proto;
+use alkanes_support::proto::alkanes::{AlkaneInventoryRequest, AlkaneInventoryResponse};
 use crate::utils::{
-    alkane_inventory_pointer, balance_pointer, credit_balances, debit_balances, pipe_storagemap_to,
-    u128_from_bytes,
+    alkane_inventory_pointer, balance_pointer, credit_balances, debit_balances, pipe_storagemap_to
 };
 use crate::vm::runtime::AlkanesRuntimeContext;
 use crate::vm::utils::{prepare_context, run_after_special, run_special_cellpacks};
 use alkanes_support::cellpack::Cellpack;
-use alkanes_support::id::AlkaneId;
 use alkanes_support::parcel::AlkaneTransfer;
 use alkanes_support::response::ExtendedCallResponse;
 use anyhow::Result;
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
 use metashrew_support::index_pointer::KeyValuePointer;
-use protobuf::MessageField;
 use protorune::message::MessageContextParcel;
 use protorune_support::balance_sheet::BalanceSheet;
 use protorune_support::rune_transfer::RuneTransfer;
 use protorune_support::utils::decode_varint_list;
 use std::io::Cursor;
 
-impl Into<AlkaneId> for proto::alkanes::AlkaneId {
-    fn into(self) -> AlkaneId {
-        AlkaneId {
-            block: u128_from_bytes(self.block),
-            tx: u128_from_bytes(self.tx),
-        }
-    }
-}
-
-impl Into<proto::alkanes::AlkaneTransfer> for AlkaneTransfer {
-    fn into(self) -> proto::alkanes::AlkaneTransfer {
-        let mut result = proto::alkanes::AlkaneTransfer::new();
-        result.id = MessageField::some(self.id.into());
-        result.value = self.value.to_le_bytes().to_vec();
-        result
-    }
-}
 
 pub fn alkane_inventory(req: &AlkaneInventoryRequest) -> Result<AlkaneInventoryResponse> {
     let mut result: AlkaneInventoryResponse = AlkaneInventoryResponse::new();

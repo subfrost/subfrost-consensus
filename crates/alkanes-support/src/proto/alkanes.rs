@@ -456,6 +456,8 @@ pub struct MessageContextParcel {
     pub alkanes: ::std::vec::Vec<AlkaneTransfer>,
     // @@protoc_insertion_point(field:alkanes.MessageContextParcel.transaction)
     pub transaction: ::std::vec::Vec<u8>,
+    // @@protoc_insertion_point(field:alkanes.MessageContextParcel.block)
+    pub block: ::std::vec::Vec<u8>,
     // @@protoc_insertion_point(field:alkanes.MessageContextParcel.height)
     pub height: u64,
     // @@protoc_insertion_point(field:alkanes.MessageContextParcel.txindex)
@@ -485,7 +487,7 @@ impl MessageContextParcel {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(8);
+        let mut fields = ::std::vec::Vec::with_capacity(9);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "alkanes",
@@ -496,6 +498,11 @@ impl MessageContextParcel {
             "transaction",
             |m: &MessageContextParcel| { &m.transaction },
             |m: &mut MessageContextParcel| { &mut m.transaction },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "block",
+            |m: &MessageContextParcel| { &m.block },
+            |m: &mut MessageContextParcel| { &mut m.block },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
             "height",
@@ -551,6 +558,9 @@ impl ::protobuf::Message for MessageContextParcel {
                 18 => {
                     self.transaction = is.read_bytes()?;
                 },
+                26 => {
+                    self.block = is.read_bytes()?;
+                },
                 32 => {
                     self.height = is.read_uint64()?;
                 },
@@ -588,6 +598,9 @@ impl ::protobuf::Message for MessageContextParcel {
         if !self.transaction.is_empty() {
             my_size += ::protobuf::rt::bytes_size(2, &self.transaction);
         }
+        if !self.block.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(3, &self.block);
+        }
         if self.height != 0 {
             my_size += ::protobuf::rt::uint64_size(4, self.height);
         }
@@ -617,6 +630,9 @@ impl ::protobuf::Message for MessageContextParcel {
         };
         if !self.transaction.is_empty() {
             os.write_bytes(2, &self.transaction)?;
+        }
+        if !self.block.is_empty() {
+            os.write_bytes(3, &self.block)?;
         }
         if self.height != 0 {
             os.write_uint64(4, self.height)?;
@@ -655,6 +671,7 @@ impl ::protobuf::Message for MessageContextParcel {
     fn clear(&mut self) {
         self.alkanes.clear();
         self.transaction.clear();
+        self.block.clear();
         self.height = 0;
         self.txindex = 0;
         self.calldata.clear();
@@ -668,6 +685,7 @@ impl ::protobuf::Message for MessageContextParcel {
         static instance: MessageContextParcel = MessageContextParcel {
             alkanes: ::std::vec::Vec::new(),
             transaction: ::std::vec::Vec::new(),
+            block: ::std::vec::Vec::new(),
             height: 0,
             txindex: 0,
             calldata: ::std::vec::Vec::new(),
@@ -1391,24 +1409,25 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x05block\x12\x20\n\x02tx\x18\x02\x20\x01(\x0b2\x10.alkanes.uint128R\x02\
     tx\"[\n\x0eAlkaneTransfer\x12!\n\x02id\x18\x01\x20\x01(\x0b2\x11.alkanes\
     .AlkaneIdR\x02id\x12&\n\x05value\x18\x02\x20\x01(\x0b2\x10.alkanes.uint1\
-    28R\x05value\"\x8e\x02\n\x14MessageContextParcel\x121\n\x07alkanes\x18\
+    28R\x05value\"\xa4\x02\n\x14MessageContextParcel\x121\n\x07alkanes\x18\
     \x01\x20\x03(\x0b2\x17.alkanes.AlkaneTransferR\x07alkanes\x12\x20\n\x0bt\
-    ransaction\x18\x02\x20\x01(\x0cR\x0btransaction\x12\x16\n\x06height\x18\
-    \x04\x20\x01(\x04R\x06height\x12\x18\n\x07txindex\x18\x06\x20\x01(\rR\
-    \x07txindex\x12\x1a\n\x08calldata\x18\x05\x20\x01(\x0cR\x08calldata\x12\
-    \x12\n\x04vout\x18\x07\x20\x01(\rR\x04vout\x12\x18\n\x07pointer\x18\x08\
-    \x20\x01(\rR\x07pointer\x12%\n\x0erefund_pointer\x18\t\x20\x01(\rR\rrefu\
-    ndPointer\"6\n\x0cKeyValuePair\x12\x10\n\x03key\x18\x01\x20\x01(\x0cR\
-    \x03key\x12\x14\n\x05value\x18\x02\x20\x01(\x0cR\x05value\"\x8e\x01\n\
-    \x14ExtendedCallResponse\x121\n\x07alkanes\x18\x01\x20\x03(\x0b2\x17.alk\
-    anes.AlkaneTransferR\x07alkanes\x12/\n\x07storage\x18\x02\x20\x03(\x0b2\
-    \x15.alkanes.KeyValuePairR\x07storage\x12\x12\n\x04data\x18\x03\x20\x01(\
-    \x0cR\x04data\"j\n\x10SimulateResponse\x12;\n\texecution\x18\x01\x20\x01\
-    (\x0b2\x1d.alkanes.ExtendedCallResponseR\texecution\x12\x19\n\x08gas_use\
-    d\x18\x02\x20\x01(\x04R\x07gasUsed\";\n\x16AlkaneInventoryRequest\x12!\n\
-    \x02id\x18\x01\x20\x01(\x0b2\x11.alkanes.AlkaneIdR\x02id\"L\n\x17AlkaneI\
-    nventoryResponse\x121\n\x07alkanes\x18\x01\x20\x03(\x0b2\x17.alkanes.Alk\
-    aneTransferR\x07alkanesb\x06proto3\
+    ransaction\x18\x02\x20\x01(\x0cR\x0btransaction\x12\x14\n\x05block\x18\
+    \x03\x20\x01(\x0cR\x05block\x12\x16\n\x06height\x18\x04\x20\x01(\x04R\
+    \x06height\x12\x18\n\x07txindex\x18\x06\x20\x01(\rR\x07txindex\x12\x1a\n\
+    \x08calldata\x18\x05\x20\x01(\x0cR\x08calldata\x12\x12\n\x04vout\x18\x07\
+    \x20\x01(\rR\x04vout\x12\x18\n\x07pointer\x18\x08\x20\x01(\rR\x07pointer\
+    \x12%\n\x0erefund_pointer\x18\t\x20\x01(\rR\rrefundPointer\"6\n\x0cKeyVa\
+    luePair\x12\x10\n\x03key\x18\x01\x20\x01(\x0cR\x03key\x12\x14\n\x05value\
+    \x18\x02\x20\x01(\x0cR\x05value\"\x8e\x01\n\x14ExtendedCallResponse\x121\
+    \n\x07alkanes\x18\x01\x20\x03(\x0b2\x17.alkanes.AlkaneTransferR\x07alkan\
+    es\x12/\n\x07storage\x18\x02\x20\x03(\x0b2\x15.alkanes.KeyValuePairR\x07\
+    storage\x12\x12\n\x04data\x18\x03\x20\x01(\x0cR\x04data\"j\n\x10Simulate\
+    Response\x12;\n\texecution\x18\x01\x20\x01(\x0b2\x1d.alkanes.ExtendedCal\
+    lResponseR\texecution\x12\x19\n\x08gas_used\x18\x02\x20\x01(\x04R\x07gas\
+    Used\";\n\x16AlkaneInventoryRequest\x12!\n\x02id\x18\x01\x20\x01(\x0b2\
+    \x11.alkanes.AlkaneIdR\x02id\"L\n\x17AlkaneInventoryResponse\x121\n\x07a\
+    lkanes\x18\x01\x20\x03(\x0b2\x17.alkanes.AlkaneTransferR\x07alkanesb\x06\
+    proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

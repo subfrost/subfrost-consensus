@@ -2,8 +2,6 @@ use anyhow::Result;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use hex;
-use protobuf_codegen;
-use protoc_bin_vendored;
 use std::env;
 use std::fs;
 use std::io::prelude::*;
@@ -17,14 +15,6 @@ fn compress(binary: Vec<u8>) -> Result<Vec<u8>> {
 }
 
 fn main() {
-    protobuf_codegen::Codegen::new()
-        .protoc()
-        .protoc_path(&protoc_bin_vendored::protoc_bin_path().unwrap())
-        .out_dir("src/proto")
-        .inputs(&["proto/alkanes.proto"])
-        .include("proto")
-        .run()
-        .expect("running protoc failed");
     let env_var = env::var_os("OUT_DIR").unwrap();
     let base_dir = Path::new(&env_var)
         .parent()

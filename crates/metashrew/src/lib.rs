@@ -2,6 +2,7 @@ extern crate alloc;
 use protobuf::Message;
 use std::collections::HashMap;
 use std::panic;
+#[allow(unused_imports)]
 use std::fmt::{Write};
 use std::sync::Arc;
 

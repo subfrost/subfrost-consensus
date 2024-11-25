@@ -12,7 +12,7 @@ use crate::{balance_sheet::load_sheet, tables};
 use anyhow::{anyhow, Result};
 use bitcoin;
 use protorune_support::balance_sheet::{BalanceSheet};
-use protorune_support::utils::{consensus_decode, outpoint_encode, consensus_encode};
+use protorune_support::utils::{consensus_decode, outpoint_encode};
 //use bitcoin::consensus::Decodable;
 use bitcoin::hashes::Hash;
 use bitcoin::OutPoint;
