@@ -2,8 +2,10 @@
 mod tests {
     use crate::balance_sheet::load_sheet;
     use crate::message::MessageContext;
-    use crate::proto::protorune::{RunesByHeightRequest, WalletRequest};
     use protorune_support::balance_sheet::{BalanceSheet, ProtoruneRuneId};
+    use protorune_support::proto::protorune::{
+        OutpointResponse, Rune as RuneProto, RunesByHeightRequest, WalletRequest,
+    };
 
     use crate::test_helpers::{self as helpers, RunesTestingConfig};
     use crate::test_helpers::{display_list_as_hex, display_vec_as_hex};
@@ -141,7 +143,7 @@ mod tests {
         .write_to_bytes()
         .unwrap();
         let test_val = view::runes_by_address(&req).unwrap();
-        let runes: Vec<crate::proto::protorune::OutpointResponse> = test_val.clone().outpoints;
+        let runes: Vec<OutpointResponse> = test_val.clone().outpoints;
         assert_eq!(runes[0].height, 840001);
         assert_eq!(runes[0].txindex, 0);
     }
@@ -171,7 +173,7 @@ mod tests {
         .write_to_bytes()
         .unwrap();
         let test_val = view::runes_by_height(&req).unwrap();
-        let runes: Vec<crate::proto::protorune::Rune> = test_val.clone().runes;
+        let runes: Vec<RuneProto> = test_val.clone().runes;
         let symbol = char::from_u32(runes[0].clone().symbol).unwrap();
         let name = String::from_utf8(runes[0].name.clone()).unwrap();
         assert_eq!(runes[0].divisibility, 2 as u32);
