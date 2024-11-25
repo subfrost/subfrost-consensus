@@ -3,6 +3,10 @@ use crate::view::simulate_parcel;
 use anyhow::Result;
 use bitcoin::blockdata::block::Block;
 use bitcoin::blockdata::transaction::Transaction;
+use bitcoin::blockdata::block::{Header};
+use bitcoin::blockdata::transaction::Version;
+use bitcoin::{CompactTarget, BlockHash, TxMerkleNode};
+use bitcoin::hashes::{Hash};
 #[allow(unused_imports)]
 use metashrew::{flush, input, println, stdio::stdout};
 #[allow(unused_imports)]
@@ -51,12 +55,34 @@ pub fn index_block(block: &Block, height: u32) -> Result<()> {
     Ok(())
 }
 
+fn default_transaction() -> Transaction {
+  Transaction {
+    version: Version::non_standard(0),
+    lock_time: bitcoin::absolute::LockTime::from_consensus(0),
+    input: vec![],
+    output: vec![]
+  }
+}
+
+fn default_block() -> Block {
+  Block {
+    header: Header {
+      version: bitcoin::blockdata::block::Version::ONE,
+      prev_blockhash: BlockHash::all_zeros(),
+      merkle_root: TxMerkleNode::all_zeros(),
+      time: 0,
+      bits: CompactTarget::from_consensus(0),
+      nonce: 0
+    },
+    txdata: vec![]
+  }
+}
+
 pub fn parcel_from_protobuf(v: proto::alkanes::MessageContextParcel) -> MessageContextParcel {
         let mut result = MessageContextParcel::default();
         result.height = v.height;
-        result.block = consensus_decode::<Block>(&mut Cursor::new(v.block)).unwrap();
-        result.transaction =
-            consensus_decode::<Transaction>(&mut Cursor::new(v.transaction)).unwrap();
+        result.block = if v.block.len() > 0 { consensus_decode::<Block>(&mut Cursor::new(v.block)).unwrap() } else { default_block() };
+        result.transaction = if v.transaction.len() > 0 { consensus_decode::<Transaction>(&mut Cursor::new(v.transaction)).unwrap() } else { default_transaction() };
         result.vout = v.vout;
         result.calldata = v.calldata;
         result.runes = v
