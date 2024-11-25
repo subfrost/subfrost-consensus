@@ -104,13 +104,16 @@ pub fn simulate() -> i32 {
     let _height = u32::from_le_bytes((&data[0..4]).try_into().unwrap());
     let reader = &data[4..];
     let mut result: proto::alkanes::SimulateResponse = proto::alkanes::SimulateResponse::new();
-    let (response, gas_used) = simulate_parcel(
-        &parcel_from_protobuf(proto::alkanes::MessageContextParcel::parse_from_bytes(reader)
-            .unwrap())
-    )
-    .unwrap();
-    result.execution = MessageField::some(response.into());
-    result.gas_used = gas_used;
+    match simulate_parcel(&parcel_from_protobuf(proto::alkanes::MessageContextParcel::parse_from_bytes(reader).unwrap())) {
+      Ok((response, gas_used)) => {
+        result.execution = MessageField::some(response.into());
+        result.gas_used = gas_used;
+      }
+      Err(e) => {
+        result.error = e.to_string();    
+      }
+    }
+    
     to_passback_ptr(&mut to_arraybuffer_layout::<&[u8]>(
         result.write_to_bytes().unwrap().as_ref(),
     ))

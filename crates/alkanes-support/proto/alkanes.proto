@@ -42,6 +42,7 @@ message ExtendedCallResponse {
 message SimulateResponse {
   ExtendedCallResponse execution = 1;
   uint64 gas_used = 2;
+  string error = 3;
 }
 
 message AlkaneInventoryRequest {

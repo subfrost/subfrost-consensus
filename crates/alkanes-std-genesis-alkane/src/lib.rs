@@ -9,6 +9,7 @@ use hex;
 use metashrew_support::block::AuxpowBlock;
 use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr};
 use metashrew_support::index_pointer::KeyValuePointer;
+use alkanes_support::utils::{overflow_error};
 use std::io::Cursor;
 pub mod chain;
 use crate::chain::{ChainConfiguration, CONTEXT_HANDLE};
@@ -73,6 +74,10 @@ impl GenesisAlkane {
     pub fn total_supply(&self) -> u128 {
         self.total_supply_pointer().get_value::<u128>()
     }
+    pub fn increase_total_supply(&self, v: u128) -> Result<()> {
+        self.set_total_supply(overflow_error(self.total_supply().checked_add(v))?);
+        Ok(())
+    }
     pub fn set_total_supply(&self, v: u128) {
         self.total_supply_pointer().set_value::<u128>(v);
     }
@@ -123,10 +128,12 @@ impl AlkaneResponder for GenesisAlkane {
         match shift(&mut inputs).unwrap() {
             0 => {
                 self.observe_initialization().unwrap();
+                let premine = self.premine().unwrap();
                 response.alkanes.0.push(AlkaneTransfer {
                     id: context.myself.clone(),
-                    value: self.premine().unwrap(),
+                    value: premine,
                 });
+                self.increase_total_supply(premine).unwrap();
             }
             77 => {
                 response.alkanes.0.push(self.mint(&context).unwrap());

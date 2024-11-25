@@ -1023,6 +1023,8 @@ pub struct SimulateResponse {
     pub execution: ::protobuf::MessageField<ExtendedCallResponse>,
     // @@protoc_insertion_point(field:alkanes.SimulateResponse.gas_used)
     pub gas_used: u64,
+    // @@protoc_insertion_point(field:alkanes.SimulateResponse.error)
+    pub error: ::std::string::String,
     // special fields
     // @@protoc_insertion_point(special_field:alkanes.SimulateResponse.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1040,7 +1042,7 @@ impl SimulateResponse {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ExtendedCallResponse>(
             "execution",
@@ -1051,6 +1053,11 @@ impl SimulateResponse {
             "gas_used",
             |m: &SimulateResponse| { &m.gas_used },
             |m: &mut SimulateResponse| { &mut m.gas_used },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "error",
+            |m: &SimulateResponse| { &m.error },
+            |m: &mut SimulateResponse| { &mut m.error },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SimulateResponse>(
             "SimulateResponse",
@@ -1076,6 +1083,9 @@ impl ::protobuf::Message for SimulateResponse {
                 16 => {
                     self.gas_used = is.read_uint64()?;
                 },
+                26 => {
+                    self.error = is.read_string()?;
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1095,6 +1105,9 @@ impl ::protobuf::Message for SimulateResponse {
         if self.gas_used != 0 {
             my_size += ::protobuf::rt::uint64_size(2, self.gas_used);
         }
+        if !self.error.is_empty() {
+            my_size += ::protobuf::rt::string_size(3, &self.error);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1106,6 +1119,9 @@ impl ::protobuf::Message for SimulateResponse {
         }
         if self.gas_used != 0 {
             os.write_uint64(2, self.gas_used)?;
+        }
+        if !self.error.is_empty() {
+            os.write_string(3, &self.error)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1126,6 +1142,7 @@ impl ::protobuf::Message for SimulateResponse {
     fn clear(&mut self) {
         self.execution.clear();
         self.gas_used = 0;
+        self.error.clear();
         self.special_fields.clear();
     }
 
@@ -1133,6 +1150,7 @@ impl ::protobuf::Message for SimulateResponse {
         static instance: SimulateResponse = SimulateResponse {
             execution: ::protobuf::MessageField::none(),
             gas_used: 0,
+            error: ::std::string::String::new(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1421,13 +1439,13 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x02\x20\x01(\x0cR\x05value\"\x8e\x01\n\x14ExtendedCallResponse\x121\
     \n\x07alkanes\x18\x01\x20\x03(\x0b2\x17.alkanes.AlkaneTransferR\x07alkan\
     es\x12/\n\x07storage\x18\x02\x20\x03(\x0b2\x15.alkanes.KeyValuePairR\x07\
-    storage\x12\x12\n\x04data\x18\x03\x20\x01(\x0cR\x04data\"j\n\x10Simulate\
-    Response\x12;\n\texecution\x18\x01\x20\x01(\x0b2\x1d.alkanes.ExtendedCal\
-    lResponseR\texecution\x12\x19\n\x08gas_used\x18\x02\x20\x01(\x04R\x07gas\
-    Used\";\n\x16AlkaneInventoryRequest\x12!\n\x02id\x18\x01\x20\x01(\x0b2\
-    \x11.alkanes.AlkaneIdR\x02id\"L\n\x17AlkaneInventoryResponse\x121\n\x07a\
-    lkanes\x18\x01\x20\x03(\x0b2\x17.alkanes.AlkaneTransferR\x07alkanesb\x06\
-    proto3\
+    storage\x12\x12\n\x04data\x18\x03\x20\x01(\x0cR\x04data\"\x80\x01\n\x10S\
+    imulateResponse\x12;\n\texecution\x18\x01\x20\x01(\x0b2\x1d.alkanes.Exte\
+    ndedCallResponseR\texecution\x12\x19\n\x08gas_used\x18\x02\x20\x01(\x04R\
+    \x07gasUsed\x12\x14\n\x05error\x18\x03\x20\x01(\tR\x05error\";\n\x16Alka\
+    neInventoryRequest\x12!\n\x02id\x18\x01\x20\x01(\x0b2\x11.alkanes.Alkane\
+    IdR\x02id\"L\n\x17AlkaneInventoryResponse\x121\n\x07alkanes\x18\x01\x20\
+    \x03(\x0b2\x17.alkanes.AlkaneTransferR\x07alkanesb\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
