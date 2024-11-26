@@ -6,10 +6,10 @@ use alkanes_support::{
     response::ExtendedCallResponse, storage::StorageMap, utils::overflow_error,
     witness::find_witness_payload,
 };
-#[allow(unused_imports)]
-use metashrew::{println, stdio::{stdout}};
 use anyhow::{anyhow, Result};
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
+#[allow(unused_imports)]
+use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 
 use std::sync::Arc;

@@ -18,18 +18,20 @@ use metashrew::{
 };
 use metashrew_support::index_pointer::KeyValuePointer;
 use metashrew_support::{
-    compat::{to_arraybuffer_layout, to_ptr, to_passback_ptr},
-    utils::{consume_to_end, consume_sized_int},
+    compat::{to_arraybuffer_layout, to_passback_ptr, to_ptr},
+    utils::{consume_sized_int, consume_to_end},
 };
 use ordinals::Etching;
 use ordinals::{Artifact, Runestone};
-use protorune_support::proto::protorune::{Output, RunesResponse, WalletResponse, OutpointResponse};
 use protobuf::{Message, SpecialFields};
 use protorune_support::constants;
+use protorune_support::proto::protorune::{
+    OutpointResponse, Output, RunesResponse, WalletResponse,
+};
 use protorune_support::{
     balance_sheet::{BalanceSheet, ProtoruneRuneId},
     protostone::{into_protostone_edicts, Protostone, ProtostoneEdict},
-    utils::{outpoint_encode, consensus_encode, field_to_name},
+    utils::{consensus_encode, field_to_name, outpoint_encode},
 };
 use std::collections::HashMap;
 use std::io::Cursor;
@@ -555,16 +557,14 @@ impl Protorune {
         for tx in &block.txdata {
             for i in 0..tx.output.len() {
                 let outpoint_bytes = outpoint_encode(&OutPoint {
-                  txid: tx.compute_txid(),
-                  vout: i as u32
+                    txid: tx.compute_txid(),
+                    vout: i as u32,
                 })?;
-                atomic.derive(&tables::RUNES.OUTPOINT_TO_HEIGHT.select(&outpoint_bytes)).set_value(height);
                 atomic
-                    .derive(
-                        &tables::OUTPOINT_TO_OUTPUT.select(
-                            &outpoint_bytes
-                        )
-                    )
+                    .derive(&tables::RUNES.OUTPOINT_TO_HEIGHT.select(&outpoint_bytes))
+                    .set_value(height);
+                atomic
+                    .derive(&tables::OUTPOINT_TO_OUTPUT.select(&outpoint_bytes))
                     .set(Arc::new(
                         (Output {
                             script: tx.output[i].clone().script_pubkey.into_bytes(),

@@ -1,3 +1,5 @@
+use crate::proto;
+use crate::proto::protorune::{BalanceSheetItem, Rune};
 use crate::rune_transfer::RuneTransfer;
 use anyhow::{anyhow, Result};
 use hex;
@@ -7,8 +9,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::u128;
-use crate::proto::protorune::{BalanceSheetItem, Rune};
-use crate::proto;
 
 // use metashrew::{println, stdio::stdout};
 // use std::fmt::Write;
@@ -32,7 +32,7 @@ impl From<crate::proto::protorune::BalanceSheet> for BalanceSheet {
                 balance_sheet.entries.into_iter().map(|v| {
                     let id = ProtoruneRuneId::new(
                         v.rune.runeId.height.clone().into_option().unwrap().into(),
-                        v.rune.runeId.txindex.clone().into_option().unwrap().into()
+                        v.rune.runeId.txindex.clone().into_option().unwrap().into(),
                     );
                     (id, v.balance.into_option().unwrap().into())
                 }),
@@ -55,14 +55,14 @@ impl From<BalanceSheet> for crate::proto::protorune::BalanceSheet {
                         runeId: MessageField::some(proto::protorune::ProtoruneRuneId {
                             special_fields: SpecialFields::new(),
                             height: MessageField::some(k.block.into()),
-                            txindex: MessageField::some(k.tx.into())
+                            txindex: MessageField::some(k.tx.into()),
                         }),
                         name: "name".as_bytes().to_vec(),
                         divisibility: 1,
                         spacers: 1,
                         symbol: 'Z' as char as u32,
                     }),
-                    balance: MessageField::some((*v).into())
+                    balance: MessageField::some((*v).into()),
                 })
                 .collect::<Vec<BalanceSheetItem>>(),
             special_fields: SpecialFields::new(),
@@ -153,45 +153,63 @@ pub struct BalanceSheet {
 }
 
 pub fn u128_from_bytes(v: Vec<u8>) -> u128 {
-  let bytes_ref: &[u8] = &v;
-  u128::from_le_bytes(bytes_ref.try_into().unwrap())
+    let bytes_ref: &[u8] = &v;
+    u128::from_le_bytes(bytes_ref.try_into().unwrap())
 }
 
 impl From<crate::proto::protorune::Uint128> for u128 {
-  fn from(v: crate::proto::protorune::Uint128) -> u128 {
-    let mut result: Vec<u8> = Vec::<u8>::with_capacity(16);
-    result.extend(&v.lo.to_le_bytes());
-    result.extend(&v.hi.to_le_bytes());
-    let bytes_ref: &[u8] = &result;
-    u128::from_le_bytes(bytes_ref.try_into().unwrap())
-  }
+    fn from(v: crate::proto::protorune::Uint128) -> u128 {
+        let mut result: Vec<u8> = Vec::<u8>::with_capacity(16);
+        result.extend(&v.lo.to_le_bytes());
+        result.extend(&v.hi.to_le_bytes());
+        let bytes_ref: &[u8] = &result;
+        u128::from_le_bytes(bytes_ref.try_into().unwrap())
+    }
 }
 
 impl From<u128> for crate::proto::protorune::Uint128 {
-  fn from(v: u128) -> crate::proto::protorune::Uint128 {
-    let bytes = v.to_le_bytes().to_vec();
-    let mut container: crate::proto::protorune::Uint128 = crate::proto::protorune::Uint128::new();
-    container.lo = u64::from_le_bytes((&bytes[0..8]).try_into().unwrap());
-    container.hi = u64::from_le_bytes((&bytes[8..16]).try_into().unwrap());
-    container
-  }
+    fn from(v: u128) -> crate::proto::protorune::Uint128 {
+        let bytes = v.to_le_bytes().to_vec();
+        let mut container: crate::proto::protorune::Uint128 =
+            crate::proto::protorune::Uint128::new();
+        container.lo = u64::from_le_bytes((&bytes[0..8]).try_into().unwrap());
+        container.hi = u64::from_le_bytes((&bytes[8..16]).try_into().unwrap());
+        container
+    }
 }
 
 impl From<crate::proto::protorune::OutpointResponse> for BalanceSheet {
-  fn from(v: crate::proto::protorune::OutpointResponse) -> BalanceSheet {
-    let pairs = v.balances.entries.clone().into_iter().map(|v| {
-      (ProtoruneRuneId::new(v.rune.clone().unwrap().runeId.unwrap().height.unwrap().into(), v.rune.unwrap().runeId.unwrap().txindex.unwrap().into()), v.balance.into_option().unwrap().into())
-    }).collect::<Vec<(ProtoruneRuneId, u128)>>();
-    let ids = pairs.iter().map(|(id, _)| {
-      id.clone()
-    }).collect::<Vec<ProtoruneRuneId>>();
-    let balances = pairs.iter().map(|(_, v)| {
-      v.clone()
-    }).collect::<Vec<u128>>();
-    BalanceSheet::from_pairs(ids, balances)
-  }
+    fn from(v: crate::proto::protorune::OutpointResponse) -> BalanceSheet {
+        let pairs = v
+            .balances
+            .entries
+            .clone()
+            .into_iter()
+            .map(|v| {
+                (
+                    ProtoruneRuneId::new(
+                        v.rune
+                            .clone()
+                            .unwrap()
+                            .runeId
+                            .unwrap()
+                            .height
+                            .unwrap()
+                            .into(),
+                        v.rune.unwrap().runeId.unwrap().txindex.unwrap().into(),
+                    ),
+                    v.balance.into_option().unwrap().into(),
+                )
+            })
+            .collect::<Vec<(ProtoruneRuneId, u128)>>();
+        let ids = pairs
+            .iter()
+            .map(|(id, _)| id.clone())
+            .collect::<Vec<ProtoruneRuneId>>();
+        let balances = pairs.iter().map(|(_, v)| v.clone()).collect::<Vec<u128>>();
+        BalanceSheet::from_pairs(ids, balances)
+    }
 }
-
 
 impl BalanceSheet {
     pub fn new() -> Self {

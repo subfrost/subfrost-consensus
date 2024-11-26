@@ -1,11 +1,12 @@
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
+use crate::network::{GENESIS_BLOCK, is_active};
 use crate::vm::{
     fuel::start_fuel,
     runtime::AlkanesRuntimeContext,
     utils::{prepare_context, run_after_special, run_special_cellpacks},
 };
 use alkanes_support::cellpack::Cellpack;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use metashrew::index_pointer::IndexPointer;
 #[allow(unused_imports)]
 use metashrew::{
@@ -51,12 +52,16 @@ impl MessageContext for AlkaneMessageContext {
         1
     }
     fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
-        match handle_message(_parcel) {
+        if is_active(_parcel.height) {
+          match handle_message(_parcel) {
             Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
             Err(e) => {
                 println!("{:?}", e);
                 Err(e) // Print the error
             }
+          }
+        } else {
+          Err(anyhow!("subprotocol inactive until block {}", GENESIS_BLOCK))
         }
     }
 }

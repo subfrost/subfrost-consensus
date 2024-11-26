@@ -1,9 +1,9 @@
 extern crate alloc;
 use protobuf::Message;
 use std::collections::HashMap;
-use std::panic;
 #[allow(unused_imports)]
-use std::fmt::{Write};
+use std::fmt::Write;
+use std::panic;
 use std::sync::Arc;
 
 pub mod compat;
@@ -18,7 +18,7 @@ use crate::compat::panic_hook;
 use crate::imports::{__flush, __get, __get_len, __host_len, __load_input};
 use crate::proto::metashrew::KeyValueFlush;
 pub use crate::stdio::stdout;
-use metashrew_support::compat::{to_passback_ptr, to_arraybuffer_layout, to_ptr};
+use metashrew_support::compat::{to_arraybuffer_layout, to_passback_ptr, to_ptr};
 
 static mut CACHE: Option<HashMap<Arc<Vec<u8>>, Arc<Vec<u8>>>> = None;
 static mut TO_FLUSH: Option<Vec<Arc<Vec<u8>>>> = None;
@@ -37,7 +37,10 @@ pub fn get(v: Arc<Vec<u8>>) -> Arc<Vec<u8>> {
         let mut buffer = Vec::<u8>::new();
         buffer.extend_from_slice(&length.to_le_bytes());
         buffer.resize((length as usize) + 4, 0);
-        __get(to_passback_ptr(&mut to_arraybuffer_layout(v.as_ref())), to_passback_ptr(&mut buffer));
+        __get(
+            to_passback_ptr(&mut to_arraybuffer_layout(v.as_ref())),
+            to_passback_ptr(&mut buffer),
+        );
         let value = Arc::new(buffer[4..].to_vec());
         CACHE.as_mut().unwrap().insert(v.clone(), value.clone());
         value

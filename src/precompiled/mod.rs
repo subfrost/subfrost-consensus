@@ -1,0 +1,2 @@
+pub mod alkanes_std_genesis_alkane_build;
+pub mod alkanes_std_genesis_alkane_regtest_build;

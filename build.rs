@@ -14,6 +14,32 @@ fn compress(binary: Vec<u8>) -> Result<Vec<u8>> {
     Ok(writer.finish()?)
 }
 
+fn build_alkane(wasm_str: &str, features: Vec<&'static str>) -> Result<()> {
+    if features.len() != 0 {
+      let _ = Command::new("cargo")
+        .env("CARGO_TARGET_DIR", wasm_str)
+        .arg("build")
+        .arg("--release")
+        .arg("--features")
+        .arg(features.join(","))
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()?
+        .wait()?;
+      Ok(())
+    } else {
+      Command::new("cargo")
+        .env("CARGO_TARGET_DIR", wasm_str)
+        .arg("build")
+        .arg("--release")
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()?
+        .wait()?;
+      Ok(())
+    }
+}
+
 fn main() {
     let env_var = env::var_os("OUT_DIR").unwrap();
     let base_dir = Path::new(&env_var)
@@ -81,16 +107,14 @@ fn main() {
     files.into_iter()
         .map(|v| -> Result<String> {
             std::env::set_current_dir(&crates_dir.clone().join(v.clone()))?;
-            Command::new("cargo")
-                .env("CARGO_TARGET_DIR", wasm_str)
-                .arg("build")
-                .arg("--release")
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .spawn()
-                .expect("failed to execute cargo to build test alkanes")
-                .wait()
-                .expect("failed to wait on build job");
+            if v == "alkanes-std-genesis-alkane" {
+              #[cfg(feature = "regtest")]
+              build_alkane(wasm_str, vec!["regtest"])?;
+              #[cfg(not(feature = "regtest"))]
+              build_alkane(wasm_str, vec![])?;
+            } else {
+              build_alkane(wasm_str, vec![])?;
+            }
             std::env::set_current_dir(&crates_dir)?;
             let subbed = v.clone().replace("-", "_");
             let f: Vec<u8> = fs::read(

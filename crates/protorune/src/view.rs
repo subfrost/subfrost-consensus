@@ -1,3 +1,8 @@
+use crate::{balance_sheet::load_sheet, tables};
+use anyhow::{anyhow, Result};
+use bitcoin;
+use protorune_support::balance_sheet::BalanceSheet;
+use protorune_support::proto;
 use protorune_support::proto::protorune::{
     Outpoint,
     OutpointResponse,
@@ -7,21 +12,16 @@ use protorune_support::proto::protorune::{
     RunesResponse,
     WalletResponse,
 };
-use protorune_support::proto;
-use crate::{balance_sheet::load_sheet, tables};
-use anyhow::{anyhow, Result};
-use bitcoin;
-use protorune_support::balance_sheet::{BalanceSheet};
 use protorune_support::utils::{consensus_decode, outpoint_encode};
 //use bitcoin::consensus::Decodable;
 use bitcoin::hashes::Hash;
 use bitcoin::OutPoint;
 //use metashrew::utils::{ consume_exact, consume_sized_int };
+use metashrew::{println, stdio::stdout};
 use metashrew_support::index_pointer::KeyValuePointer;
 use protobuf::{Message, MessageField, SpecialFields};
+use std::fmt::Write;
 use std::io::Cursor;
-use metashrew::{println, stdio::{stdout}};
-use std::fmt::{Write};
 
 pub fn outpoint_to_bytes(outpoint: &OutPoint) -> Result<Vec<u8>> {
     Ok(outpoint_encode(outpoint)?)
@@ -44,7 +44,7 @@ pub fn protorune_outpoint_to_outpoint_response(
     let balance_sheet: BalanceSheet = load_sheet(
         &tables::RuneTable::for_protocol(protocol_id)
             .OUTPOINT_TO_RUNES
-            .select(&outpoint_bytes)
+            .select(&outpoint_bytes),
     );
 
     let mut height: u128 = tables::RUNES
@@ -152,20 +152,20 @@ pub fn runes_by_address(input: &Vec<u8>) -> Result<WalletResponse> {
 }
 
 pub fn protorunes_by_outpoint(input: &Vec<u8>) -> Result<OutpointResponse> {
-  match proto::protorune::OutpointWithProtocol::parse_from_bytes(input).ok() {
-    Some(req) => {
-     let protocol_tag: u128 = req.protocol.into_option().unwrap().into();
+    match proto::protorune::OutpointWithProtocol::parse_from_bytes(input).ok() {
+        Some(req) => {
+            let protocol_tag: u128 = req.protocol.into_option().unwrap().into();
 
-     let outpoint = OutPoint {
-       txid: bitcoin::blockdata::transaction::Txid::from_byte_array(<Vec<u8> as AsRef<[u8]>>::as_ref(&req.txid).try_into()?),
-       vout: req.vout
-     };
-     protorune_outpoint_to_outpoint_response(&outpoint, protocol_tag)
+            let outpoint = OutPoint {
+                txid: bitcoin::blockdata::transaction::Txid::from_byte_array(
+                    <Vec<u8> as AsRef<[u8]>>::as_ref(&req.txid).try_into()?,
+                ),
+                vout: req.vout,
+            };
+            protorune_outpoint_to_outpoint_response(&outpoint, protocol_tag)
+        }
+        None => Err(anyhow!("malformed request")),
     }
-    None => {
-      Err(anyhow!("malformed request"))
-    }
-  }
 }
 
 pub fn protorunes_by_address(input: &Vec<u8>) -> Result<WalletResponse> {
@@ -214,8 +214,10 @@ pub fn runes_by_height(input: &Vec<u8>) -> Result<RunesResponse> {
             let mut _rune: Rune = Rune::new();
             _rune.name = rune.clone().to_vec();
             _rune.runeId = MessageField::from_option(
-                proto::protorune::ProtoruneRuneId::parse_from_bytes(&tables::RUNES.ETCHING_TO_RUNE_ID.select(&rune).get())
-                    .ok(),
+                proto::protorune::ProtoruneRuneId::parse_from_bytes(
+                    &tables::RUNES.ETCHING_TO_RUNE_ID.select(&rune).get(),
+                )
+                .ok(),
             );
             _rune.spacers = tables::RUNES.SPACERS.select(&rune).get_value::<u32>();
 

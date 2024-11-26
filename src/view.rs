@@ -1,12 +1,12 @@
-use alkanes_support::proto;
-use alkanes_support::proto::alkanes::{AlkaneInventoryRequest, AlkaneInventoryResponse};
 use crate::utils::{
-    alkane_inventory_pointer, balance_pointer, credit_balances, debit_balances, pipe_storagemap_to
+    alkane_inventory_pointer, balance_pointer, credit_balances, debit_balances, pipe_storagemap_to,
 };
 use crate::vm::runtime::AlkanesRuntimeContext;
 use crate::vm::utils::{prepare_context, run_after_special, run_special_cellpacks};
 use alkanes_support::cellpack::Cellpack;
 use alkanes_support::parcel::AlkaneTransfer;
+use alkanes_support::proto;
+use alkanes_support::proto::alkanes::{AlkaneInventoryRequest, AlkaneInventoryResponse};
 use alkanes_support::response::ExtendedCallResponse;
 use anyhow::Result;
 use metashrew::index_pointer::{AtomicPointer, IndexPointer};
@@ -16,7 +16,6 @@ use protorune_support::balance_sheet::BalanceSheet;
 use protorune_support::rune_transfer::RuneTransfer;
 use protorune_support::utils::decode_varint_list;
 use std::io::Cursor;
-
 
 pub fn alkane_inventory(req: &AlkaneInventoryRequest) -> Result<AlkaneInventoryResponse> {
     let mut result: AlkaneInventoryResponse = AlkaneInventoryResponse::new();

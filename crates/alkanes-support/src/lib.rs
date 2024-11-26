@@ -5,36 +5,36 @@ pub mod envelope;
 pub mod gz;
 pub mod id;
 pub mod parcel;
+pub mod proto;
 pub mod response;
 pub mod storage;
 pub mod utils;
-pub mod proto;
 pub mod witness;
 
-use crate::response::{ExtendedCallResponse};
-use crate::parcel::{AlkaneTransfer};
-use crate::id::{AlkaneId};
-use protobuf::{SpecialFields, MessageField};
+use crate::id::AlkaneId;
+use crate::parcel::AlkaneTransfer;
+use crate::response::ExtendedCallResponse;
+use protobuf::{MessageField, SpecialFields};
 use protorune_support::balance_sheet::ProtoruneRuneId;
 
 impl From<proto::alkanes::Uint128> for u128 {
-  fn from(v: proto::alkanes::Uint128) -> u128 {
-    let mut result: Vec<u8> = Vec::<u8>::with_capacity(16);
-    result.extend(&v.lo.to_le_bytes());
-    result.extend(&v.hi.to_le_bytes());
-    let bytes_ref: &[u8] = &result;
-    u128::from_le_bytes(bytes_ref.try_into().unwrap())
-  }
+    fn from(v: proto::alkanes::Uint128) -> u128 {
+        let mut result: Vec<u8> = Vec::<u8>::with_capacity(16);
+        result.extend(&v.lo.to_le_bytes());
+        result.extend(&v.hi.to_le_bytes());
+        let bytes_ref: &[u8] = &result;
+        u128::from_le_bytes(bytes_ref.try_into().unwrap())
+    }
 }
 
 impl From<u128> for proto::alkanes::Uint128 {
-  fn from(v: u128) -> proto::alkanes::Uint128 {
-    let bytes = v.to_le_bytes().to_vec();
-    let mut container: proto::alkanes::Uint128 = proto::alkanes::Uint128::new();
-    container.lo = u64::from_le_bytes((&bytes[0..8]).try_into().unwrap());
-    container.hi = u64::from_le_bytes((&bytes[8..16]).try_into().unwrap());
-    container
-  }
+    fn from(v: u128) -> proto::alkanes::Uint128 {
+        let bytes = v.to_le_bytes().to_vec();
+        let mut container: proto::alkanes::Uint128 = proto::alkanes::Uint128::new();
+        container.lo = u64::from_le_bytes((&bytes[0..8]).try_into().unwrap());
+        container.hi = u64::from_le_bytes((&bytes[8..16]).try_into().unwrap());
+        container
+    }
 }
 
 impl Into<proto::alkanes::AlkaneId> for AlkaneId {
@@ -42,7 +42,7 @@ impl Into<proto::alkanes::AlkaneId> for AlkaneId {
         proto::alkanes::AlkaneId {
             special_fields: SpecialFields::new(),
             block: MessageField::some(self.block.into()),
-            tx: MessageField::some(self.tx.into())
+            tx: MessageField::some(self.tx.into()),
         }
     }
 }
@@ -82,7 +82,7 @@ impl Into<proto::alkanes::ExtendedCallResponse> for ExtendedCallResponse {
                     special_fields: SpecialFields::new(),
                 }),
                 special_fields: SpecialFields::new(),
-                value: MessageField::some(v.value.into())
+                value: MessageField::some(v.value.into()),
             })
             .collect::<Vec<proto::alkanes::AlkaneTransfer>>();
 
@@ -100,12 +100,12 @@ impl Into<AlkaneId> for proto::alkanes::AlkaneId {
 }
 
 impl Into<ProtoruneRuneId> for proto::alkanes::AlkaneId {
-  fn into(self) -> ProtoruneRuneId {
-    ProtoruneRuneId {
-      block: self.tx.as_ref().unwrap().clone().into(),
-      tx: self.block.as_ref().unwrap().clone().into()
+    fn into(self) -> ProtoruneRuneId {
+        ProtoruneRuneId {
+            block: self.tx.as_ref().unwrap().clone().into(),
+            tx: self.block.as_ref().unwrap().clone().into(),
+        }
     }
-  }
 }
 
 impl Into<proto::alkanes::AlkaneInventoryRequest> for AlkaneId {
