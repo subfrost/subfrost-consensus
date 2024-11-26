@@ -30,17 +30,47 @@ pub fn genesis_alkane_bytes() -> Vec<u8> {
 }
 
 #[cfg(feature = "regtest")]
-pub const GENESIS_BLOCK: u64 = 0;
+pub mod genesis {
+  pub const GENESIS_BLOCK: u64 = 0;
+  pub const GENESIS_OUTPOINT: &str = "cf2b52ffaaf1c094df22f190b888fb0e474fe62990547a34e144ec9f8e135b07";
+}
 
-#[cfg(not(feature = "regtest"))]
-pub const GENESIS_BLOCK: u64 = 880_000;
+#[cfg(feature = "mainnet")]
+pub mod genesis {
+  pub const GENESIS_BLOCK: u64 = 880_000;
+  pub const GENESIS_OUTPOINT: &str = "3977b30a97c9b9d609afb4b7cc138e17b21d1e0c5e360d25debf1441de933bf4";
+}
+
+#[cfg(feature = "fractal")]
+pub mod genesis {
+  pub const GENESIS_BLOCK: u64 = 400_000;
+  pub const GENESIS_OUTPOINT: &str = "cf2b52ffaaf1c094df22f190b888fb0e474fe62990547a34e144ec9f8e135b07";
+}
+
+#[cfg(feature = "dogecoin")]
+pub mod genesis {
+  pub const GENESIS_BLOCK: u64 = 6_000_000;
+  pub const GENESIS_OUTPOINT: &str = "cf2b52ffaaf1c094df22f190b888fb0e474fe62990547a34e144ec9f8e135b07";
+}
+
+#[cfg(feature = "luckycoin")]
+pub mod genesis {
+  pub const GENESIS_BLOCK: u64 = 400_000;
+  pub const GENESIS_OUTPOINT: &str = "cf2b52ffaaf1c094df22f190b888fb0e474fe62990547a34e144ec9f8e135b07";
+}
 
 pub fn is_active(height: u64) -> bool {
-    height >= GENESIS_BLOCK
+    height >= genesis::GENESIS_BLOCK
 }
 
 pub fn is_genesis(height: u64) -> bool {
-    height == GENESIS_BLOCK
+    let mut init_ptr = IndexPointer::from_keyword("/seen-genesis");
+    if height >= genesis::GENESIS_BLOCK && init_ptr.get().len() == 0 {
+      init_ptr.set_value::<u8>(0x01);
+      true
+    } else {
+      false
+    }
 }
 
 pub fn genesis(block: &Block) -> Result<()> {
@@ -60,7 +90,7 @@ pub fn genesis(block: &Block) -> Result<()> {
             lock_time: bitcoin::absolute::LockTime::ZERO,
         },
         block: block.clone(),
-        height: GENESIS_BLOCK,
+        height: genesis::GENESIS_BLOCK,
         pointer: 0,
         refund_pointer: 0,
         calldata: (Cellpack {
@@ -81,7 +111,7 @@ pub fn genesis(block: &Block) -> Result<()> {
                 .select(&outpoint_encode(&OutPoint {
                     txid: Txid::from_byte_array(
                         <Vec<u8> as AsRef<[u8]>>::as_ref(&hex::decode(
-                            "3977b30a97c9b9d609afb4b7cc138e17b21d1e0c5e360d25debf1441de933bf4",
+                            genesis::GENESIS_OUTPOINT
                         )?)
                         .try_into()?,
                     ),

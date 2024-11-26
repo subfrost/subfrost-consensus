@@ -3,7 +3,16 @@ use alkanes_support::utils::overflow_error;
 use anyhow::Result;
 use wasmi::*;
 
+#[cfg(feature = "mainnet")]
 const TOTAL_FUEL: u64 = 100_000_000;
+#[cfg(feature = "dogecoin")]
+const TOTAL_FUEL: u64 = 60_000_000;
+#[cfg(feature = "fractal")]
+const TOTAL_FUEL: u64 = 50_000_000;
+#[cfg(feature = "luckycoin")]
+const TOTAL_FUEL: u64 = 50_000_000;
+#[cfg(feature = "bellscoin")]
+const TOTAL_FUEL: u64 = 50_000_000;
 
 static mut MESSAGE_COUNT: u64 = 0;
 

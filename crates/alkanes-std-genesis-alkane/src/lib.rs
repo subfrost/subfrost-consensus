@@ -19,10 +19,10 @@ pub struct GenesisAlkane(());
 
 impl Token for GenesisAlkane {
     fn name(&self) -> String {
-        String::from("{TBD}")
+        String::from("DIESEL")
     }
     fn symbol(&self) -> String {
-        String::from("{TBD}")
+        String::from("DIESEL")
     }
 }
 
@@ -42,7 +42,7 @@ impl ChainConfiguration for GenesisAlkane {
     }
 }
 
-#[cfg(not(feature = "regtest"))]
+#[cfg(feature = "mainnet")]
 impl ChainConfiguration for GenesisAlkane {
     fn block_reward(&self, n: u64) -> u128 {
         return (50e8 as u128) / (1u128 << ((n as u128) / 210000u128));
@@ -55,6 +55,70 @@ impl ChainConfiguration for GenesisAlkane {
     }
     fn total_supply(&self) -> u128 {
         131250000000000
+    }
+}
+
+#[cfg(feature = "dogecoin")]
+impl ChainConfiguration for GenesisAlkane {
+    fn block_reward(&self, n: u64) -> u128 {
+        1_000_000_000_000u128
+    }
+    fn genesis_block(&self) -> u64 {
+        4_000_000u64
+    }
+    fn average_payout_from_genesis(&self) -> u128 {
+        1_000_000_000_000u128
+    }
+    fn total_supply(&self) -> u128 {
+        4_000_000_000_000_000_000u128
+    }
+}
+
+#[cfg(feature = "fractal")]
+impl ChainConfiguration for GenesisAlkane {
+    fn block_reward(&self, n: u64) -> u128 {
+        return (25e8 as u128) / (1u128 << ((n as u128) / 2100000u128));
+    }
+    fn genesis_block(&self) -> u64 {
+        0e64
+    }
+    fn average_payout_from_genesis(&self) -> u128 {
+        2_500_000_000
+    }
+    fn total_supply(&self) -> u128 {
+        21_000_000_000_000_000
+    }
+}
+
+#[cfg(feature = "luckycoin")]
+impl ChainConfiguration for GenesisAlkane {
+    fn block_reward(&self, n: u64) -> u128 {
+      1_000_000_000
+    }
+    fn genesis_block(&self) -> u64 {
+      0e64
+    }
+    fn average_payout_from_genesis(&self) -> u128 {
+      1_000_000_000
+    }
+    fn total_supply(&self) -> u128 {
+      20e14
+    }
+}
+
+#[cfg(feature = "bellscoin")]
+impl ChainConfiguration for GenesisAlkane {
+    fn block_reward(&self, n: u64) -> u128 {
+      1_000_000_000
+    }
+    fn genesis_block(&self) -> u64 {
+      0e64
+    }
+    fn average_payout_from_genesis(&self) -> u128 {
+      1_000_000_000
+    }
+    fn total_supply(&self) -> u128 {
+      20e14
     }
 }
 

@@ -8,6 +8,10 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 regtest = []
+dogecoin = []
+luckycoin = []
+mainnet = []
+fractal = []
 
 [dependencies]
 alkanes-runtime = { path = "../alkanes-runtime" }

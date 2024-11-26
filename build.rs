@@ -108,10 +108,19 @@ fn main() {
         .map(|v| -> Result<String> {
             std::env::set_current_dir(&crates_dir.clone().join(v.clone()))?;
             if v == "alkanes-std-genesis-alkane" {
-              #[cfg(feature = "regtest")]
-              build_alkane(wasm_str, vec!["regtest"])?;
-              #[cfg(not(feature = "regtest"))]
-              build_alkane(wasm_str, vec![])?;
+              if let Some(_) = env::var("CARGO_FEATURE_REGTEST").ok() {
+                build_alkane(wasm_str, vec!["regtest"])?;
+              } else if let Some(_) = env::var("CARGO_FEATURE_MAINNET").ok() {
+                build_alkane(wasm_str, vec!["mainnet"])?;
+              } else if let Some(_) = env::var("CARGO_FEATURE_DOGECOIN").ok() {
+                build_alkane(wasm_str, vec!["dogecoin"])?;
+              } else if let Some(_) = env::var("CARGO_FEATURE_FRACTAL").ok() {
+                build_alkane(wasm_str, vec!["fractal"])?;
+              } else if let Some(_) = env::var("CARGO_FEATURE_LUCKYCOIN").ok() {
+                build_alkane(wasm_str, vec!["luckycoin"])?;
+              } else if let Some(_) = env::var("CARGO_FEATURE_BELLSCOIN").ok() {
+                build_alkane(wasm_str, vec!["bellscoin"])?;
+              }
             } else {
               build_alkane(wasm_str, vec![])?;
             }

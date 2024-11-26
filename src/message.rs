@@ -1,5 +1,5 @@
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
-use crate::network::{GENESIS_BLOCK, is_active};
+use crate::network::{genesis::{GENESIS_BLOCK}, is_active};
 use crate::vm::{
     fuel::start_fuel,
     runtime::AlkanesRuntimeContext,
