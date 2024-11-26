@@ -93,32 +93,32 @@ impl ChainConfiguration for GenesisAlkane {
 #[cfg(feature = "luckycoin")]
 impl ChainConfiguration for GenesisAlkane {
     fn block_reward(&self, n: u64) -> u128 {
-      1_000_000_000
+        1_000_000_000
     }
     fn genesis_block(&self) -> u64 {
-      0e64
+        0e64
     }
     fn average_payout_from_genesis(&self) -> u128 {
-      1_000_000_000
+        1_000_000_000
     }
     fn total_supply(&self) -> u128 {
-      20e14
+        20e14
     }
 }
 
 #[cfg(feature = "bellscoin")]
 impl ChainConfiguration for GenesisAlkane {
     fn block_reward(&self, n: u64) -> u128 {
-      1_000_000_000
+        1_000_000_000
     }
     fn genesis_block(&self) -> u64 {
-      0e64
+        0e64
     }
     fn average_payout_from_genesis(&self) -> u128 {
-      1_000_000_000
+        1_000_000_000
     }
     fn total_supply(&self) -> u128 {
-      20e14
+        20e14
     }
 }
 

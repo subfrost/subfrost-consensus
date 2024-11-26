@@ -42,8 +42,10 @@ Boilerplate for various alkanes are included and prefixed with `alkanes-std-` an
 ALKANES is built with the command:
 
 ```sh
-cargo build --release
+cargo build --release --features all,mainnet
 ```
+
+Replace `mainnet` with your network of choice. Constants are defined for luckycoin, regtest, mainnet, dogecoin, bellscoin, and fractal. For other networks or test networks, use the regtest feature.
 
 An `alkanes.wasm` file will be built, as well as a WASM for every crate prefixed with `alkanes-std-`, which will be built to `target/alkanes/wasm32-unknown-unknown/release`
 

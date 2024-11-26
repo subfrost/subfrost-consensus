@@ -16,27 +16,27 @@ fn compress(binary: Vec<u8>) -> Result<Vec<u8>> {
 
 fn build_alkane(wasm_str: &str, features: Vec<&'static str>) -> Result<()> {
     if features.len() != 0 {
-      let _ = Command::new("cargo")
-        .env("CARGO_TARGET_DIR", wasm_str)
-        .arg("build")
-        .arg("--release")
-        .arg("--features")
-        .arg(features.join(","))
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .spawn()?
-        .wait()?;
-      Ok(())
+        let _ = Command::new("cargo")
+            .env("CARGO_TARGET_DIR", wasm_str)
+            .arg("build")
+            .arg("--release")
+            .arg("--features")
+            .arg(features.join(","))
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .spawn()?
+            .wait()?;
+        Ok(())
     } else {
-      Command::new("cargo")
-        .env("CARGO_TARGET_DIR", wasm_str)
-        .arg("build")
-        .arg("--release")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .spawn()?
-        .wait()?;
-      Ok(())
+        Command::new("cargo")
+            .env("CARGO_TARGET_DIR", wasm_str)
+            .arg("build")
+            .arg("--release")
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .spawn()?
+            .wait()?;
+        Ok(())
     }
 }
 

@@ -1,5 +1,5 @@
+use crate::network::{genesis::GENESIS_BLOCK, is_active};
 use crate::utils::{credit_balances, debit_balances, pipe_storagemap_to};
-use crate::network::{genesis::{GENESIS_BLOCK}, is_active};
 use crate::vm::{
     fuel::start_fuel,
     runtime::AlkanesRuntimeContext,
@@ -53,15 +53,18 @@ impl MessageContext for AlkaneMessageContext {
     }
     fn handle(_parcel: &MessageContextParcel) -> Result<(Vec<RuneTransfer>, BalanceSheet)> {
         if is_active(_parcel.height) {
-          match handle_message(_parcel) {
-            Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
-            Err(e) => {
-                println!("{:?}", e);
-                Err(e) // Print the error
+            match handle_message(_parcel) {
+                Ok((outgoing, runtime)) => Ok((outgoing, runtime)),
+                Err(e) => {
+                    println!("{:?}", e);
+                    Err(e) // Print the error
+                }
             }
-          }
         } else {
-          Err(anyhow!("subprotocol inactive until block {}", GENESIS_BLOCK))
+            Err(anyhow!(
+                "subprotocol inactive until block {}",
+                GENESIS_BLOCK
+            ))
         }
     }
 }

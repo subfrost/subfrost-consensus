@@ -1,5 +1,5 @@
-use crate::network::{genesis, is_genesis};
 use crate::message::AlkaneMessageContext;
+use crate::network::{genesis, is_genesis};
 use crate::view::simulate_parcel;
 use alkanes_support::proto;
 use anyhow::Result;
@@ -156,7 +156,7 @@ pub fn _start() {
         .unwrap()
         .to_consensus();
     if is_genesis(height.into()) {
-      genesis(&block).unwrap();
+        genesis(&block).unwrap();
     }
     index_block(&block, height).unwrap();
     flush();
