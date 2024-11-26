@@ -3,6 +3,8 @@ use alkanes_support::utils::overflow_error;
 use anyhow::Result;
 use wasmi::*;
 
+#[cfg(feature = "regtest")]
+const TOTAL_FUEL: u64 = 100_000_000;
 #[cfg(feature = "mainnet")]
 const TOTAL_FUEL: u64 = 100_000_000;
 #[cfg(feature = "dogecoin")]
