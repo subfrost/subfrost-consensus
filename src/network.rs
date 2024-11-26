@@ -5,8 +5,10 @@ use crate::precompiled::{
     alkanes_std_genesis_alkane_regtest_build,
 };
 use crate::utils::pipe_storagemap_to;
+use crate::vm::utils::{sequence_pointer};
 use crate::{simulate_parcel, AlkaneMessageContext};
 use alkanes_support::cellpack::Cellpack;
+use alkanes_support::gz::{compress};
 use alkanes_support::id::AlkaneId;
 use alkanes_support::parcel::AlkaneTransferParcel;
 use anyhow::Result;
@@ -110,9 +112,9 @@ pub fn is_genesis(height: u64) -> bool {
 pub fn genesis(block: &Block) -> Result<()> {
     IndexPointer::from_keyword("/alkanes/")
         .select(&(AlkaneId { block: 2, tx: 0 }).into())
-        .set(Arc::new(genesis_alkane_bytes()));
-    IndexPointer::from_keyword("/sequence").set_value::<u128>(1);
+        .set(Arc::new(compress(genesis_alkane_bytes())?));
     let mut atomic: AtomicPointer = AtomicPointer::default();
+    sequence_pointer(&atomic).set_value::<u128>(1);
     let myself = AlkaneId { block: 2, tx: 0 };
     let parcel = MessageContextParcel {
         atomic: atomic.derive(&IndexPointer::default()),

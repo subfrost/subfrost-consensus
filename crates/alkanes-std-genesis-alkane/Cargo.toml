@@ -12,6 +12,7 @@ dogecoin = []
 luckycoin = []
 mainnet = []
 fractal = []
+bellscoin = []
 
 [dependencies]
 alkanes-runtime = { path = "../alkanes-runtime" }
