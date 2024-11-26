@@ -59,6 +59,12 @@ pub mod genesis {
   pub const GENESIS_OUTPOINT: &str = "cf2b52ffaaf1c094df22f190b888fb0e474fe62990547a34e144ec9f8e135b07";
 }
 
+#[cfg(feature = "bellscoin")]
+pub mod genesis {
+  pub const GENESIS_BLOCK: u64 = 500_000;
+  pub const GENESIS_OUTPOINT: &str = "2c58484a86e117a445c547d8f3acb56b569f7ea036637d909224d52a5b990259";
+}
+
 pub fn is_active(height: u64) -> bool {
     height >= genesis::GENESIS_BLOCK
 }
