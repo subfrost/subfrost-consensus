@@ -63,6 +63,14 @@ fn test_amm_pool_normal() -> Result<()> {
         },
     ]
     .into();
+    let amm_pool_factory = AlkaneId {
+        block: 4,
+        tx: AMM_FACTORY_ID,
+    };
+    let auth_token_factory = AlkaneId {
+        block: 4,
+        tx: AUTH_TOKEN_FACTORY_ID,
+    };
     let amm_factory_deployment = AlkaneId { block: 2, tx: 0 };
     let owned_token_1_deployment = AlkaneId { block: 2, tx: 1 };
     let auth_token_1_deployment = AlkaneId { block: 2, tx: 2 };
@@ -138,6 +146,7 @@ fn test_amm_pool_normal() -> Result<()> {
             false,
         ),
     );
+    let amm_pool_deployment = AlkaneId { block: 2, tx: 5 };
     let len = test_block.txdata.len();
     let outpoint = OutPoint {
         txid: test_block.txdata[len - 1].compute_txid(),
@@ -149,6 +158,15 @@ fn test_amm_pool_normal() -> Result<()> {
         .OUTPOINT_TO_RUNES
         .select(&consensus_encode(&outpoint)?);
     let sheet = load_sheet(&ptr);
+    let _ = assert_binary_deployed_to_id(
+        amm_pool_factory.clone(),
+        alkanes_std_amm_pool_build::get_bytes(),
+    );
+    let _ = assert_binary_deployed_to_id(
+        auth_token_factory.clone(),
+        alkanes_std_auth_token_build::get_bytes(),
+    );
+
     let _ = assert_binary_deployed_to_id(
         amm_factory_deployment.clone(),
         alkanes_std_amm_factory_build::get_bytes(),
@@ -169,12 +187,12 @@ fn test_amm_pool_normal() -> Result<()> {
         auth_token_2_deployment.clone(),
         alkanes_std_auth_token_build::get_bytes(),
     );
-    /*
-    get_cache().iter().for_each(|(k, v)| {
-      if v.len() < 300 { println!("{}: {}", format_key(&k.as_ref().clone()), hex::encode(&v.as_ref().clone())); }
-    });
-    */
+    let _ = assert_binary_deployed_to_id(
+        amm_pool_deployment.clone(),
+        alkanes_std_amm_pool_build::get_bytes(),
+    );
     println!("balances at end {:?}", sheet);
+    assert_eq!(sheet.get(&amm_pool_deployment.into()), 999000);
     Ok(())
 }
 
