@@ -9,6 +9,7 @@ use bitcoin::blockdata::transaction::OutPoint;
 use bitcoin::hashes::Hash;
 use bitcoin::{Address, Amount, Block, ScriptBuf, Sequence, TxIn, TxOut, Witness};
 use metashrew_support::index_pointer::KeyValuePointer;
+use num::integer::Roots;
 use protobuf::{Message, MessageField};
 use protorune::{
     balance_sheet::load_sheet, message::MessageContext, tables::RuneTable,
@@ -37,6 +38,9 @@ struct AmmTestDeploymentIds {
     auth_token_2_deployment: AlkaneId,
     amm_pool_deployment: AlkaneId,
 }
+
+// per uniswap docs, the first 1e3 wei of lp token minted are burned to mitigate attacks where the value of a lp token is raised too high easily
+pub const MINIMUM_LIQUIDITY: u128 = 1000;
 
 fn init_block_with_amm_pool() -> Result<(Block, AmmTestDeploymentIds)> {
     let cellpacks: Vec<Cellpack> = [
@@ -206,14 +210,16 @@ fn insert_add_liquidity_tx(
     );
 }
 
-#[wasm_bindgen_test]
-fn test_amm_pool_normal() -> Result<()> {
-    clear();
-    let block_height = 840_000;
-    let (mut test_block, deployment_ids) = init_block_with_amm_pool()?;
-    insert_add_liquidity_tx(1000000, 1000000, &mut test_block, &deployment_ids);
-    index_block(&test_block, block_height)?;
-    assert_contracts_correct_ids(&deployment_ids)?;
+fn calc_lp_balance_from_pool_init(amount1: u128, amount2: u128) -> u128 {
+    return (amount1 * amount2).sqrt() - MINIMUM_LIQUIDITY;
+}
+
+fn check_init_liquidity_lp_balance(
+    amount1: u128,
+    amount2: u128,
+    test_block: &Block,
+    deployment_ids: &AmmTestDeploymentIds,
+) -> Result<()> {
     let len = test_block.txdata.len();
     let outpoint = OutPoint {
         txid: test_block.txdata[len - 1].compute_txid(),
@@ -226,44 +232,28 @@ fn test_amm_pool_normal() -> Result<()> {
     println!("balances at end {:?}", sheet);
     assert_eq!(
         sheet.get(&deployment_ids.amm_pool_deployment.into()),
-        999000
+        calc_lp_balance_from_pool_init(amount1, amount2)
     );
     Ok(())
 }
 
-#[wasm_bindgen_test]
-fn test_amm_pool_skewed() -> Result<()> {
+fn test_amm_pool_init_fixture(amount1: u128, amount2: u128) -> Result<()> {
     clear();
     let block_height = 840_000;
     let (mut test_block, deployment_ids) = init_block_with_amm_pool()?;
-    insert_add_liquidity_tx(1000000 / 2, 1000000, &mut test_block, &deployment_ids);
+    insert_add_liquidity_tx(amount1, amount2, &mut test_block, &deployment_ids);
     index_block(&test_block, block_height)?;
     assert_contracts_correct_ids(&deployment_ids)?;
-
-    let len = test_block.txdata.len();
-    let outpoint = OutPoint {
-        txid: test_block.txdata[len - 1].compute_txid(),
-        vout: 0,
-    };
-
-    let ptr = RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
-        .OUTPOINT_TO_RUNES
-        .select(&consensus_encode(&outpoint)?);
-    let mut payload = protorune_support::proto::protorune::OutpointWithProtocol::new();
-    payload.protocol = MessageField::some((1u128).into());
-    payload.txid = outpoint.txid.as_byte_array().clone().to_vec();
-    payload.vout = outpoint.vout;
-    let response: BalanceSheet = protorunes_by_outpoint(
-        &<Vec<u8> as AsRef<[u8]>>::as_ref(&payload.write_to_bytes().unwrap()).to_vec(),
-    )
-    .unwrap()
-    .into();
-    println!("{:?}", response);
-    let sheet = load_sheet(&ptr);
-    println!("balances at end {:?}", sheet);
-    assert_eq!(
-        sheet.get(&deployment_ids.amm_pool_deployment.into()),
-        706106
-    );
+    check_init_liquidity_lp_balance(amount1, amount2, &test_block, &deployment_ids);
     Ok(())
+}
+
+#[wasm_bindgen_test]
+fn test_amm_pool_normal() -> Result<()> {
+    test_amm_pool_init_fixture(1000000, 1000000)
+}
+
+#[wasm_bindgen_test]
+fn test_amm_pool_skewed() -> Result<()> {
+    test_amm_pool_init_fixture(1000000 / 2, 1000000)
 }

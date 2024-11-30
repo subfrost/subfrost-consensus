@@ -40,6 +40,7 @@ upgradeable = []
 
 [dependencies]
 anyhow = "1.0.90"
+num = "0.4.3"
 bitcoin = { version = "0.32.4", features = ["rand"] }
 metashrew = { path = "crates/metashrew" }
 metashrew-support = { path = "crates/metashrew-support" }
