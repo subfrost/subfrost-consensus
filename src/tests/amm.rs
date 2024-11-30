@@ -145,17 +145,15 @@ fn insert_add_liquidity_tx(
     test_block: &mut Block,
     deployment_ids: &AmmTestDeploymentIds,
 ) {
-    let input_txid = test_block.txdata[test_block.txdata.len() - 1].compute_txid();
-    let previous_output = OutPoint {
-        txid: input_txid,
-        vout: 0,
-    };
     let address: Address<NetworkChecked> =
         protorune::test_helpers::get_address(&protorune::test_helpers::ADDRESS1);
     let script_pubkey = address.script_pubkey();
     let split = alkane_helpers::create_protostone_tx_with_inputs(
         vec![TxIn {
-            previous_output: previous_output.clone(),
+            previous_output: OutPoint {
+                txid: test_block.txdata[test_block.txdata.len() - 1].compute_txid(),
+                vout: 0,
+            },
             script_sig: ScriptBuf::new(),
             sequence: Sequence::MAX,
             witness: Witness::new(),
@@ -199,7 +197,10 @@ fn insert_add_liquidity_tx(
                 target: deployment_ids.amm_factory_deployment,
                 inputs: vec![1],
             }],
-            previous_output.clone(),
+            OutPoint {
+                txid: test_block.txdata[test_block.txdata.len() - 1].compute_txid(),
+                vout: 0,
+            },
             false,
         ),
     );
