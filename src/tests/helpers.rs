@@ -253,3 +253,13 @@ pub fn assert_binary_deployed_to_id(token_id: AlkaneId, binary: Vec<u8>) -> Resu
     assert_eq!(binary_1, binary_2);
     return Ok(());
 }
+
+pub fn assert_token_id_has_no_deployment(token_id: AlkaneId) -> Result<()> {
+    let binary = IndexPointer::from_keyword("/alkanes/")
+        .select(&token_id.into())
+        .get()
+        .as_ref()
+        .clone();
+    assert_eq!(binary.len(), 0);
+    return Ok(());
+}
