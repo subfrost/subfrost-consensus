@@ -1,4 +1,9 @@
 use alkanes_runtime::{runtime::AlkaneResponder, storage::StoragePointer};
+
+use alkanes_runtime::{
+    println,
+    stdio::{stdout, Write},
+};
 use alkanes_support::{
     id::AlkaneId,
     parcel::{AlkaneTransfer, AlkaneTransferParcel},
@@ -15,6 +20,7 @@ use protorune_support::balance_sheet::BalanceSheet;
 use ruint::Uint;
 use std::sync::Arc;
 
+// per uniswap docs, the first 1e3 wei of lp token minted are burned to mitigate attacks where the value of a lp token is raised too high easily
 pub const MINIMUM_LIQUIDITY: u128 = 1000;
 
 type U256 = Uint<256, 4>;
@@ -123,7 +129,7 @@ impl AMMPool {
                     total_supply.checked_mul(overflow_error(root_k.checked_sub(root_k_last))?),
                 )?;
                 let denominator = overflow_error(
-                    overflow_error(root_k.checked_mul(5))?.checked_add(root_k_last),
+                    overflow_error(root_k.checked_mul(5))?.checked_add(root_k_last), // constant 5 is assuming 1/6 of LP fees goes as protocol fees
                 )?;
                 liquidity = numerator / denominator;
             }
@@ -164,7 +170,7 @@ impl AMMPool {
                 value: amount_b,
             },
         ]);
-        Ok(CallResponse::default())
+        Ok(response)
     }
     pub fn get_amount_out(
         &self,
