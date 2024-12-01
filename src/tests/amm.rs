@@ -273,18 +273,30 @@ fn calc_lp_balance_from_pool_init(amount1: u128, amount2: u128) -> u128 {
     return (amount1 * amount2).sqrt() - MINIMUM_LIQUIDITY;
 }
 
-fn get_sheet_with_lp(test_block: &Block) -> Result<(BalanceSheet)> {
-    let len = test_block.txdata.len();
+fn get_sheet_for_outpoint(test_block: &Block, tx_num: usize, vout: u32) -> Result<BalanceSheet> {
     let outpoint = OutPoint {
-        txid: test_block.txdata[len - 1].compute_txid(),
-        vout: 0,
+        txid: test_block.txdata[tx_num].compute_txid(),
+        vout,
     };
     let ptr = RuneTable::for_protocol(AlkaneMessageContext::protocol_tag())
         .OUTPOINT_TO_RUNES
         .select(&consensus_encode(&outpoint)?);
     let sheet = load_sheet(&ptr);
-    println!("balances at lp outpoint {:?}", sheet);
-    Ok((sheet))
+    println!(
+        "balances at outpoint tx {} vout {}: {:?}",
+        tx_num, vout, sheet
+    );
+    Ok(sheet)
+}
+
+fn get_sheet_with_lp(test_block: &Block) -> Result<BalanceSheet> {
+    let len = test_block.txdata.len();
+    get_sheet_for_outpoint(test_block, len - 1, 0)
+}
+
+fn get_sheet_with_remaining_lp_after_burn(test_block: &Block) -> Result<BalanceSheet> {
+    let len = test_block.txdata.len();
+    get_sheet_for_outpoint(test_block, len - 2, 1)
 }
 
 fn check_init_liquidity_lp_balance(
@@ -312,6 +324,24 @@ fn test_amm_pool_init_fixture(amount1: u128, amount2: u128) -> Result<()> {
     index_block(&test_block, block_height)?;
     assert_contracts_correct_ids(&deployment_ids)?;
     check_init_liquidity_lp_balance(amount1, amount2, &test_block, &deployment_ids)?;
+    Ok(())
+}
+
+fn test_amm_burn_fixture(amount_burn: u128) -> Result<()> {
+    let block_height = 840_000;
+    let (amount1, amount2) = (1000000, 1000000);
+    let total_lp = calc_lp_balance_from_pool_init(1000000, 1000000);
+    let (mut test_block, deployment_ids) = init_block_with_amm_pool()?;
+    insert_init_pool_liquidity_tx(amount1, amount2, &mut test_block, &deployment_ids);
+    insert_remove_liquidity_tx(amount_burn, &mut test_block, &deployment_ids);
+    index_block(&test_block, block_height)?;
+
+    let sheet = get_sheet_with_remaining_lp_after_burn(&test_block)?;
+    assert_eq!(
+        sheet.get(&deployment_ids.amm_pool_deployment.into()),
+        total_lp - amount_burn
+    );
+
     Ok(())
 }
 
@@ -347,16 +377,18 @@ fn test_amm_pool_bad_init() -> Result<()> {
 }
 
 #[wasm_bindgen_test]
-fn test_amm_pool_normal_burn() -> Result<()> {
+fn test_amm_pool_burn_all() -> Result<()> {
     clear();
-    let block_height = 840_000;
-    let (amount1, amount2) = (1000000, 1000000);
-    let total_lp = calc_lp_balance_from_pool_init(amount1, amount2);
-    let (mut test_block, deployment_ids) = init_block_with_amm_pool()?;
-    insert_init_pool_liquidity_tx(amount1, amount2, &mut test_block, &deployment_ids);
-    insert_remove_liquidity_tx(total_lp, &mut test_block, &deployment_ids);
-    index_block(&test_block, block_height)?;
-    let sheet = get_sheet_with_lp(&test_block)?;
-    assert_eq!(sheet.get(&deployment_ids.amm_pool_deployment.into()), 0);
+    let total_lp = calc_lp_balance_from_pool_init(1000000, 1000000);
+    test_amm_burn_fixture(total_lp)?;
+    Ok(())
+}
+
+#[wasm_bindgen_test]
+fn test_amm_pool_burn_some() -> Result<()> {
+    clear();
+    let total_lp = calc_lp_balance_from_pool_init(1000000, 1000000);
+    let burn_amount = total_lp / 3;
+    test_amm_burn_fixture(burn_amount)?;
     Ok(())
 }
