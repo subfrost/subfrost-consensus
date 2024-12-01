@@ -9,6 +9,7 @@ use bitcoin::blockdata::transaction::OutPoint;
 use bitcoin::{Address, Amount, Block, ScriptBuf, Sequence, TxIn, TxOut, Witness};
 use metashrew_support::index_pointer::KeyValuePointer;
 use num::integer::Roots;
+use protorune::test_helpers::create_block_with_coinbase_tx;
 use protorune::{balance_sheet::load_sheet, message::MessageContext, tables::RuneTable};
 use protorune_support::balance_sheet::BalanceSheet;
 use protorune_support::protostone::Protostone;
@@ -140,21 +141,19 @@ fn assert_contracts_correct_ids(deployment_ids: &AmmTestDeploymentIds) -> Result
     Ok(())
 }
 
-fn insert_init_pool_liquidity_tx(
+fn insert_add_liquidity_split_tx(
     amount1: u128,
     amount2: u128,
     test_block: &mut Block,
     deployment_ids: &AmmTestDeploymentIds,
+    input_outpoint: OutPoint,
 ) {
     let address: Address<NetworkChecked> =
         protorune::test_helpers::get_address(&protorune::test_helpers::ADDRESS1);
     let script_pubkey = address.script_pubkey();
     let split = alkane_helpers::create_protostone_tx_with_inputs(
         vec![TxIn {
-            previous_output: OutPoint {
-                txid: test_block.txdata[test_block.txdata.len() - 1].compute_txid(),
-                vout: 0,
-            },
+            previous_output: input_outpoint,
             script_sig: ScriptBuf::new(),
             sequence: Sequence::MAX,
             witness: Witness::new(),
@@ -191,6 +190,24 @@ fn insert_init_pool_liquidity_tx(
         },
     );
     test_block.txdata.push(split);
+}
+
+fn insert_init_pool_liquidity_txs(
+    amount1: u128,
+    amount2: u128,
+    test_block: &mut Block,
+    deployment_ids: &AmmTestDeploymentIds,
+) {
+    insert_add_liquidity_split_tx(
+        amount1,
+        amount2,
+        test_block,
+        deployment_ids,
+        OutPoint {
+            txid: test_block.txdata[test_block.txdata.len() - 1].compute_txid(),
+            vout: 0,
+        },
+    );
     test_block.txdata.push(
         alkane_helpers::create_multiple_cellpack_with_witness_and_in(
             Witness::new(),
@@ -207,7 +224,31 @@ fn insert_init_pool_liquidity_tx(
     );
 }
 
-fn insert_remove_liquidity_tx(
+fn insert_add_liquidity_txs(
+    amount1: u128,
+    amount2: u128,
+    test_block: &mut Block,
+    deployment_ids: &AmmTestDeploymentIds,
+    input_outpoint: OutPoint,
+) {
+    insert_add_liquidity_split_tx(amount1, amount2, test_block, deployment_ids, input_outpoint);
+    test_block.txdata.push(
+        alkane_helpers::create_multiple_cellpack_with_witness_and_in(
+            Witness::new(),
+            vec![Cellpack {
+                target: deployment_ids.amm_pool_deployment,
+                inputs: vec![1],
+            }],
+            OutPoint {
+                txid: test_block.txdata[test_block.txdata.len() - 1].compute_txid(),
+                vout: 0,
+            },
+            false,
+        ),
+    );
+}
+
+fn insert_remove_liquidity_txs(
     amount: u128,
     test_block: &mut Block,
     deployment_ids: &AmmTestDeploymentIds,
@@ -273,6 +314,20 @@ fn calc_lp_balance_from_pool_init(amount1: u128, amount2: u128) -> u128 {
     return (amount1 * amount2).sqrt() - MINIMUM_LIQUIDITY;
 }
 
+fn calc_lp_balance_from_add_liquidity(
+    prev_amount1: u128,
+    prev_amount2: u128,
+    added_amount1: u128,
+    added_amount2: u128,
+    total_supply: u128,
+) -> u128 {
+    let root_k = ((prev_amount1 + added_amount1) * (prev_amount2 + added_amount2)).sqrt();
+    let root_k_last = (prev_amount1 * prev_amount2).sqrt();
+    let numerator = total_supply * (root_k - root_k_last);
+    let denominator = root_k * 5 + root_k_last;
+    numerator / denominator
+}
+
 fn get_sheet_for_outpoint(test_block: &Block, tx_num: usize, vout: u32) -> Result<BalanceSheet> {
     let outpoint = OutPoint {
         txid: test_block.txdata[tx_num].compute_txid(),
@@ -306,25 +361,51 @@ fn check_init_liquidity_lp_balance(
     deployment_ids: &AmmTestDeploymentIds,
 ) -> Result<()> {
     let sheet = get_last_outpoint_sheet(test_block)?;
-    println!(
-        "expected amt {:?}",
-        calc_lp_balance_from_pool_init(amount1, amount2)
-    );
+    let expected_amount = calc_lp_balance_from_pool_init(amount1, amount2);
+    println!("expected amt from init {:?}", expected_amount);
     assert_eq!(
         sheet.get(&deployment_ids.amm_pool_deployment.into()),
-        calc_lp_balance_from_pool_init(amount1, amount2)
+        expected_amount
     );
     Ok(())
 }
 
-fn test_amm_pool_init_fixture(amount1: u128, amount2: u128) -> Result<()> {
+fn check_add_liquidity_lp_balance(
+    prev_amount1: u128,
+    prev_amount2: u128,
+    added_amount1: u128,
+    added_amount2: u128,
+    total_supply: u128,
+    test_block: &Block,
+    deployment_ids: &AmmTestDeploymentIds,
+) -> Result<()> {
+    let sheet = get_last_outpoint_sheet(test_block)?;
+    let expected_amount = calc_lp_balance_from_add_liquidity(
+        prev_amount1,
+        prev_amount2,
+        added_amount1,
+        added_amount2,
+        total_supply,
+    );
+    println!("expected amt from adding liquidity {:?}", expected_amount);
+    assert_eq!(
+        sheet.get(&deployment_ids.amm_pool_deployment.into()),
+        expected_amount
+    );
+    Ok(())
+}
+
+fn test_amm_pool_init_fixture(
+    amount1: u128,
+    amount2: u128,
+) -> Result<(Block, AmmTestDeploymentIds)> {
     let block_height = 840_000;
     let (mut test_block, deployment_ids) = init_block_with_amm_pool()?;
-    insert_init_pool_liquidity_tx(amount1, amount2, &mut test_block, &deployment_ids);
+    insert_init_pool_liquidity_txs(amount1, amount2, &mut test_block, &deployment_ids);
     index_block(&test_block, block_height)?;
     assert_contracts_correct_ids(&deployment_ids)?;
     check_init_liquidity_lp_balance(amount1, amount2, &test_block, &deployment_ids)?;
-    Ok(())
+    Ok((test_block, deployment_ids))
 }
 
 fn test_amm_burn_fixture(amount_burn: u128) -> Result<()> {
@@ -333,8 +414,8 @@ fn test_amm_burn_fixture(amount_burn: u128) -> Result<()> {
     let total_lp = calc_lp_balance_from_pool_init(1000000, 1000000);
     let total_supply = (amount1 * amount2).sqrt();
     let (mut test_block, deployment_ids) = init_block_with_amm_pool()?;
-    insert_init_pool_liquidity_tx(amount1, amount2, &mut test_block, &deployment_ids);
-    insert_remove_liquidity_tx(amount_burn, &mut test_block, &deployment_ids);
+    insert_init_pool_liquidity_txs(amount1, amount2, &mut test_block, &deployment_ids);
+    insert_remove_liquidity_txs(amount_burn, &mut test_block, &deployment_ids);
     index_block(&test_block, block_height)?;
 
     let sheet = get_sheet_with_remaining_lp_after_burn(&test_block)?;
@@ -359,19 +440,22 @@ fn test_amm_burn_fixture(amount_burn: u128) -> Result<()> {
 #[wasm_bindgen_test]
 fn test_amm_pool_normal_init() -> Result<()> {
     clear();
-    test_amm_pool_init_fixture(1000000, 1000000)
+    test_amm_pool_init_fixture(1000000, 1000000)?;
+    Ok(())
 }
 
 #[wasm_bindgen_test]
 fn test_amm_pool_skewed_init() -> Result<()> {
     clear();
-    test_amm_pool_init_fixture(1000000 / 2, 1000000)
+    test_amm_pool_init_fixture(1000000 / 2, 1000000)?;
+    Ok(())
 }
 
 #[wasm_bindgen_test]
 fn test_amm_pool_zero_init() -> Result<()> {
     clear();
-    test_amm_pool_init_fixture(1000000, 1)
+    test_amm_pool_init_fixture(1000000, 1)?;
+    Ok(())
 }
 
 #[wasm_bindgen_test]
@@ -379,7 +463,7 @@ fn test_amm_pool_bad_init() -> Result<()> {
     clear();
     let block_height = 840_000;
     let (mut test_block, deployment_ids) = init_block_with_amm_pool()?;
-    insert_init_pool_liquidity_tx(10000, 1, &mut test_block, &deployment_ids);
+    insert_init_pool_liquidity_txs(10000, 1, &mut test_block, &deployment_ids);
     index_block(&test_block, block_height)?;
     assert_token_id_has_no_deployment(deployment_ids.amm_pool_deployment);
     let sheet = get_last_outpoint_sheet(&test_block)?;
@@ -409,5 +493,39 @@ fn test_amm_pool_burn_more_than_owned() -> Result<()> {
     clear();
     let total_lp = calc_lp_balance_from_pool_init(1000000, 1000000);
     test_amm_burn_fixture(total_lp * 2)?;
+    Ok(())
+}
+
+#[wasm_bindgen_test]
+fn test_amm_pool_add_more_liquidity() -> Result<()> {
+    clear();
+    let (amount1, amount2) = (500000, 500000);
+    let total_supply = (amount1 * amount2).sqrt();
+    let (init_block, deployment_ids) = test_amm_pool_init_fixture(amount1, amount2)?;
+    let block_height = 840_001;
+    let mut add_liquidity_block = create_block_with_coinbase_tx(block_height);
+    // split init tx puts 1000000 / 2 in vout 0, and the other is unspent at vout 1. The split tx is now 2 from the tail
+    let input_outpoint = OutPoint {
+        txid: init_block.txdata[init_block.txdata.len() - 2].compute_txid(),
+        vout: 1,
+    };
+    insert_add_liquidity_txs(
+        amount1,
+        amount2,
+        &mut add_liquidity_block,
+        &deployment_ids,
+        input_outpoint,
+    );
+    index_block(&add_liquidity_block, block_height)?;
+
+    check_add_liquidity_lp_balance(
+        amount1,
+        amount2,
+        amount1,
+        amount2,
+        total_supply,
+        &add_liquidity_block,
+        &deployment_ids,
+    )?;
     Ok(())
 }
