@@ -241,9 +241,8 @@ impl BalanceSheet {
     /// can mint more than what the initial balance sheet has.
     pub fn debit(&mut self, sheet: &BalanceSheet) -> Result<()> {
         for (rune, balance) in &sheet.balances {
-            if *balance >= self.get(&rune) {
-                let amount = self.get(&rune);
-                self.decrease(rune, amount);
+            if *balance <= self.get(&rune) {
+                self.decrease(rune, *balance);
             } else {
                 return Err(anyhow!("balance underflow"));
             }
