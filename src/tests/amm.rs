@@ -338,19 +338,20 @@ fn test_amm_burn_fixture(amount_burn: u128) -> Result<()> {
     index_block(&test_block, block_height)?;
 
     let sheet = get_sheet_with_remaining_lp_after_burn(&test_block)?;
+    let amount_burned_true = std::cmp::min(amount_burn, total_lp);
     assert_eq!(
         sheet.get(&deployment_ids.amm_pool_deployment.into()),
-        total_lp - amount_burn
+        total_lp - amount_burned_true
     );
 
     let owned_alkane_sheets = get_last_outpoint_sheet(&test_block)?;
     assert_eq!(
         owned_alkane_sheets.get(&deployment_ids.owned_token_1_deployment.into()),
-        amount_burn * amount1 / total_supply
+        amount_burned_true * amount1 / total_supply
     );
     assert_eq!(
         owned_alkane_sheets.get(&deployment_ids.owned_token_2_deployment.into()),
-        amount_burn * amount2 / total_supply
+        amount_burned_true * amount2 / total_supply
     );
     Ok(())
 }
@@ -400,5 +401,13 @@ fn test_amm_pool_burn_some() -> Result<()> {
     let total_lp = calc_lp_balance_from_pool_init(1000000, 1000000);
     let burn_amount = total_lp / 3;
     test_amm_burn_fixture(burn_amount)?;
+    Ok(())
+}
+
+#[wasm_bindgen_test]
+fn test_amm_pool_burn_more_than_owned() -> Result<()> {
+    clear();
+    let total_lp = calc_lp_balance_from_pool_init(1000000, 1000000);
+    test_amm_burn_fixture(total_lp * 2)?;
     Ok(())
 }
