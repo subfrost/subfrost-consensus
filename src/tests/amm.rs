@@ -289,7 +289,7 @@ fn get_sheet_for_outpoint(test_block: &Block, tx_num: usize, vout: u32) -> Resul
     Ok(sheet)
 }
 
-fn get_sheet_with_lp(test_block: &Block) -> Result<BalanceSheet> {
+fn get_last_outpoint_sheet(test_block: &Block) -> Result<BalanceSheet> {
     let len = test_block.txdata.len();
     get_sheet_for_outpoint(test_block, len - 1, 0)
 }
@@ -305,7 +305,7 @@ fn check_init_liquidity_lp_balance(
     test_block: &Block,
     deployment_ids: &AmmTestDeploymentIds,
 ) -> Result<()> {
-    let sheet = get_sheet_with_lp(test_block)?;
+    let sheet = get_last_outpoint_sheet(test_block)?;
     println!(
         "expected amt {:?}",
         calc_lp_balance_from_pool_init(amount1, amount2)
@@ -331,6 +331,7 @@ fn test_amm_burn_fixture(amount_burn: u128) -> Result<()> {
     let block_height = 840_000;
     let (amount1, amount2) = (1000000, 1000000);
     let total_lp = calc_lp_balance_from_pool_init(1000000, 1000000);
+    let total_supply = (amount1 * amount2).sqrt();
     let (mut test_block, deployment_ids) = init_block_with_amm_pool()?;
     insert_init_pool_liquidity_tx(amount1, amount2, &mut test_block, &deployment_ids);
     insert_remove_liquidity_tx(amount_burn, &mut test_block, &deployment_ids);
@@ -342,6 +343,15 @@ fn test_amm_burn_fixture(amount_burn: u128) -> Result<()> {
         total_lp - amount_burn
     );
 
+    let owned_alkane_sheets = get_last_outpoint_sheet(&test_block)?;
+    assert_eq!(
+        owned_alkane_sheets.get(&deployment_ids.owned_token_1_deployment.into()),
+        amount_burn * amount1 / total_supply
+    );
+    assert_eq!(
+        owned_alkane_sheets.get(&deployment_ids.owned_token_2_deployment.into()),
+        amount_burn * amount2 / total_supply
+    );
     Ok(())
 }
 
@@ -371,7 +381,7 @@ fn test_amm_pool_bad_init() -> Result<()> {
     insert_init_pool_liquidity_tx(10000, 1, &mut test_block, &deployment_ids);
     index_block(&test_block, block_height)?;
     assert_token_id_has_no_deployment(deployment_ids.amm_pool_deployment);
-    let sheet = get_sheet_with_lp(&test_block)?;
+    let sheet = get_last_outpoint_sheet(&test_block)?;
     assert_eq!(sheet.get(&deployment_ids.amm_pool_deployment.into()), 0);
     Ok(())
 }

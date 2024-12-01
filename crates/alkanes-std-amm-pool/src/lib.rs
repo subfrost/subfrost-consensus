@@ -145,7 +145,6 @@ impl AMMPool {
         }
     }
     pub fn burn(&self, myself: AlkaneId, parcel: AlkaneTransferParcel) -> Result<CallResponse> {
-        println!("attempting burn with parcel {:?}", parcel);
         self.check_inputs(&myself, &parcel, 1)?;
         let incoming = parcel.0[0].clone();
         if incoming.id != myself {
@@ -171,8 +170,7 @@ impl AMMPool {
                 value: amount_b,
             },
         ]);
-        println!("response: {:?}", response);
-        Ok(CallResponse::default())
+        Ok(response)
     }
     pub fn get_amount_out(
         &self,
