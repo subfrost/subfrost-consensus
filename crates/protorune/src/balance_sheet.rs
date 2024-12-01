@@ -71,12 +71,12 @@ pub trait OutgoingRunes {
     ) -> Result<()>;
 }
 
-pub trait CheckedDebit {
-    fn debit_checked(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()>;
+pub trait MintableDebit {
+    fn debit_mintable(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()>;
 }
 
-impl CheckedDebit for BalanceSheet {
-    fn debit_checked(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()> {
+impl MintableDebit for BalanceSheet {
+    fn debit_mintable(&mut self, sheet: &BalanceSheet, atomic: &mut AtomicPointer) -> Result<()> {
         for (rune, balance) in &sheet.balances {
             let mut amount = *balance;
             let current = self.get(&rune);
@@ -120,8 +120,8 @@ impl OutgoingRunes for (Vec<RuneTransfer>, BalanceSheet) {
 
         // we want to subtract outgoing and the outgoing runtime balance
         // amount from the initial amount
-        initial.debit_checked(&outgoing, atomic)?;
-        initial.debit_checked(&outgoing_runtime, atomic)?;
+        initial.debit_mintable(&outgoing, atomic)?;
+        initial.debit_mintable(&outgoing_runtime, atomic)?;
 
         // now lets update balances_by_output to correct values
 
