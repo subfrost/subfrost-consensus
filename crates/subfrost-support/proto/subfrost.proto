@@ -1,0 +1,30 @@
+syntax = "proto3";
+package subfrost;
+
+message uint128 {
+  uint64 lo = 1;
+  uint64 hi = 2;
+}
+
+message AlkaneId {
+  uint128 block = 1;
+  uint128 tx = 2;
+}
+
+message AlkaneTransfer {
+  AlkaneId id = 1;
+  uint128 value = 2;
+}
+
+message ReceiptsRequest {
+  bytes recipient = 1;
+}
+
+message Payment {
+  bytes sender = 1;
+  AlkaneTransfer transfer = 2;
+}
+
+message ReceiptsResponse {
+  repeated Payment payments = 1;
+}

@@ -1,17 +1,39 @@
 [package]
-name = "subfrost-consensus"
+name = "alkanes"
 version = "0.1.0"
 edition = "2021"
-description = "SUBFROST consensus program"
+description = "ALKANES metaprotocol indexer routines"
 license = "MIT"
-repository = "https://github.com/subfrost/subfrost-consensus"
+repository = "https://github.com/kungfuflex/alkanes-rs"
 resolver = "2"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[workspace]
-members = [".", "crates/*"]
+[features]
+test = []
+dogecoin = []
+luckycoin = []
+bellscoin = []
+fractal = []
+mainnet = []
+proxy = ["test"]
+owned_token = ["test"]
+auth_token = ["owned_token"]
+genesis_alkane = []
+regtest = []
+genesis_protorune = []
+amm_pool = ["auth_token"]
+amm_factory = ["auth_token"]
+amm = ["amm_pool", "amm_factory"]
+orbital = []
+all = []
+minimal = ["refunder", "merkle_distributor", "free_mint", "upgradeable", "proxy"]
+refunder = []
+merkle_distributor = []
+free_mint = []
+upgradeable = []
+
 
 [dependencies]
 anyhow = "1.0.90"
@@ -23,8 +45,6 @@ ordinals = { git = "https://github.com/kungfuflex/alkanes-rs" }
 protorune = { git = "https://github.com/kungfuflex/alkanes-rs" }
 protorune-support = { git = "https://github.com/kungfuflex/alkanes-rs" }
 alkanes-support = { git = "https://github.com/kungfuflex/alkanes-rs" }
-alkanes = { path = "crates/alkanes", features = ["mainnet"] }
-subfrost-support = { path = "crates/subfrost-support" }
 ruint = "1.12.3"
 wasm-bindgen = "0.2.95"
 byteorder = "1.5"
@@ -40,7 +60,7 @@ hex_lit = "0.1.1"
 
 [dev-dependencies]
 
-alkanes = { path = "crates/alkanes", features = [
+alkanes = { path = ".", features = [
     "genesis_alkane",
     "genesis_protorune",
     "amm",
